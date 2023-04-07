@@ -1,13 +1,13 @@
 .new-instance {
-    position: relative;
-    height: 100%;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-
+  position: relative;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .new-instance-info {
+<<<<<<< HEAD
     display: flex;
     flex-direction: column;
     position: relative;
@@ -16,72 +16,116 @@
     width: 100%;
     color: var(--text-color-secondary);
     font-size: 0.85rem;
+=======
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  left: 1.5rem;
+  top: 0.5rem;
+  width: 100%;
+>>>>>>> ce6df684f118c9d437b7b983bbdfe62d36fb9d7d
 }
 .new-instance-title {
-    color: var(--text-color-primary);
-    font-size: 1.2rem;
-    margin-bottom: 0.6rem;
-    font-weight: bold;
-
+  color: var(--text-color-primary);
+  font-size: 1.2rem;
+  margin-bottom: 0.6rem;
+  font-weight: bold;
 }
 
+<<<<<<< HEAD
+=======
+.new-instance-info {
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+}
+
+>>>>>>> ce6df684f118c9d437b7b983bbdfe62d36fb9d7d
 .flavour-container {
-    position: absolute;
-    bottom: 1.5rem;
-    left: 1.5rem;
-    height: calc(100% - 6.5rem);
-    width: calc(100% - 1rem);
-    display: flex;
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  height: calc(100% - 6.5rem);
+  width: calc(100% - 1rem);
+  display: flex;
 }
 
 .flavour {
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(53, 30, 95, 0.1);
-    border-radius: 0.3rem;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-right: 1rem;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(53, 30, 95, 0.1);
+  border-radius: 0.3rem;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 1rem;
 }
 
 .flavour-background {
-    height: 100%;
-    opacity: 0.3;
-    transition: all 0.3s ease-in-out;
-    filter: blur(1.5px);
-
+  height: 100%;
+  opacity: 0.3;
+  transition: all 0.3s ease-in-out;
+  filter: blur(1.5px);
 }
 
 .flavour:hover .flavour-background {
-    opacity: 1;
-    transform: scale(1.01);
-    filter: blur(0px);
+  opacity: 1;
+  transform: scale(1.01);
+  filter: blur(0px);
 }
 
 .flavour-icon {
-    position: absolute;
-    height: auto;
-    width: 60%;
-    filter: var(--text-filter-secondary);
-    transition: all 0.3s ease-in-out;
+  filter: var(--text-filter-secondary);
+  transition: all 0.3s ease-in-out;
+}
+
+.image-wrapper {
+  position: absolute;
+  height: auto;
+  width: 60%;
+  transition: all 0.3s ease-in-out;
+  padding: 1rem;
 }
 
 .flavour span {
-    position: absolute;
-    bottom: 1.5rem;
-    font-size: 1.2rem;
-    transition: all 0.3s ease-in-out;
-    color: var(--text-color-secondary);
+  position: absolute;
+  bottom: 1.5rem;
+  font-size: 1.2rem;
+  transition: all 0.3s ease-in-out;
+  color: var(--text-color-secondary);
 }
 
-.flavour:hover .flavour-icon, .flavour:hover span {
-    opacity: 0;
+.flavour .image-wrapper::before {
+  position: absolute;
+  content: "";
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 30px;
+  transition: all 0.3s ease-in-out;
+  opacity: 0;
 }
 
+.flavour:hover .image-wrapper::before {
+  background: radial-gradient(
+    circle,
+    rgba(32, 39, 53, 0.8) 0%,
+    rgba(28, 33, 45, 0.8) 100%
+  );
+  backdrop-filter: blur(10px);
+  opacity: 1;
+}
+
+.flavour:hover .image-wrapper img {
+  filter: var(--text-filter-primary);
+}
+
+.flavour:hover span {
+  opacity: 0;
+}
 
 /*.item-flavour {
     cursor: pointer;

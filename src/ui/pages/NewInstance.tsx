@@ -22,17 +22,23 @@ function NewInstance(): JSX.Element {
             <div className='flavour-container'>
                 <div className='flavour'>
                     <img className='flavour-background' src={MinecraftCover} alt="" />
-                    <img className='flavour-icon' src={BoxIcon} alt="" />
+                    <div className='image-wrapper'>
+                        <img className='flavour-icon' src={BoxIcon} alt="" />
+                    </div>
                     <span>Vanilla</span>
                 </div>
                 <div className='flavour'>
                     <img className='flavour-background' src={MinecraftForge} alt="" />
-                    <img className='flavour-icon' src={ForgeIcon} alt="" />
+                    <div className='image-wrapper'>
+                        <img className='flavour-icon' src={ForgeIcon} alt="" />
+                    </div>
                     <span>Forge</span>
                 </div>
                 <div className='flavour'>
                     <img className='flavour-background' src="https://zonacraft.net/wp-content/uploads/2022/07/Eden-Ring-Mod.png" alt="" />
-                    <img className='flavour-icon fabric-icon' src={FabricIcon} />
+                    <div className='image-wrapper'>
+                        <img className='flavour-icon fabric-icon' src={FabricIcon} />
+                    </div>
                     <span>Fabric</span>
                 </div>
 
