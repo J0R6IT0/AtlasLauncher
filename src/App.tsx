@@ -38,7 +38,7 @@ function App(): JSX.Element {
                     <img src={XIcon} alt="close" />
                 </div>
             </div>
-            <SideBar setActivePage={setActivePage}/>
+            <SideBar setActivePage={setActivePage} activePage={activePage}/>
             <AccountSelector />
             <div className='content'>
                 {activePage === 1 && <NewInstance />}

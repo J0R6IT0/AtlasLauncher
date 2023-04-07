@@ -8,19 +8,22 @@ import SettingsIcon from '../../assets/icons/settings.svg';
 import '../styles/SideBar.css';
 
 interface SideBarProps {
+    activePage: number
     setActivePage: (page: number) => void
 }
 
-function SideBar({ setActivePage }: SideBarProps): JSX.Element {
+function SideBar({ setActivePage, activePage }: SideBarProps): JSX.Element {
     return (
         <div id='side-bar' className='side-bar'>
             <div className='side-bar-items'>
                 <img src={HomeIcon}/>
             </div>
-            <div className='side-bar-items' onClick={() => { setActivePage(2); }}>
+            <div className={`side-bar-items ${activePage === 2 ? 'selected' : ''}`} onClick={() => { setActivePage(2); }}>
+                <div className='side-bar-selector' />
                 <img src={GridIcon}/>
             </div>
-            <div className='side-bar-items new-icon' onClick={() => { setActivePage(1); }}>
+            <div className={`side-bar-items ${activePage === 1 ? 'selected' : ''}`} onClick={() => { setActivePage(1); }}>
+                <div className='side-bar-selector' />
                 <img src={PlusIcon}/>
             </div>
             <div className='side-bar-items'>
