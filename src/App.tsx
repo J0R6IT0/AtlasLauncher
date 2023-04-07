@@ -16,7 +16,10 @@ function App(): JSX.Element {
 
     return (
         <div className='container'>
-            <img className='background-image' src={BackgroundImage} alt="" />
+            <div className='background'>
+                <div className='background-color'></div>
+                <img className='background-image' src={BackgroundImage} alt="" />
+            </div>
             <div data-tauri-drag-region className="titlebar">
                 <div className="titlebar-button" id="titlebar-minimize" onClick={() => { appWindow.minimize().catch(e => {}); }}>
                     <img

@@ -22,26 +22,28 @@ function NewInstance(): JSX.Element {
             <div className='flavour-container'>
                 <div className='flavour'>
                     <img className='flavour-background' src={MinecraftCover} alt="" />
-                    <div className='image-wrapper'>
-                        <img className='flavour-icon' src={BoxIcon} alt="" />
+                    <span className='flavour-icon' ><img src={BoxIcon} alt="" />Vanilla</span>
+                    <div className='flavour-wrapper'>
+                        <img src={BoxIcon} alt="" />
+                        <span>Vanilla</span>
                     </div>
-                    <span>Vanilla</span>
                 </div>
                 <div className='flavour'>
                     <img className='flavour-background' src={MinecraftForge} alt="" />
-                    <div className='image-wrapper'>
-                        <img className='flavour-icon' src={ForgeIcon} alt="" />
+                    <span className='flavour-icon' ><img src={ForgeIcon} alt="" />Forge</span>
+                    <div className='flavour-wrapper'>
+                        <img src={ForgeIcon} alt="" />
+                        <span>Forge</span>
                     </div>
-                    <span>Forge</span>
                 </div>
                 <div className='flavour'>
                     <img className='flavour-background' src="https://zonacraft.net/wp-content/uploads/2022/07/Eden-Ring-Mod.png" alt="" />
-                    <div className='image-wrapper'>
-                        <img className='flavour-icon fabric-icon' src={FabricIcon} />
+                    <span className='flavour-icon' ><img className='fabric-icon' src={FabricIcon} alt="" />Fabric</span>
+                    <div className='flavour-wrapper'>
+                        <img className='fabric-icon' src={FabricIcon} alt="" />
+                        <span>Fabric</span>
                     </div>
-                    <span>Fabric</span>
                 </div>
-
             </div>
         </div>
     );

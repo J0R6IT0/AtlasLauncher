@@ -6,7 +6,7 @@ function Library(): JSX.Element {
         <div className='library'>
             <div className='library-info'>
                 <span className='library-title'>Library</span>
-                <span>Your Minecraft worlds are awaiting you</span>
+                <span>Your Minecraft worlds are awaiting</span>
             </div>
             <div className='instance'>
                 <img className='instance-background' src="https://cdn.modrinth.com/data/BYfVnHa7/00a1b981ab6eb08b67bf9d9d9c910f3c404cfb56.png" alt="" />
