@@ -1,0 +1,1 @@
+Atlas Launcher © 2023 by Jorge Pardo is licensed under CC BY-NC-SA 4.0 
