@@ -1,0 +1,136 @@
+.new-instance {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+
+}
+
+.new-instance-info {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    left: 1.5rem;
+    top: 0.5rem;
+    width: 100%;
+}
+.new-instance-title {
+    color: var(--text-color-primary);
+    font-size: 1.2rem;
+    margin-bottom: 0.6rem;
+    font-weight: bold;
+
+}
+
+.new-instance-info {
+    color: var(--text-color-secondary);
+    font-size: 0.85rem;
+}
+
+.flavour-container {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    height: calc(100% - 6.5rem);
+    width: calc(100% - 1rem);
+    display: flex;
+}
+
+.flavour {
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(53, 30, 95, 0.1);
+    border-radius: 0.3rem;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 1rem;
+}
+
+.flavour-background {
+    height: 100%;
+    opacity: 0.3;
+    transition: all 0.3s ease-in-out;
+    filter: blur(1.5px);
+
+}
+
+.flavour:hover .flavour-background {
+    opacity: 1;
+    transform: scale(1.01);
+    filter: blur(0px);
+}
+
+.flavour-icon {
+    position: absolute;
+    height: auto;
+    width: 60%;
+    filter: var(--text-filter-secondary);
+    transition: all 0.3s ease-in-out;
+}
+
+.flavour span {
+    position: absolute;
+    bottom: 1.5rem;
+    font-size: 1.2rem;
+    transition: all 0.3s ease-in-out;
+    color: var(--text-color-secondary);
+}
+
+.flavour:hover .flavour-icon, .flavour:hover span {
+    opacity: 0;
+}
+
+
+/*.item-flavour {
+    cursor: pointer;
+    width: 100%;
+    height: calc(100% - 3.7rem);
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 0.3rem;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 1rem;
+    margin-right: 1rem;
+
+
+}
+
+.item-flavour span {
+    position: absolute;
+    bottom: 1.5rem;
+    font-size: 1.2rem;
+    transition: all 0.3s ease-in-out;
+}
+
+.flavour-background {
+    height: 100%;
+    opacity: 0.25;
+    transition: all 0.3s ease-in-out;
+}
+
+.item-flavour:hover .flavour-background {
+    opacity: 1;
+    transform: scale(1.01);
+}
+
+
+.flavour-icon {
+    position: absolute;
+    height: auto;
+    width: 60%;
+    filter: var(--text-color-filter);
+    transition: all 0.3s ease-in-out;
+}
+
+.item-flavour:hover .flavour-icon, .item-flavour:hover span {
+    opacity: 0;
+}
+*/

@@ -1,0 +1,37 @@
+.side-bar {
+  width: 4rem;
+  height: 100%;
+  background-color: var(--side-bar-color);
+  left: 0rem;
+  top: 0rem;
+  position: fixed;
+  transition: all 0.3s ease;
+  z-index: 4000;
+  box-shadow: 0 0 0.4rem rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.side-bar-items {
+  margin: 0.5rem;
+  display: flex;
+  height: 3rem;
+  width: 3rem;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+}
+
+.side-bar-items img {
+  filter: var(--icons-filter);
+  height: 1.8rem;
+}
+
+.side-bar-items:hover img {
+  filter: var(--icons-filter-hover);
+}
+
+

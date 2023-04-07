@@ -1,0 +1,75 @@
+.account-selector {
+    position: fixed;
+    background-color: var(--secondary-color);
+    width: 10rem;
+    height: auto;
+    bottom: 0;
+    transition: all 0.1s ease;
+    margin-bottom: 0.8rem;
+    margin-left: 1.3rem;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 0.3rem;
+    z-index: 20000;
+
+}
+
+.account-selector::before {
+    content:"";
+    position: absolute;
+    height: 0px;
+    width: 0px;
+    bottom: 0.25rem;
+    left: -2rem;
+    border-width: 1rem;
+    border-color: transparent var(--secondary-color) transparent transparent;
+    border-style: solid;
+}
+
+
+.account-selector.open {
+    transition: all 0.1s ease;
+    opacity: 1;
+    pointer-events: all;
+
+
+}
+
+.account-items {
+    height: 2.5rem;
+    align-items: center;
+    display: flex;
+    cursor: pointer;
+}
+
+.account-items:hover {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 0.3rem;
+
+}
+
+.account-items img {
+    width: 1.5rem;
+    margin-left: 0.6rem;
+    margin-right: 0.6rem;
+}
+
+#add-account img {
+    filter: var(--text-color-filter);
+    transition: transform 0.2s ease;
+
+}
+
+.account-items span {
+    margin-left: 0 !important;
+    margin-top: 0.2rem;
+}
+
+#add-account:hover img {
+    filter: var(--accent-color-filter);
+}
+
+#active-account-label {
+    font-size: 0.6rem;
+    color: var(--accent-color);
+}
