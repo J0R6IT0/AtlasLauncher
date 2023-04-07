@@ -7,23 +7,12 @@
 }
 
 .new-instance-info {
-<<<<<<< HEAD
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    left: 1.5rem;
-    top: 0.5rem;
-    width: 100%;
-    color: var(--text-color-secondary);
-    font-size: 0.85rem;
-=======
   display: flex;
   flex-direction: column;
   position: relative;
   left: 1.5rem;
   top: 0.5rem;
   width: 100%;
->>>>>>> ce6df684f118c9d437b7b983bbdfe62d36fb9d7d
 }
 .new-instance-title {
   color: var(--text-color-primary);
@@ -32,14 +21,11 @@
   font-weight: bold;
 }
 
-<<<<<<< HEAD
-=======
 .new-instance-info {
   color: var(--text-color-secondary);
   font-size: 0.85rem;
 }
 
->>>>>>> ce6df684f118c9d437b7b983bbdfe62d36fb9d7d
 .flavour-container {
   position: absolute;
   bottom: 1.5rem;
@@ -126,52 +112,3 @@
 .flavour:hover span {
   opacity: 0;
 }
-
-/*.item-flavour {
-    cursor: pointer;
-    width: 100%;
-    height: calc(100% - 3.7rem);
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 0.3rem;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    top: 1rem;
-    margin-right: 1rem;
-
-
-}
-
-.item-flavour span {
-    position: absolute;
-    bottom: 1.5rem;
-    font-size: 1.2rem;
-    transition: all 0.3s ease-in-out;
-}
-
-.flavour-background {
-    height: 100%;
-    opacity: 0.25;
-    transition: all 0.3s ease-in-out;
-}
-
-.item-flavour:hover .flavour-background {
-    opacity: 1;
-    transform: scale(1.01);
-}
-
-
-.flavour-icon {
-    position: absolute;
-    height: auto;
-    width: 60%;
-    filter: var(--text-color-filter);
-    transition: all 0.3s ease-in-out;
-}
-
-.item-flavour:hover .flavour-icon, .item-flavour:hover span {
-    opacity: 0;
-}
-*/

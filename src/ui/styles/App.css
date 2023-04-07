@@ -35,8 +35,6 @@
   right: 0;
 }
 
-<<<<<<< HEAD
-=======
 .titlebar span {
   display: flex;
   position: fixed;
@@ -49,7 +47,6 @@
   margin-top: 0.1rem;
 }
 
->>>>>>> ce6df684f118c9d437b7b983bbdfe62d36fb9d7d
 .titlebar-button {
   cursor: pointer;
   display: inline-flex;
