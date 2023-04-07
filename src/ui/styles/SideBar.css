@@ -33,3 +33,23 @@
 .side-bar-items:hover img {
   filter: var(--icons-filter-hover);
 }
+
+.new-icon {
+  background-color: #4259c4;
+  box-shadow: 0 0 0.4rem rgba(0, 0, 0, 0.1);
+  border-radius: 100%;
+  transition: all 0.15s ease-in-out;
+}
+
+.new-icon img {
+  filter: var(--text-color-filter);
+}
+
+.new-icon:hover {
+  background-color: var(--accent-color);
+  box-shadow: 0 0 2rem 0rem rgba(0, 0, 0, 0.575);
+}
+
+.new-icon:hover img {
+  filter: var(--text-filter-primary);
+}
