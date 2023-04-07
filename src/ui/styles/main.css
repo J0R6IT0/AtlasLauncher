@@ -1,4 +1,4 @@
-@import url('fonts.css');
+@import url("fonts.css");
 
 :root {
   height: 100%;
@@ -7,7 +7,7 @@
   text-decoration: none;
   overflow: hidden;
   color: var(--text-color);
-  font-family: 'MetropolisRegular', sherif;
+  font-family: "MetropolisRegular", sherif;
   font-weight: lighter;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -16,28 +16,37 @@
   -ms-user-select: none;
   user-select: none;
 
-  --background: linear-gradient(180deg, rgba(32,39,53,1) 0%, rgba(28,33,45,1) 100%);;
+  --background: linear-gradient(
+    180deg,
+    rgba(32, 39, 53, 1) 0%,
+    rgba(28, 33, 45, 1) 100%
+  );
   --side-bar-color: #252b3b;
 
   --icons-color: #414c68;
-  --icons-filter: invert(27%) sepia(13%) saturate(1347%) hue-rotate(185deg) brightness(94%) contrast(87%);
-  --icons-color-hover: #f6356a;
-  --icons-filter-hover: invert(31%) sepia(46%) saturate(3815%) hue-rotate(325deg) brightness(99%) contrast(94%);
+  --icons-filter: invert(27%) sepia(13%) saturate(1347%) hue-rotate(185deg)
+    brightness(94%) contrast(87%);
+  --icons-color-hover: #5776ff;
+  --icons-filter-hover: invert(49%) sepia(80%) saturate(2775%)
+    hue-rotate(211deg) brightness(94%) contrast(115%);
 
   --text-color-primary: #fcffff;
-  --text-filter-primary: invert(94%) sepia(2%) saturate(1556%) hue-rotate(188deg) brightness(94%) contrast(82%);
+  --text-filter-primary: invert(94%) sepia(2%) saturate(1556%)
+    hue-rotate(188deg) brightness(94%) contrast(82%);
   --text-color-secondary: #6b6f80;
-  --text-filter-secondary: invert(45%) sepia(7%) saturate(878%) hue-rotate(191deg) brightness(94%) contrast(88%);
+  --text-filter-secondary: invert(45%) sepia(7%) saturate(878%)
+    hue-rotate(191deg) brightness(94%) contrast(88%);
 
   --primary-color: #13183f;
   --secondary-color: transparent;
   --text-color: #cad0dc;
-  --text-color-filter: invert(94%) sepia(2%) saturate(1556%) hue-rotate(188deg) brightness(94%) contrast(82%);
-  --accent-color: #e44b7f;
-  --accent-color-filter: invert(44%) sepia(20%) saturate(6340%) hue-rotate(313deg) brightness(95%) contrast(87%);
+  --text-color-filter: invert(94%) sepia(2%) saturate(1556%) hue-rotate(188deg)
+    brightness(94%) contrast(82%);
+  --accent-color: #5776ff;
+  --accent-color-filter: invert(49%) sepia(80%) saturate(2775%)
+    hue-rotate(211deg) brightness(94%) contrast(115%);
   --scroll-bar-color: #464646;
 }
-
 
 /*
   dark theme?
@@ -79,17 +88,14 @@
   width: 8px;
 }
 
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 
 ::-webkit-scrollbar-thumb {
   background: var(--scroll-bar-color);
   border-radius: 0.5rem;
 }
-
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-color);
