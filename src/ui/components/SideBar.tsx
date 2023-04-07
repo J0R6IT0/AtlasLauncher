@@ -6,16 +6,20 @@ import PackageIcon from '../../assets/icons/package.svg';
 
 import '../styles/SideBar.css';
 
-function SideBar(): JSX.Element {
+interface SideBarProps {
+    setActivePage: (page: number) => void
+}
+
+function SideBar({ setActivePage }: SideBarProps): JSX.Element {
     return (
         <div id='side-bar' className='side-bar'>
             <div className='side-bar-items'>
                 <img src={HomeIcon}/>
             </div>
-            <div className='side-bar-items'>
+            <div className='side-bar-items' onClick={() => { setActivePage(2); }}>
                 <img src={GridIcon}/>
             </div>
-            <div className='side-bar-items'>
+            <div className='side-bar-items' onClick={() => { setActivePage(1); }}>
                 <img src={PlusIcon}/>
             </div>
             <div className='side-bar-items'>

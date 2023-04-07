@@ -17,7 +17,7 @@ function NewInstance(): JSX.Element {
         <div className='new-instance'>
             <div className='new-instance-info'>
                 <span className='new-instance-title'>New Instance</span>
-                <span className='new-instance-text'>Add a new instance to your library</span>
+                <span>Add a new instance to your library</span>
             </div>
             <div className='flavour-container'>
                 <div className='flavour'>

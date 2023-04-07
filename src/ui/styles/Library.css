@@ -1,7 +1,26 @@
 .library {
-    height: calc(100% - 1.7rem);
-    width: calc(100% - 1rem);
+    position: relative;
+    height: 100%;
+    width: 100%;
     display: flex;
+
+}
+
+.library-info {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    left: 1.5rem;
+    top: 0.5rem;
+    width: 100%;
+    color: var(--text-color-secondary);
+    font-size: 0.85rem;
+}
+.library-title {
+    color: var(--text-color-primary);
+    font-size: 1.2rem;
+    margin-bottom: 0.6rem;
+    font-weight: bold;
 
 }
 

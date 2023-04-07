@@ -12,11 +12,7 @@ import { Toaster } from 'react-hot-toast';
 import BackgroundImage from './assets/images/minecraft-background.jpg';
 
 function App(): JSX.Element {
-    const [activePage, setActiveButton] = useState(1);
-
-    /*
-
-    */
+    const [activePage, setActivePage] = useState(1);
 
     return (
         <div className='container'>
@@ -39,7 +35,7 @@ function App(): JSX.Element {
                     <img src={XIcon} alt="close" />
                 </div>
             </div>
-            <SideBar />
+            <SideBar setActivePage={setActivePage}/>
             <AccountSelector />
             <div className='content'>
                 {activePage === 1 && <NewInstance />}

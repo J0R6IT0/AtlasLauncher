@@ -36,18 +36,6 @@
     right: 0;
 }
 
-.titlebar span {
-    display: flex;
-    position: fixed;
-    align-items: center;
-    justify-content: center;
-    width: 5rem;
-    height: 1.7rem;
-    font-size: 1.1rem;
-    left: calc(50% - 2.5rem);
-    margin-top: 0.1rem;
-}
-
 .titlebar-button {
     cursor: pointer;
     display: inline-flex;
