@@ -1,8 +1,10 @@
 import { invoke } from '@tauri-apps/api/tauri';
 import React, { useEffect, useState } from 'react';
 import UserPlus from '../../assets/icons/user-plus.svg';
-import { once } from '@tauri-apps/api/event';
+import TrashIcon from '../../assets/icons/trash.svg';
+import { listen } from '@tauri-apps/api/event';
 import toast from 'react-hot-toast';
+import UserIcon from '../../assets/icons/user.svg';
 
 import '../styles/AccountSelector.css';
 
@@ -20,10 +22,15 @@ interface LoginEventPayload {
     message: string
 }
 
+interface AccountSelectorProps {
+    visible: boolean
+    setVisible: (visible: boolean) => void
+}
+
 const accountsFirstRun: AccountInfo[] = await invoke('get_accounts').catch(e => {}) as AccountInfo[];
 const activeAccountFirstRun = await invoke('get_active_account').catch(e => {}) as string;
 
-function AccountSelector(): JSX.Element {
+function AccountSelector(props: AccountSelectorProps): JSX.Element {
     const [accounts, setAccounts] = useState(accountsFirstRun);
     const [activeAccount, setActiveAccount] = useState(activeAccountFirstRun);
 
@@ -37,20 +44,17 @@ function AccountSelector(): JSX.Element {
     useEffect(() => {
         const element = document.getElementById('account-selector');
         const button = document.getElementById('accounts-button');
-        const menuToggle = document.getElementById('menu-toggle');
 
-        once('auth', (event: LoginEvent) => {
-            getAccounts().catch(e => {});
-            console.log('e');
-
+        listen('auth', (event: LoginEvent) => {
             if (event.payload.status === 'Success') {
+                getAccounts().catch(e => {});
                 toast.success(event.payload.message, {
                     id: 'currentLoginNotification',
                     duration: 6000,
                     position: 'bottom-center',
                     iconTheme: {
-                        primary: '#212128',
-                        secondary: '#e44b7f'
+                        primary: 'var(--icons-color)',
+                        secondary: 'var(--icons-color-hover)'
                     }
                 });
             } else if (event.payload.status === 'Error') {
@@ -59,15 +63,19 @@ function AccountSelector(): JSX.Element {
                     duration: 10000,
                     position: 'bottom-center',
                     iconTheme: {
-                        primary: '#212128',
-                        secondary: '#e44b7f'
+                        primary: 'var(--icons-color)',
+                        secondary: 'var(--icons-color-hover)'
                     }
                 });
             } else if (event.payload.status === 'Loading') {
                 toast.loading(event.payload.message, {
                     id: 'currentLoginNotification',
                     position: 'bottom-center',
-                    className: 'toast-notification'
+                    className: 'toast-notification',
+                    iconTheme: {
+                        primary: 'var(--icons-color-hover)',
+                        secondary: 'var(--icons-color)'
+                    }
                 });
             } else {
                 toast.dismiss('currentLoginNotification');
@@ -75,10 +83,9 @@ function AccountSelector(): JSX.Element {
         }).catch(e => {});
 
         function clickHandler(event: Event): void {
-            if (element !== null && button !== null && menuToggle !== null) {
-                if (!element.contains(event.target as Node) && !button.contains(event.target as Node) && !menuToggle.contains(event.target as Node) && element.classList.contains('open')) {
-                    element.classList.remove('open');
-                    button?.classList.remove('open');
+            if (element !== null && button !== null) {
+                if (!element.contains(event.target as Node) && !button.contains(event.target as Node) && element.classList.contains('visible')) {
+                    props.setVisible(false);
                 }
             }
         }
@@ -102,12 +109,30 @@ function AccountSelector(): JSX.Element {
     });
 
     return (
-        <div className='account-selector' id='account-selector'>
-            {accounts.map((element, index) => <div key={index} onClick={() => {
-                invoke('set_active_account', { uuid: element.uuid }).catch(e => {});
-                setActiveAccount(element.uuid);
-            }} className='account-items'><img src={`https://crafatar.com/avatars/${element.uuid}?overlay`} alt="" /><span>{element.username}<span id='active-account-label'>{activeAccount === element.uuid ? '\nActive' : ''}</span></span></div>)}
-
+        <div className={`account-selector ${props.visible ? 'visible' : ''}`} id='account-selector'>
+            {accounts.map((element, index) => <div key={index} className={`account-items ${activeAccount === element.uuid ? 'active' : ''}`}>
+                <div
+                    onClick={() => {
+                        invoke('set_active_account', { uuid: element.uuid }).catch(e => {});
+                        setActiveAccount(element.uuid);
+                    }}>
+                    <img src={`https://crafatar.com/avatars/${element.uuid}?overlay`} alt="" />
+                    <span>{element.username}
+                        <span id='active-account-label'>{activeAccount === element.uuid ? '\nActive' : ''}</span>
+                    </span>
+                </div>
+                <img onClick={() => {
+                    invoke('remove_account', { uuid: element.uuid }).catch(e => {});
+                    if (activeAccount === element.uuid) {
+                        setActiveAccount('');
+                        const accountsIcon = document.querySelector('#accounts-button img');
+                        accountsIcon?.setAttribute('src', UserIcon);
+                        const button = document.getElementById('accounts-button');
+                        button?.classList.remove('active-user');
+                    }
+                    setAccounts(accounts.filter(account => account.uuid !== element.uuid));
+                }} className='remove-account' src={TrashIcon} alt="" />
+            </div>)}
             <div className='account-items' id='add-account' onClick={() => {
                 invoke('start_oauth').catch(e => {});
                 toast.loading('Logging In.', {
@@ -116,13 +141,15 @@ function AccountSelector(): JSX.Element {
                     className: 'toast-notification',
                     duration: 60000,
                     iconTheme: {
-                        primary: '#e44b7f',
-                        secondary: '#212128'
+                        primary: 'var(--icons-color-hover)',
+                        secondary: 'var(--icons-color)'
                     }
                 });
             }}>
-                <img src={UserPlus} alt="" />
-                <span>Add Account</span>
+                <div>
+                    <img src={UserPlus} alt="" />
+                    <span>Add Account</span>
+                </div>
             </div>
         </div>
     );

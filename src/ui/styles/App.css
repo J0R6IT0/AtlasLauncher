@@ -34,6 +34,63 @@
   z-index: 4000;
 }
 
+.secondary-buttons {
+  position: fixed;
+  top: 2rem;
+  right: 1.5rem;
+  width: 5rem;
+  height: auto;
+  z-index: 7000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.secondary-buttons img {
+  height: 1.5rem;
+  filter: var(--text-filter-primary);
+  transition: all 0.1s ease;
+
+
+}
+
+.secondary-buttons div {
+  width: auto;
+  height: auto;
+  margin-left: 0.5rem;
+  cursor: pointer;
+
+}
+
+.active-user {
+  border-radius: 10%;
+  overflow: hidden;
+}
+
+.active-user img {
+  filter: none;
+  transition: all 0.1s ease;
+}
+
+
+.titlebar-button img {
+  filter: var(--icons-filter);
+  height: 1rem;
+}
+
+.titlebar-button:hover img {
+  filter: var(--icons-filter-hover);
+}
+
+
+.secondary-buttons div:hover img {
+  filter: var(--icons-filter-hover);
+
+}
+
+.secondary-buttons .active-user:hover img {
+  filter: none;
+}
+
 .titlebar {
   height: 1.7rem;
   display: flex;
@@ -54,11 +111,3 @@
   height: 1.7rem;
 }
 
-.titlebar-button img {
-  filter: var(--icons-filter);
-  height: 1rem;
-}
-
-.titlebar-button:hover img {
-  filter: var(--icons-filter-hover);
-}

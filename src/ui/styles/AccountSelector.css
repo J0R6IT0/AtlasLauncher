@@ -1,75 +1,94 @@
+
 .account-selector {
     position: fixed;
-    background-color: var(--secondary-color);
-    width: 10rem;
+    background: var(--background-transparent);
+    backdrop-filter: blur(10px);
+    width: 12rem;
     height: auto;
-    bottom: 0;
-    transition: all 0.1s ease;
-    margin-bottom: 0.8rem;
-    margin-left: 1.3rem;
-    opacity: 0;
-    pointer-events: none;
-    border-radius: 0.3rem;
+    top: 4rem;
+    right: 0.5rem;
+    border-radius: 0.5rem;
     z-index: 20000;
+    box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
+    overflow: hidden;
+    pointer-events: none;
+    max-height: 0;
+    transition: all 0.2s ease-in-out;
+
 
 }
 
-.account-selector::before {
-    content:"";
-    position: absolute;
-    height: 0px;
-    width: 0px;
-    bottom: 0.25rem;
-    left: -2rem;
-    border-width: 1rem;
-    border-color: transparent var(--secondary-color) transparent transparent;
-    border-style: solid;
-}
-
-
-.account-selector.open {
-    transition: all 0.1s ease;
-    opacity: 1;
+.account-selector.visible {
     pointer-events: all;
-
-
+    max-height: 10rem;
 }
+
 
 .account-items {
+    display: flex;
+}
+
+.account-items div {
     height: 2.5rem;
     align-items: center;
     display: flex;
     cursor: pointer;
-}
-
-.account-items:hover {
-    background-color: rgba(0, 0, 0, 0.15);
+    width: 10rem;
     border-radius: 0.3rem;
+    margin-right: 0.3rem;
+}
+
+.account-items div:hover {
+    background-color: rgb(0 0 0 / 30%);
+}
+
+.remove-account {
+    width: 1.2rem;
+    transition: all 0.2s ease;
+    filter: var(--icons-filter);
+}
+
+.remove-account:hover {
+    filter: var(--icons-filter-hover);
 
 }
 
-.account-items img {
+
+.account-items div img {
     width: 1.5rem;
     margin-left: 0.6rem;
     margin-right: 0.6rem;
 }
 
-#add-account img {
-    filter: var(--text-color-filter);
-    transition: transform 0.2s ease;
-
-}
-
 .account-items span {
-    margin-left: 0 !important;
-    margin-top: 0.2rem;
+   color: var(--text-color-secondary)
 }
 
-#add-account:hover img {
-    filter: var(--accent-color-filter);
+.account-items.active span {
+    color: var(--text-color-primary)
+
 }
 
 #active-account-label {
     font-size: 0.6rem;
-    color: var(--accent-color);
+    color: var(--icons-color-hover);
+}
+
+#add-account {
+    display: block;
+}
+
+#add-account div {
+    width: 100%;
+}
+
+#add-account div img {
+    position: relative;
+    filter: var(--icons-filter);
+    transition: all 0.2s ease;
+
+}
+
+#add-account:hover img {
+    filter: var(--icons-filter-hover);
 }

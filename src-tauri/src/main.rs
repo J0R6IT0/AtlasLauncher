@@ -41,6 +41,11 @@ fn set_active_account(uuid: &str) {
     auth::login::set_active_account(uuid);
 }
 
+#[tauri::command]
+fn remove_account(uuid: &str) {
+    auth::login::remove_account(uuid);
+}
+
 #[tokio::main]
 async fn main() {
     // Checks and creates missing folders
@@ -61,7 +66,8 @@ async fn main() {
             start_oauth,
             get_accounts,
             get_active_account,
-            set_active_account
+            set_active_account,
+            remove_account
         ])
         .setup(|app| {
             let handle: AppHandle = app.handle();

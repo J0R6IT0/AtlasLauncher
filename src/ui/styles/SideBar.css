@@ -41,8 +41,9 @@
 
 .side-bar-items img {
   filter: var(--icons-filter);
-  transition: all 0.15s ease-in-out;
+  transition: all 0.2s ease;
   height: 1.8rem;
+
 }
 
 .side-bar-items:hover img {

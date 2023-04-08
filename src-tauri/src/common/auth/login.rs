@@ -26,6 +26,12 @@ pub struct AccountInfo {
 }
 
 pub fn create_login_window(handle: tauri::AppHandle) {
+    match handle.get_window("auth") {
+        Some(window) => window.close(),
+        None => Ok(()),
+    }
+    .unwrap();
+
     let url: String = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize".to_owned()
         // This is the official launcher ID
         + "?client_id=00000000402b5328"
@@ -135,4 +141,30 @@ pub fn set_active_account(uuid: &str) {
     );
 
     utils::json_to_file::save(&active_account, "auth/active_account.json");
+}
+
+pub fn remove_account(uuid: &str) {
+    let path: PathBuf = env::current_exe()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join(format!("launcher/auth/{}.json", uuid));
+
+    if !path.exists() {
+        return;
+    }
+
+    fs::remove_file(path).unwrap();
+
+    let active_account: String = get_active_account();
+
+    if String::from(uuid) == active_account {
+        let path: PathBuf = env::current_exe()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .join("launcher/auth/active_account.json");
+
+        fs::remove_file(path).unwrap();
+    }
 }

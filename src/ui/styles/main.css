@@ -17,6 +17,11 @@
     rgb(32 39 53) 0%,
     rgb(28 33 45) 100%
   );
+  --background-transparent: radial-gradient(
+    circle,
+    rgb(32 39 53 / 70%) 20%,
+    rgb(28 33 45 / 70%) 100%
+  );
   --side-bar-color: #252b3b;
   --icons-color: #414c68;
   --icons-filter: invert(27%) sepia(13%) saturate(1347%) hue-rotate(185deg)
@@ -86,9 +91,10 @@
 }
 
 .toast-notification {
-  background-color: var(--secondary-color) !important;
+  background: var(--background-transparent) !important;
+  backdrop-filter: blur(10px) !important;
   box-shadow: 0 0 0.4rem rgb(0 0 0 30%) !important;
-  color: var(--text-color) !important;
+  color: var(--text-color-secondary) !important;
   border-radius: 0.3rem !important;
 }
 
