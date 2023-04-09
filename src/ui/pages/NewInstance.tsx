@@ -7,10 +7,16 @@ import BoxIcon from '../../assets/icons/box.svg';
 import ForgeIcon from '../../assets/icons/forge.svg';
 import FabricIcon from '../../assets/icons/fabric.svg';
 
+enum Flavours {
+    Vanilla,
+    Forge,
+    Fabric
+}
+
 const flavours = [
-    { id: 0, name: 'Vanilla', background: MinecraftCover, icon: BoxIcon },
-    { id: 1, name: 'Forge', background: MinecraftForge, icon: ForgeIcon },
-    { id: 2, name: 'Fabric', background: 'https://zonacraft.net/wp-content/uploads/2022/07/Eden-Ring-Mod.png', icon: FabricIcon }
+    { id: Flavours.Vanilla, name: 'Vanilla', background: MinecraftCover, icon: BoxIcon },
+    { id: Flavours.Forge, name: 'Forge', background: MinecraftForge, icon: ForgeIcon },
+    { id: Flavours.Fabric, name: 'Fabric', background: 'https://zonacraft.net/wp-content/uploads/2022/07/Eden-Ring-Mod.png', icon: FabricIcon }
 ];
 
 function NewInstance(): JSX.Element {
@@ -36,6 +42,9 @@ function NewInstance(): JSX.Element {
                         <div className='flavour-data'>
                             <img className={`${element.name === 'Fabric' ? 'fabric-icon' : ''}`} src={element.icon} alt="" />
                             <span>{element.name}</span>
+                        </div>
+                        <div className='flavour-content'>
+                            <CreateInstance flavour={selectedFlavour}/>
                         </div>
                     </div>
                 </div>)}

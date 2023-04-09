@@ -35,6 +35,8 @@
   --text-color-secondary: #6b6f80;
   --text-filter-secondary: invert(45%) sepia(7%) saturate(878%)
     hue-rotate(191deg) brightness(94%) contrast(88%);
+  --scroll-bar-color: #6b6f80;
+
 }
 
 /*
@@ -87,7 +89,7 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-color);
+  background: var(--icons-color-hover);
 }
 
 .toast-notification {

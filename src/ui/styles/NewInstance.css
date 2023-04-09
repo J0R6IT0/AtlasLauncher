@@ -49,7 +49,7 @@
 }
 
 .flavour.selected {
-  width: 200%;
+  width: 230%;
 }
 
 .flavour-background {
@@ -75,7 +75,8 @@
   font-size: 1.7rem;
 }
 
-.flavour:hover .flavour-icon {
+.flavour:hover .flavour-icon,
+.flavour.selected .flavour-icon {
   opacity: 0;
 }
 
@@ -131,3 +132,9 @@
   margin-top: 2rem;
 }
 
+.flavour-content {
+  position: absolute;
+  width: 100%;
+  height: calc(100% - 5rem);
+  bottom: 0;
+}
