@@ -7,7 +7,14 @@ import BoxIcon from '../../assets/icons/box.svg';
 import ForgeIcon from '../../assets/icons/forge.svg';
 import FabricIcon from '../../assets/icons/fabric.svg';
 
+const flavours = [
+    { id: 0, name: 'Vanilla', background: MinecraftCover, icon: BoxIcon },
+    { id: 1, name: 'Forge', background: MinecraftForge, icon: ForgeIcon },
+    { id: 2, name: 'Fabric', background: 'https://zonacraft.net/wp-content/uploads/2022/07/Eden-Ring-Mod.png', icon: FabricIcon }
+];
+
 function NewInstance(): JSX.Element {
+    const [selectedFlavour, setSelectedFlavour] = useState<number | null>(null);
     const [createInstance, setCreateInstance] = useState('');
     function showCreateInstance(flavour: string): void {
         setCreateInstance(flavour);
@@ -20,30 +27,18 @@ function NewInstance(): JSX.Element {
                 <span>Add a new instance to your library</span>
             </div>
             <div className='flavour-container'>
-                <div className='flavour'>
-                    <img className='flavour-background' src={MinecraftCover} alt="" />
-                    <span className='flavour-icon' ><img src={BoxIcon} alt="" />Vanilla</span>
+                { flavours.map((element, index) => <div key={index} className={`flavour ${selectedFlavour === element.id ? 'selected' : ''}`} onClick={() => {
+                    setSelectedFlavour(element.id);
+                }}>
+                    <img className='flavour-background' src={element.background} alt="" />
+                    <span className='flavour-icon' ><img src={element.icon} className={`${element.name === 'Fabric' ? 'fabric-icon' : ''}`} alt="" />{element.name}</span>
                     <div className='flavour-wrapper'>
-                        <img src={BoxIcon} alt="" />
-                        <span>Vanilla</span>
+                        <div className='flavour-data'>
+                            <img className={`${element.name === 'Fabric' ? 'fabric-icon' : ''}`} src={element.icon} alt="" />
+                            <span>{element.name}</span>
+                        </div>
                     </div>
-                </div>
-                <div className='flavour'>
-                    <img className='flavour-background' src={MinecraftForge} alt="" />
-                    <span className='flavour-icon' ><img src={ForgeIcon} alt="" />Forge</span>
-                    <div className='flavour-wrapper'>
-                        <img src={ForgeIcon} alt="" />
-                        <span>Forge</span>
-                    </div>
-                </div>
-                <div className='flavour'>
-                    <img className='flavour-background' src="https://zonacraft.net/wp-content/uploads/2022/07/Eden-Ring-Mod.png" alt="" />
-                    <span className='flavour-icon' ><img className='fabric-icon' src={FabricIcon} alt="" />Fabric</span>
-                    <div className='flavour-wrapper'>
-                        <img className='fabric-icon' src={FabricIcon} alt="" />
-                        <span>Fabric</span>
-                    </div>
-                </div>
+                </div>)}
             </div>
         </div>
     );

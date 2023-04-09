@@ -48,6 +48,10 @@
   transition: all 0.3s ease-in-out;
 }
 
+.flavour.selected {
+  width: 200%;
+}
+
 .flavour-background {
   position: absolute;
   height: 100%;
@@ -56,7 +60,8 @@
   filter: blur(2px);
 }
 
-.flavour:hover .flavour-background {
+.flavour:hover .flavour-background,
+.flavour.selected .flavour-background {
   opacity: 1;
   transform: scale(1.01);
   filter: blur(0);
@@ -89,7 +94,15 @@
 
 }
 
-.flavour-wrapper span {
+.flavour-data {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease-in-out;
+
+}
+
+.flavour-data span {
   font-size: 1.2rem;
   transition: all 0.3s ease-in-out;
   color: var(--text-color-secondary);
@@ -97,13 +110,24 @@
   margin-left: 0.3rem;
 }
 
-.flavour-wrapper img {
+.flavour-data img {
   height: 1.5rem;
   filter: var(--text-filter-secondary);
   margin-bottom: 0.2rem;
 
 }
 
-.flavour:hover .flavour-wrapper {
+.flavour:hover .flavour-wrapper,
+.flavour.selected .flavour-wrapper {
   bottom: 0;
 }
+
+.flavour.selected .flavour-wrapper {
+  height: 100%;
+  align-items: flex-start;
+}
+
+.flavour.selected .flavour-data {
+  margin-top: 2rem;
+}
+
