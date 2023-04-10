@@ -105,10 +105,10 @@ pub async fn get_account_info(
                 }}
             "#
         );
-        json_to_file::save(&account_info, &format!("auth/{uuid}.json"));
+        json_to_file::save(&account_info, &format!("launcher/auth/{uuid}.json"));
 
         if !from_refresh {
-            json_to_file::save(&active_account, "auth/active_account.json");
+            json_to_file::save(&active_account, "launcher/auth/active_account.json");
             app.emit_all(
                 "auth",
                 LoginEventPayload {

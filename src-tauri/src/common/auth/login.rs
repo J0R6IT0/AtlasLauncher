@@ -140,7 +140,7 @@ pub fn set_active_account(uuid: &str) {
         "#
     );
 
-    utils::json_to_file::save(&active_account, "auth/active_account.json");
+    utils::json_to_file::save(&active_account, "launcher/auth/active_account.json");
 }
 
 pub fn remove_account(uuid: &str) {
