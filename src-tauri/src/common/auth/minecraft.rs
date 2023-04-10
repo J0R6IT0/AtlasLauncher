@@ -5,7 +5,13 @@ use tauri::Manager;
 use crate::auth::login::LoginEventPayload;
 use crate::utils::json_to_file;
 
-pub async fn login(token: &str, hash: &str, app: &tauri::AppHandle, refresh_token: &str, from_refresh: bool) {
+pub async fn login(
+    token: &str,
+    hash: &str,
+    app: &tauri::AppHandle,
+    refresh_token: &str,
+    from_refresh: bool,
+) {
     // We are using the same function for Xbox login (site 0) and minecraft XSTS token (site 1)
     let auth_request: String = format!(
         r#"
@@ -46,7 +52,12 @@ pub async fn login(token: &str, hash: &str, app: &tauri::AppHandle, refresh_toke
     get_account_info(token, app, refresh_token, from_refresh).await;
 }
 
-pub async fn get_account_info(token: &str, app: &tauri::AppHandle, refresh_token: &str, from_refresh: bool) {
+pub async fn get_account_info(
+    token: &str,
+    app: &tauri::AppHandle,
+    refresh_token: &str,
+    from_refresh: bool,
+) {
     let client: Client = Client::new();
 
     let response: Value = client

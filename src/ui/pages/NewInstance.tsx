@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../styles/NewInstance.css';
 import MinecraftForge from '../../assets/images/minecraft-forge.jpg';
+import MinecraftFabric from '../../assets/images/minecraft-fabric.webp';
 import MinecraftCover from '../../assets/images/minecraft-cover.png';
 import CreateInstance from '../components/CreateInstance';
 import BoxIcon from '../../assets/icons/box.svg';
@@ -16,7 +17,7 @@ enum Flavours {
 const flavours = [
     { id: Flavours.Vanilla, name: 'Vanilla', background: MinecraftCover, icon: BoxIcon },
     { id: Flavours.Forge, name: 'Forge', background: MinecraftForge, icon: ForgeIcon },
-    { id: Flavours.Fabric, name: 'Fabric', background: 'https://zonacraft.net/wp-content/uploads/2022/07/Eden-Ring-Mod.png', icon: FabricIcon }
+    { id: Flavours.Fabric, name: 'Fabric', background: MinecraftFabric, icon: FabricIcon }
 ];
 
 function NewInstance(): JSX.Element {

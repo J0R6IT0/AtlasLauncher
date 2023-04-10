@@ -46,6 +46,12 @@ fn remove_account(uuid: &str) {
     auth::login::remove_account(uuid);
 }
 
+#[tauri::command]
+async fn create_instance(version_type: &str, version: &str, name: &str) -> Result<(), ()> {
+    minecraft::instance::create_instance(version_type, version, name).await;
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() {
     // Checks and creates missing folders
@@ -67,7 +73,8 @@ async fn main() {
             get_accounts,
             get_active_account,
             set_active_account,
-            remove_account
+            remove_account,
+            create_instance,
         ])
         .setup(|app| {
             let handle: AppHandle = app.handle();

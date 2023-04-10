@@ -22,6 +22,8 @@ base64 = "0.21.0"
 ring = "0.16.20"
 rand = "0.8.5"
 async-recursion = "1.0.4"
+sha2 = "0.10.6"
+zip = "0.6.4"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
