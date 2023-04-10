@@ -151,7 +151,8 @@
     margin-top: -2.1rem;
 }
 
-.version-tabs div:hover {
+.version-tabs div:hover,
+.version-tabs div.selected {
     background-color: rgb(0 0 0 / 30%);
 }
 

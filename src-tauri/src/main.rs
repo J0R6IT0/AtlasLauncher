@@ -9,6 +9,7 @@ mod common;
 use common::auth;
 use common::minecraft;
 use common::utils;
+use common::java;
 
 
 #[tauri::command]
@@ -47,8 +48,8 @@ fn remove_account(uuid: &str) {
 }
 
 #[tauri::command]
-async fn create_instance(version_type: &str, version: &str, name: &str) -> Result<(), ()> {
-    minecraft::instance::create_instance(version_type, version, name).await;
+async fn create_instance(version_type: &str, version: &str, name: &str, handle: tauri::AppHandle) -> Result<(), ()> {
+    minecraft::instance::create_instance(version_type, version, name, &handle).await;
     Ok(())
 }
 

@@ -1,29 +1,78 @@
-use std::fmt::format;
+use serde::Serialize;
 use std::process::Command;
-use std::{env, fs, path};
+use std::env;
 
+use crate::java::downloader as javaDownloader;
 use crate::minecraft::downloader;
+use crate::utils::check_directory::check_directory;
 
-pub async fn create_instance(version_type: &str, version: &str, name: &str) {
+use tauri::Manager;
+
+#[derive(Clone, Serialize)]
+pub struct CreateInstanceEventPayload {
+    pub name: String,
+    pub message: String,
+    pub status: String,
+}
+
+pub async fn create_instance(
+    version_type: &str,
+    version: &str,
+    name: &str,
+    app: &tauri::AppHandle,
+) {
+
+    check_directory(format!("instances/{name}").as_str()).await;
+
+    app.emit_all(
+        "create_instance",
+        CreateInstanceEventPayload {
+            name: String::from(name),
+            message: format!("Downloading Java"),
+            status: String::from("Loading"),
+        },
+    )
+    .unwrap();
+
+    javaDownloader::download("17").await.unwrap();
+
+    app.emit_all(
+        "create_instance",
+        CreateInstanceEventPayload {
+            name: String::from(name),
+            message: format!("Downloading game files"),
+            status: String::from("Loading"),
+        },
+    )
+    .unwrap();
+
     downloader::download(version_type, version).await.unwrap();
 
-    let exe_path: path::PathBuf = env::current_exe().unwrap();
+    app.emit_all(
+        "create_instance",
+        CreateInstanceEventPayload {
+            name: String::from(name),
+            message: format!("Instance created successfully"),
+            status: String::from("Success"),
+        },
+    )
+    .unwrap();
 
-    let file_path: path::PathBuf = exe_path
-        .parent()
-        .unwrap()
-        .join(String::from("instances/") + name);
-
-    fs::create_dir_all(exe_path.parent().unwrap().join(file_path)).unwrap();
 }
 
 pub async fn launch_instance(name: &str) {
-    let exe_path = env::current_exe().unwrap().parent().unwrap().to_str().unwrap().to_owned();
+    let exe_path = env::current_exe()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_owned();
     let library_path = format!("{exe_path}/libraries");
     let natives_path = format!("{exe_path}/natives");
     let assets_path = format!("{exe_path}/assets");
     let instance_path = format!("{exe_path}/instances/{name}");
-    let java_path  = format!("{exe_path}/java/17.0.1+12/bin/java.exe");
+    let java_path = format!("{exe_path}/java/17.0.1+12/bin/java.exe");
 
     let class_path = format!("{exe_path}/versions/1.19.4/1.19.4.jar");
 

@@ -22,7 +22,6 @@ const flavours = [
 
 function NewInstance(): JSX.Element {
     const [selectedFlavour, setSelectedFlavour] = useState<number | null>(null);
-
     return (
         <div className='new-instance'>
             <div className='new-instance-info'>
@@ -41,7 +40,7 @@ function NewInstance(): JSX.Element {
                             <span>{element.name}</span>
                         </div>
                         <div className='flavour-content'>
-                            <CreateInstance flavour={selectedFlavour}/>
+                            <CreateInstance flavour={selectedFlavour} setFlavour={setSelectedFlavour}/>
                         </div>
                     </div>
                 </div>)}
