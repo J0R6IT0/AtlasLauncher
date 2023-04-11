@@ -86,43 +86,53 @@ async fn get_version_url(
 }
 
 async fn download_assets(url: &str, id: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let response = reqwest::get(url).await?.text().await?;
+    let mut json: Option<Value> = None;
 
-    json_to_file::save(
-        response.as_str(),
-        format!("assets/indexes/{id}.json").as_str(),
-    );
+    match file_to_json::read(format!("assets/indexes/{id}.json").as_str()) {
+        Ok(file_json) => json = Some(file_json),
+        Err(_) => {}
+    };
 
-    let json: Value = serde_json::from_str(response.as_str()).unwrap();
+    if json.is_none() {
+        let response = reqwest::get(url).await?.text().await?;
 
-    let objects = json.get("objects").unwrap().as_object().unwrap().to_owned();
+        json_to_file::save(
+            response.as_str(),
+            format!("assets/indexes/{id}.json").as_str(),
+        );
 
-    let mut download_tasks = vec![];
-
-    for (_, object) in objects {
-        let download_task = tauri::async_runtime::spawn(async move {
-            let object_hash: &str = object.get("hash").unwrap().as_str().unwrap();
-            let object_url: String = format!(
-                "https://resources.download.minecraft.net/{}/{}",
-                &object_hash[0..2],
-                &object_hash
-            );
-            download_file(
-                &object_url,
-                object_hash,
-                1,
-                format!("assets/objects/{}/{}", &object_hash[0..2], &object_hash).as_str(),
-            )
-            .await
-            .unwrap();
-        });
-        download_tasks.push(download_task);
+        json = Some(serde_json::from_str(response.as_str()).unwrap());
     }
 
-    for download_task in download_tasks {
-        download_task.await?;
-    }
+    if let Some(json) = json {
+        let objects = json.get("objects").unwrap().as_object().unwrap().to_owned();
 
+        let mut download_tasks = vec![];
+
+        for (_, object) in objects {
+            let download_task = tauri::async_runtime::spawn(async move {
+                let object_hash: &str = object.get("hash").unwrap().as_str().unwrap();
+                let object_url: String = format!(
+                    "https://resources.download.minecraft.net/{}/{}",
+                    &object_hash[0..2],
+                    &object_hash
+                );
+                download_file(
+                    &object_url,
+                    object_hash,
+                    1,
+                    format!("assets/objects/{}/{}", &object_hash[0..2], &object_hash).as_str(),
+                )
+                .await
+                .unwrap();
+            });
+            download_tasks.push(download_task);
+        }
+
+        for download_task in download_tasks {
+            download_task.await?;
+        }
+    }
     Ok(())
 }
 
@@ -133,7 +143,7 @@ async fn download_libraries(
 
     for download in libraries.clone() {
         let download_task = tauri::async_runtime::spawn(async move {
-            if let Some(_artifact) = download.get("artifact") {
+            if let Some(_artifact) = download["downloads"].get("artifact") {
                 let mut must_download: bool = true;
                 if let Some(rules) = download.get("rules") {
                     for rule in rules.as_array().unwrap().iter() {

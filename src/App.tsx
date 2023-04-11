@@ -25,7 +25,7 @@ function App(): JSX.Element {
         <div className='container'>
             <div className='background'>
                 <div className='background-color'></div>
-                <img className='background-image' src={BackgroundImage} alt="" />
+                <img className='background-image' src={BackgroundImage} />
             </div>
             <div data-tauri-drag-region className="titlebar">
                 <div className="titlebar-button" id="titlebar-minimize" onClick={() => { appWindow.minimize().catch(e => {}); }}>
@@ -42,7 +42,7 @@ function App(): JSX.Element {
                     />
                 </div>
                 <div className="titlebar-button" id="titlebar-close" onClick={() => { appWindow.close().catch(e => {}); }}>
-                    <img src={XIcon} alt="close" />
+                    <img src={XIcon} />
                 </div>
             </div>
             <SideBar setActivePage={setActivePage} activePage={activePage}/>
@@ -53,10 +53,10 @@ function App(): JSX.Element {
             </div>
             <div className='secondary-buttons'>
                 <div>
-                    <img src={BellIcon} alt="" />
+                    <img src={BellIcon} />
                 </div>
                 <div onClick={accountSelectorHandle} id='accounts-button'>
-                    <img src={UserIcon} alt="" />
+                    <img src={UserIcon} />
                 </div>
             </div>
             <Toaster />

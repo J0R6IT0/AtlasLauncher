@@ -39,42 +39,6 @@
 
 }
 
-/*
-  dark theme?
-  --primary-color: #191b1f;
-  --background: #1d1e22;
-  --secondary-color: #212227;
-  --text-color: #9e9ea0;
-  --text-color-filter: invert(67%) sepia(5%) saturate(87%) hue-rotate(201deg) brightness(94%) contrast(88%);
-  --accent-color: #fe5d5c;
-  --accent-color-filter: invert(49%) sepia(11%) saturate(5842%) hue-rotate(323deg) brightness(104%) contrast(102%);
-  --scroll-bar-color: #464646;
-
-  og theme
-    --primary-color: #2d2d3b;
-  --background: linear-gradient(90deg, rgb(56, 57, 70, 1) 5%, rgba(40,40,54,1) 100%);
-  --secondary-color: #292932;
-  --text-color: #818093;
-  --text-color-filter: invert(55%) sepia(8%) saturate(622%) hue-rotate(204deg) brightness(91%) contrast(93%);
-  --accent-color: #e44b7f;
-  --accent-color-filter: invert(44%) sepia(20%) saturate(6340%) hue-rotate(313deg) brightness(95%) contrast(87%);
-  --scroll-bar-color: #464646;
-
-  blue
-    --background: #090b28;
-  --side-bar-color: #13183f;
-
-  --icons-color: #353c69;
-  --icons-filter: invert(18%) sepia(67%) saturate(563%) hue-rotate(195deg) brightness(94%) contrast(86%);
-  --icons-color-hover: #f6356a;
-  --icons-filter-hover: invert(31%) sepia(46%) saturate(3815%) hue-rotate(325deg) brightness(99%) contrast(94%);
-
-  --text-color-primary: #fcffff;
-  --text-filter-primary: invert(94%) sepia(2%) saturate(1556%) hue-rotate(188deg) brightness(94%) contrast(82%);
-  --text-color-secondary: #6b6f80;
-  --text-filter-secondary: invert(45%) sepia(7%) saturate(878%) hue-rotate(191deg) brightness(94%) contrast(88%);
-*/
-
 ::-webkit-scrollbar {
   width: 8px;
 }

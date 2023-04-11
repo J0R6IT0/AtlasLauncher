@@ -4,7 +4,7 @@ use std::process::Command;
 
 use crate::java::downloader as javaDownloader;
 use crate::minecraft::downloader;
-use crate::utils::check_directory::check_directory;
+use crate::utils::directory_checker::check_directory;
 
 use tauri::Manager;
 

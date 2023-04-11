@@ -8,7 +8,7 @@ use std::{
 };
 use zip::ZipArchive;
 
-use crate::utils::check_directory::check_directory;
+use crate::utils::directory_checker::check_directory;
 
 pub async fn download(version: u8) -> Result<(), Box<dyn std::error::Error>> {
     if !check_java(version).await {

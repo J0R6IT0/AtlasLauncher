@@ -1,12 +1,12 @@
-use crate::utils::check_directory::check_directory;
-use reqwest;
+use crate::utils::directory_checker::check_directory;
+use reqwest::Response;
 use sha1::Sha1;
 use sha2::{Digest, Sha256};
 use std::{
     env,
     fs::File,
     io::{self, Cursor},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 pub async fn download_file(
@@ -16,13 +16,10 @@ pub async fn download_file(
     path: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Check if file exists
-
     let exe_path: PathBuf = env::current_exe().unwrap();
 
     let file_path: PathBuf = exe_path.parent().unwrap().join(path);
-
-    let mut path = file_path.clone();
-    path.pop();
+    let path: &Path = file_path.parent().unwrap();
 
     if file_path.is_file() {
         return Ok(());
@@ -30,11 +27,11 @@ pub async fn download_file(
 
     // Download the file
 
-    let mut retry_count = 0;
+    let mut retry_count: u8 = 0;
     let bytes;
 
     loop {
-        let response = match reqwest::get(url).await {
+        let response: Response = match reqwest::get(url).await {
             Ok(response) => response,
             Err(error) => {
                 if error.is_connect() || error.is_timeout() {
