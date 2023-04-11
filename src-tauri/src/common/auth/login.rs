@@ -1,5 +1,6 @@
 use crate::common::auth;
 use crate::common::utils;
+use crate::common::utils::file_to_json;
 
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -129,6 +130,14 @@ pub fn get_active_account() -> String {
     let my_json: serde_json::Value = serde_json::from_str(&content).unwrap();
 
     my_json["uuid"].as_str().unwrap().to_string()
+}
+
+pub async fn get_active_account_info() -> serde_json::Value {
+    let active_account = get_active_account();
+
+    let account = file_to_json::read(format!("launcher/auth/{active_account}.json").as_str()).unwrap();
+
+    account
 }
 
 pub fn set_active_account(uuid: &str) {

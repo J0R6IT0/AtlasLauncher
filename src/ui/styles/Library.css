@@ -41,6 +41,11 @@
     height: 8rem;
     width: 12rem;
     border-radius: 0.5rem;
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color-secondary);
 
 }
 

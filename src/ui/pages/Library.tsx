@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../styles/Library.css';
 
 import { listen } from '@tauri-apps/api/event';
 import toast from 'react-hot-toast';
+import { invoke } from '@tauri-apps/api/tauri';
 
 interface CreateInstanceEvent {
     payload: CreateInstanceEventPayload
@@ -12,12 +13,30 @@ interface CreateInstanceEventPayload {
     status: string
     message: string
     name: string
+    version: string
 }
 
+interface InstanceInfo {
+    name: string
+    version: string
+
+}
+
+let instancesFirstRun: InstanceInfo[] = await invoke('get_instances').catch(e => {}) as InstanceInfo[];
+
 function Library(): JSX.Element {
+    const [instances, setInstances] = useState(instancesFirstRun);
+
+    async function getInstances(): Promise<void> {
+        const newInstances = await invoke('get_instances').catch(e => {}) as InstanceInfo[];
+        instancesFirstRun = newInstances;
+        setInstances(newInstances);
+    }
+
     useEffect(() => {
         listen('create_instance', (event: CreateInstanceEvent) => {
             if (event.payload.status === 'Success') {
+                getInstances().catch(e => {});
                 toast.success(event.payload.message, {
                     id: event.payload.name,
                     duration: 6000,
@@ -60,8 +79,12 @@ function Library(): JSX.Element {
                 <span>Your Minecraft worlds are awaiting</span>
             </div>
             <div className='instances'>
-                <div className='instance'>
-                </div>
+                {instances.map((element, key) => <div key={key} className='instance' onClick={() => {
+                    invoke('launch_instance', { name: element.name }).catch(e => {});
+                }}>
+                    <span>{element.name} - {element.version}</span>
+                </div>)}
+
             </div>
         </div>
     );

@@ -48,8 +48,19 @@ fn remove_account(uuid: &str) {
 }
 
 #[tauri::command]
+async fn get_instances() -> Vec<minecraft::instance::InstanceInfo> {
+    minecraft::instance::get_instances().await
+}
+
+#[tauri::command]
 async fn create_instance(version_type: &str, version: &str, name: &str, handle: tauri::AppHandle) -> Result<(), ()> {
     minecraft::instance::create_instance(version_type, version, name, &handle).await;
+    Ok(())
+}
+
+#[tauri::command]
+async fn launch_instance(name: &str) -> Result<(), ()> {
+    minecraft::instance::launch_instance(name).await;
     Ok(())
 }
 
@@ -76,6 +87,8 @@ async fn main() {
             set_active_account,
             remove_account,
             create_instance,
+            get_instances,
+            launch_instance,
         ])
         .setup(|app| {
             let handle: AppHandle = app.handle();
