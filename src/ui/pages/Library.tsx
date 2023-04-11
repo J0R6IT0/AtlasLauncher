@@ -1,38 +1,66 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import '../styles/Library.css';
 
+import { listen } from '@tauri-apps/api/event';
+import toast from 'react-hot-toast';
+
+interface CreateInstanceEvent {
+    payload: CreateInstanceEventPayload
+}
+
+interface CreateInstanceEventPayload {
+    status: string
+    message: string
+    name: string
+}
+
 function Library(): JSX.Element {
+    useEffect(() => {
+        listen('create_instance', (event: CreateInstanceEvent) => {
+            if (event.payload.status === 'Success') {
+                toast.success(event.payload.message, {
+                    id: event.payload.name,
+                    duration: 6000,
+                    position: 'bottom-center',
+                    iconTheme: {
+                        primary: 'var(--icons-color)',
+                        secondary: 'var(--icons-color-hover)'
+                    }
+                });
+            } else if (event.payload.status === 'Error') {
+                toast.error(event.payload.message, {
+                    id: event.payload.name,
+                    duration: 10000,
+                    position: 'bottom-center',
+                    iconTheme: {
+                        primary: 'var(--icons-color)',
+                        secondary: 'var(--icons-color-hover)'
+                    }
+                });
+            } else if (event.payload.status === 'Loading') {
+                toast.loading(event.payload.message, {
+                    id: event.payload.name,
+                    position: 'bottom-center',
+                    className: 'toast-notification',
+                    iconTheme: {
+                        primary: 'var(--icons-color-hover)',
+                        secondary: 'var(--icons-color)'
+                    }
+                });
+            } else {
+                toast.dismiss(event.payload.name);
+            }
+        }).catch(e => {});
+    });
+
     return (
         <div className='library'>
             <div className='library-info'>
                 <span className='library-title'>Library</span>
                 <span>Your Minecraft worlds are awaiting</span>
             </div>
-            <div className='instance'>
-                <img className='instance-background' src="https://cdn.modrinth.com/data/BYfVnHa7/00a1b981ab6eb08b67bf9d9d9c910f3c404cfb56.png" alt="" />
-                <div className='instance-icon-container'>
-                    <img className='instance-icon' src="https://cdn.modrinth.com/data/BYfVnHa7/00a1b981ab6eb08b67bf9d9d9c910f3c404cfb56.png" alt="" />
-                </div>
-                <div className='instance-content'>
-                    <span className='instance-name'>Fabulously Optimized</span>
-                </div>
-            </div>
-            <div className='instance'>
-                <img className='instance-background' src="https://cdn.modrinth.com/data/paoFU4Vl/bfdc40da7ccbac30899fc89f0a6b9f524c09663c.png" alt="" />
-                <div className='instance-icon-container'>
-                    <img className='instance-icon' src="https://cdn.modrinth.com/data/paoFU4Vl/bfdc40da7ccbac30899fc89f0a6b9f524c09663c.png" alt="" />
-                </div>
-                <div className='instance-content'>
-                    <span className='instance-name'>Additive</span>
-                </div>
-            </div>
-            <div className='instance'>
-                <img className='instance-background' src="https://cdn.modrinth.com/data/JYB6M4ar/5f0f9f5f9cd3a7a2f9d7150e722d15c94125e591.gif" alt="" />
-                <div className='instance-icon-container'>
-                    <img className='instance-icon' src="https://cdn.modrinth.com/data/JYB6M4ar/5f0f9f5f9cd3a7a2f9d7150e722d15c94125e591.gif" alt="" />
-                </div>
-                <div className='instance-content'>
-                    <span className='instance-name'>Yoru</span>
+            <div className='instances'>
+                <div className='instance'>
                 </div>
             </div>
         </div>

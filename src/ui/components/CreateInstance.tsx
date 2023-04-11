@@ -1,10 +1,8 @@
 import { invoke } from '@tauri-apps/api/tauri';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import '../styles/CreateInstance.css';
 import CheckIcon from '../../assets/icons/check.svg';
 import AlertIcon from '../../assets/icons/alert-triangle.svg';
-import { listen } from '@tauri-apps/api/event';
-import toast from 'react-hot-toast';
 
 const releaseArray: string[] = await invoke('list_minecraft_versions', { versionType: 'release' });
 const snapshotArray: string[] = await invoke('list_minecraft_versions', { versionType: 'snapshot' });
@@ -14,16 +12,6 @@ const oldAlphaArray: string[] = await invoke('list_minecraft_versions', { versio
 interface CreateInstanceProps {
     flavour: number | null
     setFlavour: (flavour: number | null) => void
-}
-
-interface CreateInstanceEvent {
-    payload: CreateInstanceEventPayload
-}
-
-interface CreateInstanceEventPayload {
-    status: string
-    message: string
-    name: string
 }
 
 function CreateInstance(props: CreateInstanceProps): JSX.Element {
@@ -39,44 +27,6 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
         // eslint-disable-next-line no-control-regex
         setTitleInputValid(/^(?!^(?:(?:CON|PRN|AUX|NUL|COM\d|LPT\d)(?:\..*)?)$)[^<>:"/\\|?*\x00-\x1F]*[^<>:"/\\|?*\x00-\x1F .]$/i.test(value.trim()));
     };
-
-    useEffect(() => {
-        listen('create_instance', (event: CreateInstanceEvent) => {
-            if (event.payload.status === 'Success') {
-                toast.success(event.payload.message, {
-                    id: event.payload.name,
-                    duration: 6000,
-                    position: 'bottom-center',
-                    iconTheme: {
-                        primary: 'var(--icons-color)',
-                        secondary: 'var(--icons-color-hover)'
-                    }
-                });
-            } else if (event.payload.status === 'Error') {
-                toast.error(event.payload.message, {
-                    id: event.payload.name,
-                    duration: 10000,
-                    position: 'bottom-center',
-                    iconTheme: {
-                        primary: 'var(--icons-color)',
-                        secondary: 'var(--icons-color-hover)'
-                    }
-                });
-            } else if (event.payload.status === 'Loading') {
-                toast.loading(event.payload.message, {
-                    id: event.payload.name,
-                    position: 'bottom-center',
-                    className: 'toast-notification',
-                    iconTheme: {
-                        primary: 'var(--icons-color-hover)',
-                        secondary: 'var(--icons-color)'
-                    }
-                });
-            } else {
-                toast.dismiss(event.payload.name);
-            }
-        }).catch(e => {});
-    });
 
     return (
         <div className='create-instance'>

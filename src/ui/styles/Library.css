@@ -3,6 +3,7 @@
     height: 100%;
     width: 100%;
     display: flex;
+    flex-direction: column;
 
 }
 
@@ -16,6 +17,7 @@
     color: var(--text-color-secondary);
     font-size: 0.85rem;
 }
+
 .library-title {
     color: var(--text-color-primary);
     font-size: 1.2rem;
@@ -24,6 +26,25 @@
 
 }
 
+.instances {
+    position: absolute;
+    top: 5rem;
+    height: 10rem;
+    width: calc(100% - 2rem);
+    left: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.instance {
+    background-color: #202832;
+    height: 8rem;
+    width: 12rem;
+    border-radius: 0.5rem;
+
+}
+
+/*
 .instance {
     position: relative;
     margin-top: 1rem;
@@ -81,3 +102,4 @@
     top: 0.5rem;
     font-weight: bold;
 }
+*/
