@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::{env, fs, path};
 
-use crate::utils::{download_file::download_file, json_to_file};
+use crate::utils::{download_file::download_file, file_to_json, json_to_file};
 use serde_json::{self, Value};
 
 #[derive(Serialize, Deserialize)]
@@ -11,44 +11,55 @@ struct VersionInfo {
 }
 
 pub async fn download(version_type: &str, version: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let url = get_version_url(version_type, version).await?;
+    let mut json: Option<Value> = None;
 
-    let response = reqwest::get(url).await?.text().await?;
+    match file_to_json::read(format!("versions/{version}/{version}.json").as_str()) {
+        Ok(file_json) => json = Some(file_json),
+        Err(_) => {}
+    };
 
-    json_to_file::save(
-        response.as_str(),
-        format!("versions/{version}/{version}.json").as_str(),
-    );
+    if json.is_none() {
+        let url = get_version_url(version_type, version).await?;
 
-    let json: Value = serde_json::from_str(response.as_str()).unwrap();
+        let response = reqwest::get(url).await?.text().await?;
+
+        json_to_file::save(
+            response.as_str(),
+            format!("versions/{version}/{version}.json").as_str(),
+        );
+
+        json = Some(serde_json::from_str(response.as_str()).unwrap());
+    }
 
     // client.jar
-    let client_url: &str = json["downloads"]["client"]["url"]
-        .as_str()
-        .unwrap_or_default();
 
-    let client_checksum: &str = json["downloads"]["client"]["sha1"]
-        .as_str()
-        .unwrap_or_default();
+    if let Some(json) = json {
+        let client_url: &str = json["downloads"]["client"]["url"]
+            .as_str()
+            .unwrap_or_default();
 
-    download_file(
-        client_url,
-        client_checksum,
-        1,
-        format!("versions/{version}/{version}.jar").as_str(),
-    )
-    .await
-    .unwrap();
+        let client_checksum: &str = json["downloads"]["client"]["sha1"]
+            .as_str()
+            .unwrap_or_default();
 
-    // assets
-    let assets_url: &str = json["assetIndex"]["url"].as_str().unwrap_or_default();
-    let assets_index: &str = json["assetIndex"]["id"].as_str().unwrap_or_default();
-    download_assets(assets_url, assets_index).await?;
+        download_file(
+            client_url,
+            client_checksum,
+            1,
+            format!("versions/{version}/{version}.jar").as_str(),
+        )
+        .await
+        .unwrap();
 
-    // libraries
-    let libraries: &Vec<serde_json::Value> = json["libraries"].as_array().unwrap();
-    download_libraries(&libraries).await?;
-    println!("Done downloading game files");
+        // assets
+        let assets_url: &str = json["assetIndex"]["url"].as_str().unwrap_or_default();
+        let assets_index: &str = json["assetIndex"]["id"].as_str().unwrap_or_default();
+        download_assets(assets_url, assets_index).await?;
+
+        // libraries
+        let libraries: &Vec<serde_json::Value> = json["libraries"].as_array().unwrap();
+        download_libraries(&libraries).await?;
+    }
 
     Ok(())
 }
@@ -122,37 +133,39 @@ async fn download_libraries(
 
     for download in libraries.clone() {
         let download_task = tauri::async_runtime::spawn(async move {
-            let mut must_download: bool = true;
-            if let Some(rules) = download.get("rules") {
-                for rule in rules.as_array().unwrap().iter() {
-                    if let Some(action) = rule.get("action").and_then(|a| a.as_str()) {
-                        if action == "allow" {
-                            if let Some(os) = rule
-                                .get("os")
-                                .and_then(|os| os.get("name").and_then(|n| n.as_str()))
-                            {
-                                if os != "windows" {
-                                    must_download = false;
+            if let Some(_artifact) = download.get("artifact") {
+                let mut must_download: bool = true;
+                if let Some(rules) = download.get("rules") {
+                    for rule in rules.as_array().unwrap().iter() {
+                        if let Some(action) = rule.get("action").and_then(|a| a.as_str()) {
+                            if action == "allow" {
+                                if let Some(os) = rule
+                                    .get("os")
+                                    .and_then(|os| os.get("name").and_then(|n| n.as_str()))
+                                {
+                                    if os != "windows" {
+                                        must_download = false;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-            let url: &str = download["downloads"]["artifact"]["url"]
-                .as_str()
-                .unwrap_or_default();
-            let hash: &str = download["downloads"]["artifact"]["sha1"]
-                .as_str()
-                .unwrap_or_default();
-            let path: &str = download["downloads"]["artifact"]["path"]
-                .as_str()
-                .unwrap_or_default();
+                let url: &str = download["downloads"]["artifact"]["url"]
+                    .as_str()
+                    .unwrap_or_default();
+                let hash: &str = download["downloads"]["artifact"]["sha1"]
+                    .as_str()
+                    .unwrap_or_default();
+                let path: &str = download["downloads"]["artifact"]["path"]
+                    .as_str()
+                    .unwrap_or_default();
 
-            if must_download {
-                download_file(&url, hash, 1, format!("libraries/{}", path).as_str())
-                    .await
-                    .unwrap();
+                if must_download {
+                    download_file(&url, hash, 1, format!("libraries/{}", path).as_str())
+                        .await
+                        .unwrap();
+                }
             }
 
             if let Some(natives) = download["downloads"].get("classifiers") {

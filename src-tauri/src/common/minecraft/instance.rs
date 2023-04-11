@@ -1,6 +1,6 @@
 use serde::Serialize;
-use std::process::Command;
 use std::env;
+use std::process::Command;
 
 use crate::java::downloader as javaDownloader;
 use crate::minecraft::downloader;
@@ -21,7 +21,6 @@ pub async fn create_instance(
     name: &str,
     app: &tauri::AppHandle,
 ) {
-
     check_directory(format!("instances/{name}").as_str()).await;
 
     app.emit_all(
@@ -34,7 +33,8 @@ pub async fn create_instance(
     )
     .unwrap();
 
-    javaDownloader::download("17").await.unwrap();
+    javaDownloader::download(8).await.unwrap();
+    javaDownloader::download(17).await.unwrap();
 
     app.emit_all(
         "create_instance",
@@ -57,7 +57,6 @@ pub async fn create_instance(
         },
     )
     .unwrap();
-
 }
 
 pub async fn launch_instance(name: &str) {

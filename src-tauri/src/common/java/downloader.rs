@@ -10,7 +10,7 @@ use zip::ZipArchive;
 
 use crate::utils::check_directory::check_directory;
 
-pub async fn download(version: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn download(version: u8) -> Result<(), Box<dyn std::error::Error>> {
     if !check_java(version).await {
         return Ok(());
     }
@@ -60,7 +60,7 @@ pub async fn download(version: &str) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn get_version_info(version: &str) -> Result<Value, Box<dyn std::error::Error>> {
+async fn get_version_info(version: u8) -> Result<Value, Box<dyn std::error::Error>> {
     let os = env::consts::OS;
     let mut arch = env::consts::ARCH;
 
@@ -87,7 +87,7 @@ async fn get_version_info(version: &str) -> Result<Value, Box<dyn std::error::Er
     Ok(binary)
 }
 
-async fn check_java(version: &str) -> bool {
+async fn check_java(version: u8) -> bool {
     let path = check_directory(&format!("java/{version}")).await;
 
     path.read_dir().unwrap().next().is_none()
