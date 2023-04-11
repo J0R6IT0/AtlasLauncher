@@ -30,9 +30,31 @@ pub async fn download_file(
 
     // Download the file
 
-    let response = reqwest::get(url).await?.bytes().await?;
+    let mut retry_count = 0;
+    let bytes;
 
-    let mut reader = Cursor::new(&response);
+    loop {
+        let response = match reqwest::get(url).await {
+            Ok(response) => response,
+            Err(error) => {
+                if error.is_connect() || error.is_timeout() {
+                    // Connection timed out error, retry
+                    if retry_count >= 3 {
+                        return Err(Box::new(error)); // Maximum number of retries reached
+                    }
+                    retry_count += 1;
+                    continue;
+                } else {
+                    return Err(Box::new(error));
+                }
+            }
+        };
+
+        bytes = response.bytes().await?;
+        break;
+    }
+
+    let mut reader = Cursor::new(&bytes);
 
     // Verify the checksum
 
@@ -62,8 +84,6 @@ pub async fn download_file(
     let mut file = File::create(file_path)?;
     reader.set_position(0);
     io::copy(&mut reader, &mut file)?;
-
-    println!("downloaded {url}");
 
     Ok(())
 }
