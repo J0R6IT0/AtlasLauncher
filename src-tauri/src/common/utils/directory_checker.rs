@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf, fs};
+use std::{env, fs, path::PathBuf};
 
 pub async fn check_directory(path: &str) -> PathBuf {
     let path: PathBuf = env::current_exe()
@@ -12,7 +12,6 @@ pub async fn check_directory(path: &str) -> PathBuf {
     }
     fs::create_dir_all(&path).expect("Failed to create directory");
     path
-
 }
 
 pub fn check_directory_sync(path: &str) -> PathBuf {
@@ -27,5 +26,4 @@ pub fn check_directory_sync(path: &str) -> PathBuf {
     }
     fs::create_dir_all(&path).expect("Failed to create directory");
     path
-
 }

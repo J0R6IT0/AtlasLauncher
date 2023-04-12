@@ -1,5 +1,5 @@
-use std::{env, path::PathBuf};
 use serde_json::Value;
+use std::{env, path::PathBuf};
 
 pub fn read(path: &str) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     let exe_path: PathBuf = env::current_exe().unwrap();
