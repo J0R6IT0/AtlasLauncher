@@ -1,5 +1,6 @@
 use crate::common::auth;
 use crate::common::utils;
+use crate::common::utils::directory_checker;
 use crate::common::utils::file_to_json;
 
 use serde::{Deserialize, Serialize};
@@ -93,11 +94,7 @@ pub fn create_login_window(handle: tauri::AppHandle) {
 pub fn get_accounts() -> Vec<AccountInfo> {
     let mut accounts: Vec<AccountInfo> = Vec::new();
 
-    let auth_path: PathBuf = env::current_exe()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join("launcher/auth");
+    let auth_path: PathBuf = directory_checker::check_directory_sync("launcher/auth");
 
     for entry in fs::read_dir(auth_path).unwrap() {
         let entry: DirEntry = entry.unwrap();
@@ -134,7 +131,6 @@ pub fn get_active_account() -> String {
 
 pub async fn get_active_account_info() -> serde_json::Value {
     let active_account = get_active_account();
-
     let account = file_to_json::read(format!("launcher/auth/{active_account}.json").as_str()).unwrap();
 
     account

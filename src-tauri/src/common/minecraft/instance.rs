@@ -4,8 +4,10 @@ use std::{
     env,
     fs::{self, DirEntry},
     path::PathBuf,
-    process::{Command, self},
+    process::Command,
+    os::windows::process::CommandExt,
 };
+
 
 use crate::utils::{directory_checker::check_directory, json_to_file};
 use crate::{common::auth::login::get_active_account_info, minecraft::downloader};
@@ -77,7 +79,7 @@ pub async fn create_instance(
     )
     .unwrap();
 
-    downloader::download(version_type, version).await.unwrap();
+    downloader::download(version_type, version, name).await.unwrap();
 
     app.emit_all(
         "create_instance",
@@ -98,9 +100,12 @@ pub async fn launch_instance(name: &str) {
 
     let version_info: Value =
         file_to_json::read(format!("versions/{version}/{version}.json").as_str()).unwrap();
-    let java_version: u64 = version_info["javaVersion"]["majorVersion"]
-        .as_u64()
-        .unwrap();
+    let java_version: u64 = match version_info["javaVersion"]["majorVersion"].as_u64() {
+        Some(java_version) => java_version,
+        None => 8,
+    };
+
+
     let java_path = get_java_path(java_version.try_into().unwrap()).await;
 
     let version_path = String::from(
@@ -119,7 +124,41 @@ pub async fn launch_instance(name: &str) {
     let asset_index = version_info["assetIndex"]["id"].as_str().unwrap();
     let main_class = version_info["mainClass"].as_str().unwrap();
 
-   /*  let mut process = Command::new(java_path)
+    let arguments = match version_info["minecraftArguments"].as_str() {
+        Some(arguments) => arguments,
+        None => "--username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type}"
+    };
+    let replaced_arguments = arguments
+        .replace("${auth_player_name}", active_user["username"].as_str().unwrap())
+        .replace("${auth_session}", active_user["access_token"].as_str().unwrap())
+        .replace("${game_directory}", check_directory(format!("instances/{name}").as_str()).await.to_str().unwrap())
+        .replace("${game_assets}", check_directory(format!("{}", if asset_index == "legacy" || asset_index == "pre-1.6" { "assets/virtual/legacy" } else { "assets" }).as_str()).await.to_str().unwrap())
+        .replace("${version_name}", version)
+        .replace("${assets_root}", check_directory(format!("{}", if asset_index == "legacy" || asset_index == "pre-1.6" { "assets/virtual/legacy" } else { "assets" }).as_str()).await.to_str().unwrap())
+        .replace("${assets_index_name}", asset_index)
+        .replace("${auth_uuid}", active_user["uuid"].as_str().unwrap())
+        .replace("${auth_access_token}", active_user["access_token"].as_str().unwrap())
+        .replace("${user_properties}", "{}")
+        .replace("${user_type}", "msa");
+
+
+    let args: Vec<&str> = replaced_arguments.split_whitespace().collect();
+
+    // const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+    /*
+    
+                "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+UseG1GC",
+            "-XX:G1NewSizePercent=20",
+            "-XX:G1ReservePercent=20",
+            "-XX:MaxGCPauseMillis=50",
+            "-XX:G1HeapRegionSize=32M",
+            "-Dos.name=Windows 10",
+            "-Dos.version=10.0",
+     */
+
+    let mut process = Command::new(java_path)
         .arg("-cp")
         .arg(cp)
         .args([
@@ -128,56 +167,14 @@ pub async fn launch_instance(name: &str) {
             "-Dfml.ignorePatchDiscrepancies=true",
             "-Dfml.ignoreInvalidMinecraftCertificates=true",
             "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
-            format!("-Djava.library.path={}", check_directory(format!("instances/{name}/natives").as_str()).await.to_str().unwrap()).as_str(),
-            format!("-Dminecraft.applet.TargetDirectory={}", check_directory(format!("instances/{name}").as_str()).await.to_str().unwrap()).as_str(),
-            main_class,
-            active_user["username"].as_str().unwrap(),
-            active_user["access_token"].as_str().unwrap(),
-            "--gameDir",
-            check_directory(format!("instances/{name}").as_str()).await.to_str().unwrap(),
-            "--assetsDir",
-            check_directory("assets/virtual/legacy").await.to_str().unwrap(),
-
-
-
-
+            "-Dminecraft.launcher.brand=AtlasLauncher",
+            "-Dminecraft.launcher.version=1",
         ])
-        .spawn()
-        .expect("failed to execute java process");*/
-
-    let mut process = Command::new(java_path)
-        .args([
-            "-Xmx2G",
-            "-Xms2G",
-            "-XX:+UnlockExperimentalVMOptions",
-            "-XX:+UseG1GC",
-            "-XX:G1NewSizePercent=20",
-            "-XX:G1ReservePercent=20",
-            "-XX:MaxGCPauseMillis=50",
-            "-XX:G1HeapRegionSize=32M",
-        ])
-        .arg(format!("-Djava.library.path={}", check_directory(format!("instances/{name}/natives").as_str()).await.to_str().unwrap()).as_str())
-        .arg("-cp")
-        .arg(cp)
+        .arg(format!("-Djava.library.path={}", check_directory(format!("natives/{version}").as_str()).await.to_str().unwrap()).as_str())
+        .arg(format!("-Dminecraft.applet.TargetDirectory={}", check_directory(format!("instances/{name}").as_str()).await.to_str().unwrap()))
         .arg(main_class)
-        .arg("--username")
-        .arg(active_user["username"].as_str().unwrap())
-        .arg("--accessToken")
-        .arg(active_user["access_token"].as_str().unwrap())
-        .arg("--version")
-        .arg(version)
-        .arg("--gameDir")
-        .arg(check_directory(format!("instances/{name}").as_str()).await)
-        .arg("--assetsDir")
-        .arg(check_directory(format!("assets").as_str()).await)
-        .arg("--assetIndex")
-        .arg(asset_index)
-        .arg("--uuid")
-        .arg(active_user["uuid"].as_str().unwrap())
-        .arg("--userType")
-        .arg("msa")
-        .arg("--versionType")
-        .arg("AtlasLauncher")
+        .args(args)
+        //.creation_flags(CREATE_NO_WINDOW)
         .spawn()
         .expect("failed to execute java process");
 
@@ -241,16 +238,6 @@ pub async fn get_libraries(libraries: &Value) -> String {
 
             if must_use {
                 result = format!("{result}{libraries_path}/{path};");
-            }
-            if let Some(natives) = download["downloads"].get("classifiers") {
-                if let Some(_windows_natives) = natives.get("natives-windows") {
-                    let path: &str = download["downloads"]["classifiers"]["natives-windows"]
-                        ["path"]
-                        .as_str()
-                        .unwrap_or_default();
-
-                    result = format!("{result}{libraries_path}/{path};");
-                }
             }
         }
     }

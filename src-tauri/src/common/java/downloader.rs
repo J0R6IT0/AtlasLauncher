@@ -1,14 +1,8 @@
 use reqwest;
 use serde_json::{self, Value};
-use sha2::{Digest, Sha256};
-use std::{
-    env,
-    fs::File,
-    io::{self, Cursor},
-};
-use zip::ZipArchive;
+use std::env;
 
-use crate::utils::directory_checker::check_directory;
+use crate::{common::utils::download_file, utils::directory_checker::check_directory};
 
 pub async fn download(version: u8) -> Result<(), Box<dyn std::error::Error>> {
     if !check_java(version).await {
@@ -22,40 +16,7 @@ pub async fn download(version: u8) -> Result<(), Box<dyn std::error::Error>> {
     let link: &str = binary["package"]["link"].as_str().unwrap();
 
     // Download the file
-    let response = reqwest::get(link).await?.bytes().await?;
-
-    let mut reader = Cursor::new(&response);
-
-    // Verify the checksum
-    let mut hasher = Sha256::new();
-    io::copy(&mut reader, &mut hasher)?;
-    let actual_checksum: String = format!("{:x}", hasher.finalize());
-    if actual_checksum != checksum {
-        return Err(Box::new(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Checksum missmatch.",
-        )));
-    }
-
-    // Unzip contents
-    let mut archive = ZipArchive::new(reader).unwrap();
-
-    for i in 0..archive.len() {
-        let mut file = archive.by_index(i)?;
-        let outpath = path.join(file.mangled_name());
-
-        if (&*file.name()).ends_with('/') {
-            std::fs::create_dir_all(&outpath)?;
-        } else {
-            if let Some(p) = outpath.parent() {
-                if !p.exists() {
-                    std::fs::create_dir_all(&p)?;
-                }
-            }
-            let mut outfile = File::create(&outpath)?;
-            io::copy(&mut file, &mut outfile)?;
-        }
-    }
+    download_file::download_file(link, checksum, 56, path.to_str().unwrap(), true).await.unwrap();
 
     Ok(())
 }

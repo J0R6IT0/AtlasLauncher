@@ -9,11 +9,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use zip::ZipArchive;
+
 pub async fn download_file(
     url: &str,
     checksum: &str,
     checksum_type: u8,
     path: &str,
+    extract: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Check if file exists
     let exe_path: PathBuf = env::current_exe().unwrap();
@@ -74,13 +77,40 @@ pub async fn download_file(
         )));
     }
 
-    // Save the file
+    if extract {
+        // Unzip contents
+        let mut archive = ZipArchive::new(reader).unwrap();
 
-    check_directory(path.to_str().unwrap()).await;
+        for i in 0..archive.len() {
+            let mut file = archive.by_index(i)?;
+            let outpath = file_path.join(file.mangled_name());
 
-    let mut file = File::create(file_path)?;
-    reader.set_position(0);
-    io::copy(&mut reader, &mut file)?;
+            if (&*file.name()).starts_with("META-INF/") {
+                // Skip extracting the file if it's inside META-INF/
+                continue;
+            }
+
+            if (&*file.name()).ends_with('/') {
+                std::fs::create_dir_all(&outpath)?;
+            } else {
+                if let Some(p) = outpath.parent() {
+                    if !p.exists() {
+                        std::fs::create_dir_all(&p)?;
+                    }
+                }
+                let mut outfile = File::create(&outpath)?;
+                io::copy(&mut file, &mut outfile)?;
+            }
+        }
+    } else {
+        // Save the file
+
+        check_directory(path.to_str().unwrap()).await;
+
+        let mut file = File::create(file_path)?;
+        reader.set_position(0);
+        io::copy(&mut reader, &mut file)?;
+    }
 
     Ok(())
 }
