@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{env, fs, path::PathBuf};
+use std::env;
 use tauri::AppHandle;
 use tokio;
 
@@ -66,8 +66,6 @@ async fn launch_instance(name: &str) -> Result<(), ()> {
 
 #[tokio::main]
 async fn main() {
-    // Checks and creates missing folders
-    check_folder_structure();
     // Updates the version manifest
     match minecraft::versions::download_version_manifest().await {
         Ok(_) => println!("Version manifest successfully updated"),
@@ -102,20 +100,4 @@ async fn main() {
             tauri::generate_context!()
         })
         .expect("error while running tauri application");
-}
-
-fn check_folder_structure() {
-    // Main launcher stuff is located inside /launcher
-    let launcher_path: PathBuf = env::current_exe()
-        .expect("Failed to get executable path")
-        .parent()
-        .unwrap()
-        .join("launcher");
-
-    ["version-info", "auth"].iter().for_each(|subdir| {
-        let path: PathBuf = launcher_path.join(subdir);
-        if !path.exists() {
-            fs::create_dir_all(&path).expect("Failed to create directory");
-        }
-    });
 }

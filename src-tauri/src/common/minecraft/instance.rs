@@ -146,9 +146,13 @@ pub async fn launch_instance(name: &str) {
 
     // const CREATE_NO_WINDOW: u32 = 0x08000000;
 
-    /*
-    
-                "-XX:+UnlockExperimentalVMOptions",
+    let mut process = Command::new(java_path)
+        .arg("-cp")
+        .arg(cp)
+        .args([
+            "-Xmx2G",
+            "-Xms2G",
+            "-XX:+UnlockExperimentalVMOptions",
             "-XX:+UseG1GC",
             "-XX:G1NewSizePercent=20",
             "-XX:G1ReservePercent=20",
@@ -156,14 +160,6 @@ pub async fn launch_instance(name: &str) {
             "-XX:G1HeapRegionSize=32M",
             "-Dos.name=Windows 10",
             "-Dos.version=10.0",
-     */
-
-    let mut process = Command::new(java_path)
-        .arg("-cp")
-        .arg(cp)
-        .args([
-            "-Xmx2G",
-            "-Xms2G",
             "-Dfml.ignorePatchDiscrepancies=true",
             "-Dfml.ignoreInvalidMinecraftCertificates=true",
             "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
