@@ -4,13 +4,13 @@ use crate::common::{
 };
 
 use serde::{Deserialize, Serialize};
-use serde_json;
+use serde_json::Value;
 use std::{
     env,
     fs::{self, DirEntry},
     path::PathBuf,
 };
-use tauri::{Manager, AppHandle, Window};
+use tauri::{AppHandle, Manager, Window};
 
 #[derive(Clone, Serialize)]
 pub struct LoginEventPayload {
@@ -69,21 +69,22 @@ pub fn create_login_window(handle: tauri::AppHandle) {
         .unwrap()
         .on_window_event(move |event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
-                handle.emit_all(
-                    "auth",
-                    LoginEventPayload {
-                        message: format!("Window closed"),
-                        status: String::from("Hide"),
-                    },
-                )
-                .unwrap();
+                handle
+                    .emit_all(
+                        "auth",
+                        LoginEventPayload {
+                            message: format!("Window closed"),
+                            status: String::from("Hide"),
+                        },
+                    )
+                    .unwrap();
             }
         });
 }
 
 fn close_auth_window(app: &AppHandle) {
-        let window: Window = app.get_window("auth").unwrap();
-        window.close().unwrap();
+    let window: Window = app.get_window("auth").unwrap();
+    window.close().unwrap();
 }
 
 pub fn get_accounts() -> Vec<AccountInfo> {
@@ -119,12 +120,12 @@ pub fn get_active_account() -> String {
 
     let content = fs::read_to_string(&path).unwrap();
 
-    let my_json: serde_json::Value = serde_json::from_str(&content).unwrap();
+    let my_json: Value = serde_json::from_str(&content).unwrap();
 
     my_json["uuid"].as_str().unwrap().to_string()
 }
 
-pub async fn get_active_account_info() -> serde_json::Value {
+pub async fn get_active_account_info() -> Value {
     let active_account = get_active_account();
     let account =
         file_to_json::read(format!("launcher/auth/{active_account}.json").as_str()).unwrap();

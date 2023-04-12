@@ -1,5 +1,5 @@
 use reqwest::Client;
-use serde_json::{self, Value};
+use serde_json::Value;
 use tauri::Manager;
 
 use crate::auth::login::LoginEventPayload;

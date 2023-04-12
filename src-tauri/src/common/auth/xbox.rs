@@ -1,7 +1,7 @@
 use crate::auth::{login, minecraft};
 use async_recursion::async_recursion;
 use reqwest::Client;
-use serde_json;
+use serde_json::Value;
 use tauri::Manager;
 
 #[async_recursion]
@@ -12,7 +12,7 @@ pub async fn login(
     refresh_token: &str,
     from_refresh: bool,
 ) {
-    // We are using the same function for Xbox login (site 0) and minecraft XSTS token (site 1)
+    // we use the same function for xbox login (site 0) and minecraft xsts token (site 1)
     let auth_request: String = if site == 0 {
         format!(
             r#"
@@ -44,11 +44,11 @@ pub async fn login(
         )
     };
 
-    let json: serde_json::Value = serde_json::from_str(&auth_request).unwrap();
+    let json: Value = serde_json::from_str(&auth_request).unwrap();
 
     let client: Client = Client::new();
 
-    let response: Result<serde_json::Value, reqwest::Error> = client
+    let response: Result<Value, reqwest::Error> = client
         .post(if site == 0 {
             "https://user.auth.xboxlive.com/user/authenticate"
         } else {

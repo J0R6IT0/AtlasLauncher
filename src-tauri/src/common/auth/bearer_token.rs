@@ -1,7 +1,6 @@
-use crate::auth::login;
-use crate::auth::xbox;
+use crate::auth::{login, xbox};
 use reqwest::Client;
-use serde_json;
+use serde_json::Value;
 use tauri::Manager;
 
 use std::{
@@ -13,7 +12,7 @@ use std::{
 pub async fn get_bearer_token(code: &str, app: &tauri::AppHandle) {
     let client: Client = Client::new();
 
-    let response: serde_json::Value = client
+    let response: Value = client
         .post("https://login.live.com/oauth20_token.srf")
         .header("Content-Type", "application/x-www-form-urlencoded")
         .header("Origin", "https://login.live.com")
@@ -70,7 +69,7 @@ pub async fn refresh_bearer_tokens(app: &tauri::AppHandle) {
     let client: Client = Client::new();
 
     for account in accounts.iter() {
-        let response: serde_json::Value = client
+        let response: Value = client
             .post("https://login.live.com/oauth20_token.srf")
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Origin", "https://login.live.com")
