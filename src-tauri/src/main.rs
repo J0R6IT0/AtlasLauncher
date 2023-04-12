@@ -68,6 +68,12 @@ async fn main() {
     // to avoid problems due to having multiple async runtimes running
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
+    // update the version manifest
+    match minecraft::versions::download_version_manifest().await {
+        Ok(_) => println!("Version manifest successfully updated"),
+        Err(err) => println!("Error updating manifest: {:?}", err),
+    }
+
     // build the tauri app
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -86,13 +92,6 @@ async fn main() {
             // refresh ms tokens
             tauri::async_runtime::spawn(async move {
                 auth::bearer_token::refresh_bearer_tokens(&handle).await;
-            });
-            // update the version manifest
-            tauri::async_runtime::spawn(async {
-                match minecraft::versions::download_version_manifest().await {
-                    Ok(_) => println!("Version manifest successfully updated"),
-                    Err(err) => println!("Error updating manifest: {:?}", err),
-                }
             });
             Ok(())
         })
