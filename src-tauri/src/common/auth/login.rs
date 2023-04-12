@@ -1,7 +1,7 @@
-use crate::common::auth;
-use crate::common::utils;
-use crate::common::utils::directory_checker;
-use crate::common::utils::file_to_json;
+use crate::common::{
+    auth,
+    utils::{directory_checker, file_to_json, json_to_file},
+};
 
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -9,10 +9,8 @@ use std::{
     env,
     fs::{self, DirEntry},
     path::PathBuf,
-    thread,
-    time::Duration,
 };
-use tauri::Manager;
+use tauri::{Manager, AppHandle, Window};
 
 #[derive(Clone, Serialize)]
 pub struct LoginEventPayload {
@@ -43,52 +41,49 @@ pub fn create_login_window(handle: tauri::AppHandle) {
         + "&scope=XboxLive.signin%20offline_access"
         + "&prompt=select_account";
 
-    let auth_window: tauri::Window = tauri::WindowBuilder::new(
-        &handle,
-        "auth",
-        tauri::WindowUrl::External(url.parse().unwrap()),
-    )
-    .inner_size(500.0, 550.0)
-    .title("Sign in to Minecraft")
-    .build()
-    .unwrap();
+    let app: AppHandle = handle.to_owned();
 
-    let app = handle.clone();
+    tauri::WindowBuilder::new(&handle, "auth", tauri::WindowUrl::App(url.parse().unwrap()))
+        .inner_size(500.0, 550.0)
+        .title("Sign in to Minecraft")
+        .on_navigation(move |url| {
+            if url
+                .to_string()
+                .starts_with("https://login.live.com/oauth20_desktop.srf")
+            {
+                let code: String = url.to_owned().query_pairs().next().unwrap().1.to_string();
 
-    tauri::async_runtime::spawn(async move {
-        auth::server::start_server(&handle).await;
-    });
+                let app: AppHandle = app.to_owned();
 
-    thread::spawn(move || loop {
-        if let Err(_) = auth_window.is_visible() {
-            app.emit_all(
-                "auth",
-                LoginEventPayload {
-                    message: format!("Window closed"),
-                    status: String::from("Hide"),
-                },
-            )
-            .unwrap();
-            if let Err(err) = auth_window.close() {
-                println!("Error closing window: {:?}", err);
+                close_auth_window(&app);
+
+                app.emit_all("close-auth-window", ()).unwrap();
+
+                tauri::async_runtime::spawn(async move {
+                    auth::bearer_token::get_bearer_token(code.as_str(), &app).await;
+                });
             }
-            return;
-        }
+            true
+        })
+        .build()
+        .unwrap()
+        .on_window_event(move |event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                handle.emit_all(
+                    "auth",
+                    LoginEventPayload {
+                        message: format!("Window closed"),
+                        status: String::from("Hide"),
+                    },
+                )
+                .unwrap();
+            }
+        });
+}
 
-        let js_code: &str = r#"
-                    let currentLocation = window.location.href;
-                    if (currentLocation.startsWith('https://login.live.com/oauth20_desktop.srf?code=')) {
-                        currentLocation = currentLocation.replaceAll(':', '').replaceAll('/', '');
-                        window.location.replace('http://localhost:7222/' + currentLocation);
-                    }
-                "#;
-        match auth_window.eval(js_code) {
-            Ok(_) => (),
-            Err(_) => continue,
-        }
-
-        thread::sleep(Duration::from_secs(1));
-    });
+fn close_auth_window(app: &AppHandle) {
+        let window: Window = app.get_window("auth").unwrap();
+        window.close().unwrap();
 }
 
 pub fn get_accounts() -> Vec<AccountInfo> {
@@ -131,7 +126,8 @@ pub fn get_active_account() -> String {
 
 pub async fn get_active_account_info() -> serde_json::Value {
     let active_account = get_active_account();
-    let account = file_to_json::read(format!("launcher/auth/{active_account}.json").as_str()).unwrap();
+    let account =
+        file_to_json::read(format!("launcher/auth/{active_account}.json").as_str()).unwrap();
 
     account
 }
@@ -145,7 +141,7 @@ pub fn set_active_account(uuid: &str) {
         "#
     );
 
-    utils::json_to_file::save(&active_account, "launcher/auth/active_account.json");
+    json_to_file::save(&active_account, "launcher/auth/active_account.json");
 }
 
 pub fn remove_account(uuid: &str) {
