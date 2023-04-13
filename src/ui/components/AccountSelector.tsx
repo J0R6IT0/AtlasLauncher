@@ -106,7 +106,7 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
         return () => {
             document.removeEventListener('click', clickHandler);
         };
-    });
+    }, []);
 
     return (
         <div className={`account-selector ${props.visible ? 'visible' : ''}`} id='account-selector'>

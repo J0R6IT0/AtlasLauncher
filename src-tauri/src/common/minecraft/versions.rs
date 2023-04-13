@@ -9,6 +9,8 @@ use std::{
     path::PathBuf,
 };
 
+use crate::common::utils::directory_checker::check_directory;
+
 #[derive(Serialize, Deserialize)]
 pub struct VersionData {
     pub id: String,
@@ -17,6 +19,7 @@ pub struct VersionData {
 
 pub async fn download_version_manifest() -> Result<(), Box<dyn std::error::Error>> {
     let exe_path: PathBuf = env::current_exe()?;
+    check_directory("launcher/version-info").await;
 
     let response: serde_json::Value =
         reqwest::get("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json")

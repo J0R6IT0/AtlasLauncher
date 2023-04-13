@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import SideBar from './ui/components/SideBar';
 import NewInstance from './ui/pages/NewInstance';
 import Library from './ui/pages/Library';
@@ -8,18 +8,85 @@ import { appWindow } from '@tauri-apps/api/window';
 import MinusIcon from './assets/icons/minus.svg';
 import SquareIcon from './assets/icons/square.svg';
 import XIcon from './assets/icons/x.svg';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import BackgroundImage from './assets/images/minecraft-background.jpg';
 import UserIcon from './assets/icons/user.svg';
 import BellIcon from './assets/icons/bell.svg';
+import { invoke } from '@tauri-apps/api/tauri';
+import { listen } from '@tauri-apps/api/event';
+
+interface CreateInstanceEvent {
+    payload: CreateInstanceEventPayload
+}
+
+interface CreateInstanceEventPayload {
+    status: string
+    message: string
+    name: string
+    version: string
+}
+
+export interface InstanceInfo {
+    name: string
+    version: string
+}
+
+let instancesFirstRun: InstanceInfo[] = await invoke('get_instances').catch(e => {}) as InstanceInfo[];
 
 function App(): JSX.Element {
-    const [activePage, setActivePage] = useState(1);
+    const [activePage, setActivePage] = useState(2);
     const [accountSelectorActive, setAccountSelectorActive] = useState(false);
+    const [instances, setInstances] = useState(instancesFirstRun);
+
+    async function getInstances(): Promise<void> {
+        const newInstances = await invoke('get_instances').catch(e => {}) as InstanceInfo[];
+        instancesFirstRun = newInstances;
+        setInstances(newInstances);
+    }
 
     function accountSelectorHandle(): void {
         setAccountSelectorActive(!accountSelectorActive);
     }
+
+    useEffect(() => {
+        listen('create_instance', (event: CreateInstanceEvent) => {
+            console.log(Math.random());
+            if (event.payload.status === 'Success') {
+                getInstances().catch(e => {});
+                toast.success(event.payload.message, {
+                    id: event.payload.name,
+                    duration: 6000,
+                    position: 'bottom-center',
+                    iconTheme: {
+                        primary: 'var(--icons-color)',
+                        secondary: 'var(--icons-color-hover)'
+                    }
+                });
+            } else if (event.payload.status === 'Error') {
+                toast.error(event.payload.message, {
+                    id: event.payload.name,
+                    duration: 10000,
+                    position: 'bottom-center',
+                    iconTheme: {
+                        primary: 'var(--icons-color)',
+                        secondary: 'var(--icons-color-hover)'
+                    }
+                });
+            } else if (event.payload.status === 'Loading') {
+                toast.loading(event.payload.message, {
+                    id: event.payload.name,
+                    position: 'bottom-center',
+                    className: 'toast-notification',
+                    iconTheme: {
+                        primary: 'var(--icons-color-hover)',
+                        secondary: 'var(--icons-color)'
+                    }
+                });
+            } else {
+                toast.dismiss(event.payload.name);
+            }
+        }).catch(e => {});
+    }, []);
 
     return (
         <div className='container'>
@@ -49,7 +116,7 @@ function App(): JSX.Element {
             <AccountSelector visible={accountSelectorActive} setVisible={setAccountSelectorActive}/>
             <div className='content'>
                 {activePage === 1 && <NewInstance />}
-                {activePage === 2 && <Library />}
+                {activePage === 2 && <Library instances={instances}/>}
             </div>
             <div className='secondary-buttons'>
                 <div>

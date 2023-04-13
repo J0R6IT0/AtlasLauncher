@@ -5,14 +5,14 @@ use std::{
     fs::{self, DirEntry},
     path::PathBuf,
     process::Command,
-    os::windows::process::CommandExt,
 };
 
+use chrono::DateTime;
 
 use crate::utils::{directory_checker::check_directory, json_to_file};
 use crate::{common::auth::login::get_active_account_info, minecraft::downloader};
 use crate::{
-    common::{utils::file_to_json},
+    common::utils::file_to_json,
     java::{downloader as javaDownloader, get_java_path::get_java_path},
 };
 
@@ -38,21 +38,7 @@ pub async fn create_instance(
     name: &str,
     app: &tauri::AppHandle,
 ) {
-    check_directory(format!("instances/{name}").as_str()).await;
-
-    let instance_info: String = format!(
-        r#"
-            {{
-                "name": "{name}",
-                "version": "{version}"
-            }}
-        "#
-    );
-
-    json_to_file::save(
-        &instance_info,
-        &format!("instances/{name}/atlas_instance.json"),
-    );
+    check_directory(format!("instances/{name}/resourcepacks").as_str()).await;
 
     app.emit_all(
         "create_instance",
@@ -79,7 +65,24 @@ pub async fn create_instance(
     )
     .unwrap();
 
-    downloader::download(version_type, version, name).await.unwrap();
+    let libraries_arg = downloader::download(version_type, version, name)
+        .await
+        .unwrap();
+
+    let instance_info: String = format!(
+        r#"
+            {{
+                "name": "{name}",
+                "version": "{version}",
+                "libraries": "{libraries_arg}"
+            }}
+        "#
+    );
+
+    json_to_file::save(
+        &instance_info,
+        &format!("instances/{name}/atlas_instance.json"),
+    );
 
     app.emit_all(
         "create_instance",
@@ -101,10 +104,13 @@ pub async fn launch_instance(name: &str) {
     let version_info: Value =
         file_to_json::read(format!("versions/{version}/{version}.json").as_str()).unwrap();
     let java_version: u64 = match version_info["javaVersion"]["majorVersion"].as_u64() {
-        Some(java_version) => java_version,
+        Some(java_version) => match java_version {
+            8 => 8,
+            17 => 17,
+            _ => 17,
+        },
         None => 8,
     };
-
 
     let java_path = get_java_path(java_version.try_into().unwrap()).await;
 
@@ -115,7 +121,7 @@ pub async fn launch_instance(name: &str) {
             .to_str()
             .unwrap(),
     );
-    let libraries = get_libraries(&version_info["libraries"]).await;
+    let libraries = instance_info["libraries"].as_str().unwrap().replace("[libraries_path]", check_directory("libraries").await.to_str().unwrap());
 
     let cp = format!("{version_path};{libraries}");
 
@@ -129,54 +135,167 @@ pub async fn launch_instance(name: &str) {
         None => "--username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type}"
     };
     let replaced_arguments = arguments
-        .replace("${auth_player_name}", active_user["username"].as_str().unwrap())
-        .replace("${auth_session}", active_user["access_token"].as_str().unwrap())
-        .replace("${game_directory}", check_directory(format!("instances/{name}").as_str()).await.to_str().unwrap())
-        .replace("${game_assets}", check_directory(format!("{}", if asset_index == "legacy" || asset_index == "pre-1.6" { "assets/virtual/legacy" } else { "assets" }).as_str()).await.to_str().unwrap())
+        .replace(
+            "${auth_player_name}",
+            active_user["username"].as_str().unwrap(),
+        )
+        .replace(
+            "${auth_session}",
+            active_user["access_token"].as_str().unwrap(),
+        )
+        .replace(
+            "${game_directory}",
+            check_directory(format!("instances/{name}").as_str())
+                .await
+                .to_str()
+                .unwrap(),
+        )
+        .replace(
+            "${game_assets}",
+            check_directory(
+                format!(
+                    "{}",
+                    if asset_index == "legacy" || asset_index == "pre-1.6" {
+                        "assets/virtual/legacy"
+                    } else {
+                        "assets"
+                    }
+                )
+                .as_str(),
+            )
+            .await
+            .to_str()
+            .unwrap(),
+        )
         .replace("${version_name}", version)
-        .replace("${assets_root}", check_directory(format!("{}", if asset_index == "legacy" || asset_index == "pre-1.6" { "assets/virtual/legacy" } else { "assets" }).as_str()).await.to_str().unwrap())
+        .replace(
+            "${assets_root}",
+            check_directory(
+                format!(
+                    "{}",
+                    if asset_index == "legacy" || asset_index == "pre-1.6" {
+                        "assets/virtual/legacy"
+                    } else {
+                        "assets"
+                    }
+                )
+                .as_str(),
+            )
+            .await
+            .to_str()
+            .unwrap(),
+        )
         .replace("${assets_index_name}", asset_index)
         .replace("${auth_uuid}", active_user["uuid"].as_str().unwrap())
-        .replace("${auth_access_token}", active_user["access_token"].as_str().unwrap())
+        .replace(
+            "${auth_access_token}",
+            active_user["access_token"].as_str().unwrap(),
+        )
         .replace("${user_properties}", "{}")
-        .replace("${user_type}", "msa");
-
+        .replace("${user_type}", "msa")
+        .replace("${version_type}", version_info["type"].as_str().unwrap());
 
     let args: Vec<&str> = replaced_arguments.split_whitespace().collect();
 
     // const CREATE_NO_WINDOW: u32 = 0x08000000;
 
+    // we change the working dir to avoid old versions creating files out of their instance folder
+    let working_dir = env::current_dir().unwrap();
+    std::env::set_current_dir(
+        check_directory(format!("instances/{name}").as_str())
+            .await
+            .to_str()
+            .unwrap(),
+    )
+    .unwrap();
+
+    let mut jvm_args: Vec<&str> = [
+        "-Xmx2G",
+        "-Xms2G",
+        "-XX:+UnlockExperimentalVMOptions",
+        "-XX:+UseG1GC",
+        "-XX:G1NewSizePercent=20",
+        "-XX:G1ReservePercent=20",
+        "-XX:MaxGCPauseMillis=50",
+        "-XX:G1HeapRegionSize=32M",
+        "-Dos.name=Windows 10",
+        "-Dos.version=10.0",
+        "-Dfml.ignorePatchDiscrepancies=true",
+        "-Dfml.ignoreInvalidMinecraftCertificates=true",
+        "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
+        "-Dminecraft.launcher.brand=AtlasLauncher",
+        "-Dminecraft.launcher.version=1",
+    ]
+    .to_vec();
+
+    let logging_arg;
+    if let Some(logging) = version_info.get("logging") {
+        if let Some(client) = logging.get("client") {
+            let argument = String::from(client["argument"].as_str().unwrap());
+            if let Some(file) = client.get("file") {
+                let id = file["id"].as_str().unwrap();
+                logging_arg = argument.to_owned().replace(
+                    "${path}",
+                    check_directory("assets/log_configs")
+                        .await
+                        .join(id)
+                        .to_str()
+                        .unwrap(),
+                );
+                jvm_args.push(&logging_arg);
+            }
+        }
+    }
+
+    // 1.7.10 release date, latest supported by agenta
+    let agenta_arg;
+    let max_date = "2014-05-14T17:29:23+00:00";
+    let instance_date = version_info["releaseTime"].as_str().unwrap();
+
+    let max_datetime = DateTime::parse_from_rfc3339(max_date).unwrap();
+    let instance_datetime = DateTime::parse_from_rfc3339(instance_date).unwrap();
+    if instance_datetime < max_datetime {
+        agenta_arg = format!(
+            "-javaagent:{}/agenta.jar",
+            check_directory("libraries/za/net/hanro50")
+                .await
+                .to_str()
+                .unwrap()
+        );
+        //jvm_args.push(&agenta_arg);
+    }
+
     let mut process = Command::new(java_path)
         .arg("-cp")
         .arg(cp)
-        .args([
-            "-Xmx2G",
-            "-Xms2G",
-            "-XX:+UnlockExperimentalVMOptions",
-            "-XX:+UseG1GC",
-            "-XX:G1NewSizePercent=20",
-            "-XX:G1ReservePercent=20",
-            "-XX:MaxGCPauseMillis=50",
-            "-XX:G1HeapRegionSize=32M",
-            "-Dos.name=Windows 10",
-            "-Dos.version=10.0",
-            "-Dfml.ignorePatchDiscrepancies=true",
-            "-Dfml.ignoreInvalidMinecraftCertificates=true",
-            "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
-            "-Dminecraft.launcher.brand=AtlasLauncher",
-            "-Dminecraft.launcher.version=1",
-        ])
-        .arg(format!("-Djava.library.path={}", check_directory(format!("natives/{version}").as_str()).await.to_str().unwrap()).as_str())
-        .arg(format!("-Dminecraft.applet.TargetDirectory={}", check_directory(format!("instances/{name}").as_str()).await.to_str().unwrap()))
+        .args(jvm_args)
+        .arg(
+            format!(
+                "-Djava.library.path={}",
+                check_directory(format!("natives/{version}").as_str())
+                    .await
+                    .to_str()
+                    .unwrap()
+            )
+            .as_str(),
+        )
+        .arg(format!(
+            "-Dminecraft.applet.TargetDirectory={}",
+            check_directory(format!("instances/{name}").as_str())
+                .await
+                .to_str()
+                .unwrap()
+        ))
         .arg(main_class)
         .args(args)
         //.creation_flags(CREATE_NO_WINDOW)
         .spawn()
         .expect("failed to execute java process");
 
+    std::env::set_current_dir(working_dir).unwrap();
+
     let status = process.wait().unwrap().code().unwrap();
     println!("{status}");
-
 }
 
 pub async fn get_instances() -> Vec<InstanceInfo> {
@@ -194,49 +313,4 @@ pub async fn get_instances() -> Vec<InstanceInfo> {
     }
 
     instances
-}
-
-pub async fn get_libraries(libraries: &Value) -> String {
-    let mut result: String = String::from("");
-
-    let libraries_path: String = String::from(
-        env::current_exe()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .join("libraries")
-            .to_str()
-            .unwrap(),
-    );
-
-    for download in libraries.as_array().unwrap() {
-        if let Some(_artifact) = download["downloads"].get("artifact") {
-            let mut must_use: bool = true;
-            if let Some(rules) = download.get("rules") {
-                for rule in rules.as_array().unwrap().iter() {
-                    if let Some(action) = rule.get("action").and_then(|a| a.as_str()) {
-                        if action == "allow" {
-                            if let Some(os) = rule
-                                .get("os")
-                                .and_then(|os| os.get("name").and_then(|n| n.as_str()))
-                            {
-                                if os != "windows" {
-                                    must_use = false;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            let path: &str = download["downloads"]["artifact"]["path"]
-                .as_str()
-                .unwrap_or_default();
-
-            if must_use {
-                result = format!("{result}{libraries_path}/{path};");
-            }
-        }
-    }
-
-    result
 }
