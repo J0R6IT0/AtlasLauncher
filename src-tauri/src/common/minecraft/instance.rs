@@ -194,7 +194,10 @@ pub async fn launch_instance(name: &str) {
             "${auth_session}",
             active_user["access_token"].as_str().unwrap(),
         )
-        .replace("${game_directory}", format!("\"{}\"", &instance_path).as_str())
+        .replace(
+            "${game_directory}",
+            format!("\"{}\"", &instance_path).as_str(),
+        )
         .replace("${game_assets}", &assets_path)
         .replace("${version_name}", version)
         .replace("${assets_root}", &assets_path)
@@ -208,18 +211,18 @@ pub async fn launch_instance(name: &str) {
         .replace("${user_type}", "msa")
         .replace("${version_type}", version_info["type"].as_str().unwrap());
 
-        let re: Regex = Regex::new(r#""([^"]+)"|(\S+)"#).unwrap();
-        
-        let args: Vec<&str> = re
-            .captures_iter(&replaced_arguments)
-            .map(|cap| {
-                if let Some(s) = cap.get(1) {
-                    s.as_str()
-                } else {
-                    cap.get(2).unwrap().as_str()
-                }
-            })
-            .collect();
+    let re: Regex = Regex::new(r#""([^"]+)"|(\S+)"#).unwrap();
+
+    let args: Vec<&str> = re
+        .captures_iter(&replaced_arguments)
+        .map(|cap| {
+            if let Some(s) = cap.get(1) {
+                s.as_str()
+            } else {
+                cap.get(2).unwrap().as_str()
+            }
+        })
+        .collect();
 
     // const CREATE_NO_WINDOW: u32 = 0x08000000;
 
