@@ -2,6 +2,8 @@ import React from 'react';
 import '../styles/Library.css';
 import { invoke } from '@tauri-apps/api/tauri';
 import type { InstanceInfo } from '../../App';
+import GrassBlock from '../../assets/images/grass-block.webp';
+import InstanceBackground from '../../assets/images/instance-background.jpg';
 
 interface LibraryProps {
     instances: InstanceInfo[]
@@ -18,7 +20,12 @@ function Library(props: LibraryProps): JSX.Element {
                 {props.instances.map((element, key) => <div key={key} className='instance' onClick={() => {
                     invoke('launch_instance', { name: element.name }).catch(e => {});
                 }}>
-                    <span>{element.name} - {element.version}</span>
+                    <div className='instance-content'>
+                        <img className='instance-background' src={InstanceBackground} />
+                        <div className='instance-info'>
+                            <span><img src={GrassBlock} />{element.name}</span>
+                        </div>
+                    </div>
                 </div>)}
 
             </div>

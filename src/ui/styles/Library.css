@@ -38,72 +38,47 @@
 }
 
 .instance {
+    position: relative;
+    aspect-ratio: 1.4 / 1;
+}
+
+.instance-background {
+    position: absolute;
+    opacity: 1;
+    filter: blur(1.5px);
+}
+
+.instance-content {
+    width: 100%;
+    position: absolute;
     background-color: #202832;
-    aspect-ratio: 1.3 / 1;
+    height: 100%;
+    bottom: 0;
     border-radius: 0.5rem;
+    overflow: hidden;
+
+}
+
+.instance-info {
+    position: absolute;
+    background-color: #202832d2;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-color-secondary);
+
 }
 
-
-/*
-.instance {
-    position: relative;
-    margin-top: 1rem;
-    margin-left: 1rem;
-    width: 15rem;
-    height: 10rem;
-    background-color: var(--primary-color);
-    border-radius: 0.5rem;
-    overflow: hidden;
-    box-shadow: 0 0 0.1rem rgba(0, 0, 0, 0.3) !important;
-}
-
-.instance-background {
-    width: 20rem;
-    height: 10rem;
-    position: absolute;
-    top: -4rem;
-    left: -4rem;
-    filter: blur(51.2px);
-}
-
-
-.instance-icon-container {
-    z-index: 100;
-    position: absolute;
-    background-color: var(--primary-color);
-    width: 5rem;
-    height: 5rem;
-    top: 2rem;
-    left: 0.7rem;
+.instance-content span {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    border-radius: 0.9rem;
+    width: 65%;
 }
 
-.instance-icon {
-    width: 4.5rem;
-    height: 4.5rem;
-    border-radius: 0.6rem;
-
+.instance-content span img {
+    margin-bottom: 0.5rem;
+    width: 50%;
 }
-
-.instance-content {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 5.5rem;
-    background-color: var(--primary-color);
-}
-
-.instance-name {
-    position: absolute;
-    left: 6rem;
-    top: 0.5rem;
-    font-weight: bold;
-}
-*/
