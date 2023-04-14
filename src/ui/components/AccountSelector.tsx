@@ -47,7 +47,9 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
 
         listen('auth', (event: LoginEvent) => {
             if (event.payload.status === 'Success') {
-                getAccounts().catch(e => {});
+                getAccounts().then(() => {
+                    updateAccountButton();
+                }).catch(e => {});
                 toast.success(event.payload.message, {
                     id: 'currentLoginNotification',
                     duration: 6000,
@@ -91,16 +93,18 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
         }
 
         document.addEventListener('click', clickHandler);
+        updateAccountButton();
+        function updateAccountButton(): void {
+            if (activeAccount !== null && activeAccount.length > 1) {
+                const user = accounts.find(user => user.uuid === activeAccount);
+                if (user !== null && user !== undefined) {
+                    const accountsIcon = document.querySelector('#accounts-button img');
+                    accountsIcon?.setAttribute('src', `https://crafatar.com/avatars/${activeAccount}?overlay`);
+                    button?.classList.add('active-user');
 
-        if (activeAccount !== null && activeAccount.length > 1) {
-            const user = accounts.find(user => user.uuid === activeAccount);
-            if (user !== null && user !== undefined) {
-                const accountsIcon = document.querySelector('#accounts-button img');
-                accountsIcon?.setAttribute('src', `https://crafatar.com/avatars/${activeAccount}?overlay`);
-                button?.classList.add('active-user');
-
-                const usernameSpan = document.querySelector('#accounts-button span');
-                if (usernameSpan !== null) usernameSpan.textContent = user.username;
+                    const usernameSpan = document.querySelector('#accounts-button span');
+                    if (usernameSpan !== null) usernameSpan.textContent = user.username;
+                }
             }
         }
         return () => {
