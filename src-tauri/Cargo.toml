@@ -1,10 +1,10 @@
 [package]
 name = "atlaslauncher"
 version = "0.0.0"
-description = "A Tauri App"
+description = "A minimalist Minecraft launcher."
 authors = ["Jorge Pardo"]
-license = ""
-repository = ""
+license = "CC BY-NC-SA 4.0"
+repository = "https://github.com/J0R6IT0/AtlasLauncher"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -13,7 +13,7 @@ edition = "2021"
 tauri-build = { version = "2.0.0-alpha.4", features = [] }
 
 [dependencies]
-tauri = { version = "2.0.0-alpha.8", features = ["api-all"] }
+tauri = { version = "2.0.0-alpha.8", features = ["fs-all", "shell-open", "window-close", "window-create", "window-maximize", "window-minimize", "window-start-dragging"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 reqwest = { version = "0.11", features = ["blocking", "json"] }

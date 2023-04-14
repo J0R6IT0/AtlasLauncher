@@ -12,7 +12,19 @@
   },
   "tauri": {
     "allowlist": {
-      "all": true,
+      "all": false,
+      "fs": {
+        "all": true,
+        "scope": ["$EXE/*"]
+      },
+      "window": {
+        "all": false,
+        "create": true,
+        "close": true,
+        "minimize": true,
+        "maximize": true,
+        "startDragging": true
+      },
       "shell": {
         "all": false,
         "open": true
