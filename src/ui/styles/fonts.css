@@ -4,5 +4,5 @@
     font-style: normal;
     src: 
       local('Metropolis-Regular'), 
-      url('../../assets/fonts/Metropolis-Regular.otf') format('opentype');
+      url('../../assets/fonts/Metropolis-Regular.woff2') format('woff2');
   }
