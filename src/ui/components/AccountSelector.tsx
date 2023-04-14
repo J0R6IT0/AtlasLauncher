@@ -27,18 +27,27 @@ interface AccountSelectorProps {
     setVisible: (visible: boolean) => void
 }
 
-const accountsFirstRun: AccountInfo[] = await invoke('get_accounts').catch(e => {}) as AccountInfo[];
-const activeAccountFirstRun = await invoke('get_active_account').catch(e => {}) as string;
-
 function AccountSelector(props: AccountSelectorProps): JSX.Element {
-    const [accounts, setAccounts] = useState(accountsFirstRun);
-    const [activeAccount, setActiveAccount] = useState(activeAccountFirstRun);
+    const [accounts, setAccounts] = useState<AccountInfo[]>([]);
+    const [activeAccount, setActiveAccount] = useState('');
 
     async function getAccounts(): Promise<void> {
         const accounts = await invoke('get_accounts').catch(e => {}) as AccountInfo[];
         const activeAccount = await invoke('get_active_account').catch(e => {}) as string;
         setAccounts(accounts);
         setActiveAccount(activeAccount);
+        const button = document.getElementById('accounts-button');
+        if (activeAccount !== null && activeAccount.length > 1) {
+            const user = accounts.find(user => user.uuid === activeAccount);
+            if (user !== null && user !== undefined) {
+                const accountsIcon = document.querySelector('#accounts-button img');
+                accountsIcon?.setAttribute('src', `https://crafatar.com/avatars/${activeAccount}?overlay`);
+                button?.classList.add('active-user');
+
+                const usernameSpan = document.querySelector('#accounts-button span');
+                if (usernameSpan !== null) usernameSpan.textContent = user.username;
+            }
+        }
     }
 
     useEffect(() => {
@@ -47,9 +56,7 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
 
         listen('auth', (event: LoginEvent) => {
             if (event.payload.status === 'Success') {
-                getAccounts().then(() => {
-                    updateAccountButton();
-                }).catch(e => {});
+                getAccounts().catch(e => {});
                 toast.success(event.payload.message, {
                     id: 'currentLoginNotification',
                     duration: 6000,
@@ -84,6 +91,8 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
             }
         }).catch(e => {});
 
+        getAccounts().catch(e => {});
+
         function clickHandler(event: Event): void {
             if (element !== null && button !== null) {
                 if (!element.contains(event.target as Node) && !button.contains(event.target as Node) && element.classList.contains('visible')) {
@@ -93,20 +102,6 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
         }
 
         document.addEventListener('click', clickHandler);
-        updateAccountButton();
-        function updateAccountButton(): void {
-            if (activeAccount !== null && activeAccount.length > 1) {
-                const user = accounts.find(user => user.uuid === activeAccount);
-                if (user !== null && user !== undefined) {
-                    const accountsIcon = document.querySelector('#accounts-button img');
-                    accountsIcon?.setAttribute('src', `https://crafatar.com/avatars/${activeAccount}?overlay`);
-                    button?.classList.add('active-user');
-
-                    const usernameSpan = document.querySelector('#accounts-button span');
-                    if (usernameSpan !== null) usernameSpan.textContent = user.username;
-                }
-            }
-        }
         return () => {
             document.removeEventListener('click', clickHandler);
         };
