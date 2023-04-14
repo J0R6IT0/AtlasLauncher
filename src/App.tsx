@@ -9,7 +9,7 @@ import MinusIcon from './assets/icons/minus.svg';
 import SquareIcon from './assets/icons/square.svg';
 import XIcon from './assets/icons/x.svg';
 import toast, { Toaster } from 'react-hot-toast';
-import BackgroundImage from './assets/images/minecraft-background.jpg';
+import BackgroundImage from './assets/images/minecraft-background.webp';
 import UserIcon from './assets/icons/user.svg';
 import BellIcon from './assets/icons/bell.svg';
 import { invoke } from '@tauri-apps/api/tauri';
