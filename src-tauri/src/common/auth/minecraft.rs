@@ -3,7 +3,7 @@ use serde_json::Value;
 use tauri::Manager;
 
 use crate::auth::login::LoginEventPayload;
-use crate::utils::json_to_file;
+use crate::utils::file;
 
 pub async fn login(
     token: &str,
@@ -105,10 +105,10 @@ pub async fn get_account_info(
                 }}
             "#
         );
-        json_to_file::save(&account_info, &format!("launcher/auth/{uuid}.json"));
+        file::write_str(&account_info, &format!("launcher/auth/{uuid}.json")).unwrap();
 
         if !from_refresh {
-            json_to_file::save(&active_account, "launcher/auth/active_account.json");
+            file::write_str(&active_account, "launcher/auth/active_account.json").unwrap();
             app.emit_all(
                 "auth",
                 LoginEventPayload {

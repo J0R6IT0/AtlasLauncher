@@ -1,6 +1,6 @@
 use crate::common::{
     auth,
-    utils::{directory_checker, file_to_json, json_to_file},
+    utils::{directory, file},
 };
 
 use serde::{Deserialize, Serialize};
@@ -90,7 +90,7 @@ fn close_auth_window(app: &AppHandle) {
 pub fn get_accounts() -> Vec<AccountInfo> {
     let mut accounts: Vec<AccountInfo> = Vec::new();
 
-    let auth_path: PathBuf = directory_checker::check_directory_sync("launcher/auth");
+    let auth_path: PathBuf = directory::check_directory_sync("launcher/auth");
 
     for entry in fs::read_dir(auth_path).unwrap() {
         let entry: DirEntry = entry.unwrap();
@@ -128,7 +128,7 @@ pub fn get_active_account() -> String {
 pub async fn get_active_account_info() -> Value {
     let active_account = get_active_account();
     let account =
-        file_to_json::read(format!("launcher/auth/{active_account}.json").as_str()).unwrap();
+        file::read_as_json(format!("launcher/auth/{active_account}.json").as_str()).await.unwrap();
 
     account
 }
@@ -142,7 +142,7 @@ pub fn set_active_account(uuid: &str) {
         "#
     );
 
-    json_to_file::save(&active_account, "launcher/auth/active_account.json");
+    file::write_str(&active_account, "launcher/auth/active_account.json").unwrap();
 }
 
 pub fn remove_account(uuid: &str) {

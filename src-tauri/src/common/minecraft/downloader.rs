@@ -1,8 +1,10 @@
+use futures::{future::join_all, stream, StreamExt};
 use serde::{Deserialize, Serialize};
-use std::{env, fs, path};
+use std::env;
+use tauri::async_runtime;
 
-use crate::{utils::{download_file::download_file, file_to_json, json_to_file}, common::utils::directory_checker::check_directory};
-use serde_json::{self, Value};
+use crate::utils::file;
+use serde_json::{self, Map, Value};
 
 #[derive(Serialize, Deserialize)]
 struct VersionInfo {
@@ -15,65 +17,66 @@ pub async fn download(
     version: &str,
     instance_name: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let mut json: Option<Value> = None;
+    let url = get_version_url(version_type, version).await?;
 
-    match file_to_json::read(format!("versions/{version}/{version}.json").as_str()) {
-        Ok(file_json) => json = Some(file_json),
-        Err(_) => {}
-    };
+    let json = file::download_as_json(
+        &url,
+        "",
+        1,
+        format!("versions/{version}/{version}.json").as_str(),
+        false,
+    )
+    .await?;
 
-    if json.is_none() {
-        let url = get_version_url(version_type, version).await?;
-
-        let response = reqwest::get(url).await?.text().await?;
-
-        json_to_file::save(
-            response.as_str(),
-            format!("versions/{version}/{version}.json").as_str(),
-        );
-
-        json = Some(serde_json::from_str(response.as_str()).unwrap());
-    }
+    let mut download_tasks = vec![];
 
     // client.jar
-
-    if let Some(json) = json {
-        let client_url: &str = json["downloads"]["client"]["url"]
+    let json_copy = json.clone();
+    let version_copy = version.clone().to_owned();
+    let download_task = tauri::async_runtime::spawn(async move {
+        let client_url: &str = json_copy["downloads"]["client"]["url"]
             .as_str()
             .unwrap_or_default();
 
-        let client_checksum: &str = json["downloads"]["client"]["sha1"]
+        let client_checksum: &str = json_copy["downloads"]["client"]["sha1"]
             .as_str()
             .unwrap_or_default();
 
-        download_file(
+        file::download_as_vec(
             client_url,
             client_checksum,
             1,
-            format!("versions/{version}/{version}.jar").as_str(),
+            format!("versions/{version_copy}/{version_copy}.jar").as_str(),
             false,
         )
         .await
         .unwrap();
+    });
+    download_tasks.push(download_task);
 
-        // assets
-        let assets_url: &str = json["assetIndex"]["url"].as_str().unwrap_or_default();
-        let assets_index: &str = json["assetIndex"]["id"].as_str().unwrap_or_default();
-        download_assets(assets_url, assets_index, instance_name).await?;
+    // assets
+    let json_copy = json.clone();
+    let instance_name_copy = instance_name.clone().to_owned();
+    let download_task = tauri::async_runtime::spawn(async move {
+        let assets_url: &str = json_copy["assetIndex"]["url"].as_str().unwrap_or_default();
+        let assets_index: &str = json_copy["assetIndex"]["id"].as_str().unwrap_or_default();
+        download_assets(assets_url, assets_index, &instance_name_copy)
+            .await
+            .unwrap();
+    });
+    download_tasks.push(download_task);
 
-        // libraries
-        let libraries: &Vec<serde_json::Value> = json["libraries"].as_array().unwrap();
-        let libraries_arg = download_libraries(&libraries, &version).await?;
-
-        // logging
-        if let Some(logging) = json.get("logging") {
+    // logging
+    let json_copy = json.clone();
+    let download_task = tauri::async_runtime::spawn(async move {
+        if let Some(logging) = json_copy.get("logging") {
             if let Some(client) = logging.get("client") {
                 if let Some(file) = client.get("file") {
                     let url = file["url"].as_str().unwrap();
                     let sha1 = file["sha1"].as_str().unwrap();
                     let id = file["id"].as_str().unwrap();
 
-                    download_file(
+                    file::download_as_vec(
                         url,
                         sha1,
                         1,
@@ -85,31 +88,30 @@ pub async fn download(
                 }
             }
         }
-        return Ok(libraries_arg);
+    });
+    download_tasks.push(download_task);
 
-    }
-    Err(Box::new(std::io::Error::new(
-        std::io::ErrorKind::Other,
-        "Download failed, no json found.",
-    )))
+    // libraries
+    let libraries: &Vec<serde_json::Value> = json["libraries"].as_array().unwrap();
+    let libraries_arg = download_libraries(&libraries, &version).await?;
+
+    join_all(download_tasks).await;
+    return Ok(libraries_arg);
 }
 
 async fn get_version_url(
     version_type: &str,
     version: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let exe_path: path::PathBuf = env::current_exe().unwrap();
+    let json: Value =
+        file::read_as_json(&("launcher/version-info/".to_string() + version_type + ".json"))
+            .await?;
+    let versions = json.as_array().unwrap();
 
-    let file_path: path::PathBuf = exe_path
-        .parent()
-        .ok_or_else(|| "Could not get parent directory".to_string())?
-        .join(String::from("launcher/version-info/") + version_type + ".json");
-
-    let content = fs::read_to_string(file_path).unwrap();
-    let versions: Vec<VersionInfo> = serde_json::from_str(&content).unwrap();
-
-    if let Some(v) = versions.iter().find(|v| v.id == version) {
-        return Ok(v.url.clone());
+    for item in versions.iter() {
+        if item["id"].as_str().unwrap() == version {
+            return Ok(item["url"].as_str().unwrap().to_string());
+        }
     }
 
     Err("Version not found".into())
@@ -120,69 +122,89 @@ async fn download_assets(
     id: &str,
     instance_name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut json: Option<Value> = None;
+    let json: Value = file::download_as_json(
+        url,
+        "",
+        1,
+        format!("assets/indexes/{id}.json").as_str(),
+        false,
+    )
+    .await?;
 
-    match file_to_json::read(format!("assets/indexes/{id}.json").as_str()) {
-        Ok(file_json) => json = Some(file_json),
-        Err(_) => {}
-    };
+    let objects: Map<String, Value> = json.get("objects").unwrap().as_object().unwrap().to_owned();
 
-    if json.is_none() {
-        let response = reqwest::get(url).await?.text().await?;
+    let download_tasks = stream::iter(objects.into_iter().map(|object| async {
+        let id_copy = id.clone().to_owned();
+        let instance_name_copy = instance_name.clone().to_owned();
+        async_runtime::spawn(async move {
+            let mc_instance: String = String::from(instance_name_copy);
+            let assets_id: String = String::from(id_copy);
 
-        json_to_file::save(
-            response.as_str(),
-            format!("assets/indexes/{id}.json").as_str(),
+            let object_hash: &str = object.1.get("hash").unwrap().as_str().unwrap();
+            let object_url: String = format!(
+                "https://resources.download.minecraft.net/{}/{}",
+                &object_hash[0..2],
+                &object_hash
+            );
+
+            let path: String;
+            if assets_id == "legacy" || assets_id == "pre-1.6" {
+                path = format!("assets/virtual/legacy/{}", object.0);
+            } else {
+                path = format!("assets/objects/{}/{}", &object_hash[0..2], &object_hash);
+            }
+            let vec: Vec<u8> = file::download_as_vec(&object_url, object_hash, 1, &path, false)
+                .await
+                .unwrap();
+
+            if assets_id == "pre-1.6" {
+                file::write_vec(
+                    &vec,
+                    format!("instances/{}/resources/{}", mc_instance, object.0).as_str(),
+                )
+                .unwrap();
+            }
+        })
+        .await
+        .unwrap();
+    }))
+    .buffer_unordered(50)
+    .collect::<Vec<_>>();
+
+    download_tasks.await;
+    /*let download_tasks = stream::iter(objects.into_iter().map(|object| async move {
+        let mc_instance: String = String::from(instance_name);
+        let assets_id: String = String::from(id);
+
+        let object_hash: &str = object.1.get("hash").unwrap().as_str().unwrap();
+        let object_url: String = format!(
+            "https://resources.download.minecraft.net/{}/{}",
+            &object_hash[0..2],
+            &object_hash
         );
 
-        json = Some(serde_json::from_str(response.as_str()).unwrap());
-    }
-
-    if let Some(json) = json {
-        let objects = json.get("objects").unwrap().as_object().unwrap().to_owned();
-
-        let mut download_tasks = vec![];
-
-        for (key, object) in objects {
-            let mc_instance: String = String::from(instance_name);
-            let assets_id = String::from(id);
-            let download_task = tauri::async_runtime::spawn(async move {
-                let object_hash: &str = object.get("hash").unwrap().as_str().unwrap();
-                let object_url: String = format!(
-                    "https://resources.download.minecraft.net/{}/{}",
-                    &object_hash[0..2],
-                    &object_hash
-                );
-
-                let path: String;
-                if assets_id == "legacy" || assets_id == "pre-1.6" {
-                    path = format!("assets/virtual/legacy/{}", key);
-                } else {
-                    path = format!("assets/objects/{}/{}", &object_hash[0..2], &object_hash);
-                }
-                download_file(&object_url, object_hash, 1, &path, false)
-                    .await
-                    .unwrap();
-
-                if assets_id == "pre-1.6" {
-                    download_file(
-                        &object_url,
-                        object_hash,
-                        1,
-                        format!("instances/{}/resources/{}", mc_instance, key).as_str(),
-                        false,
-                    )
-                    .await
-                    .unwrap();
-                }
-            });
-            download_tasks.push(download_task);
+        let path: String;
+        if assets_id == "legacy" || assets_id == "pre-1.6" {
+            path = format!("assets/virtual/legacy/{}", object.0);
+        } else {
+            path = format!("assets/objects/{}/{}", &object_hash[0..2], &object_hash);
         }
+        let vec: Vec<u8> = file::download_as_vec(&object_url, object_hash, 1, &path, false)
+            .await
+            .unwrap();
 
-        for download_task in download_tasks {
-            download_task.await?;
+        if assets_id == "pre-1.6" {
+            file::write_vec(
+                &vec,
+                format!("instances/{}/resources/{}", mc_instance, object.0).as_str(),
+            )
+            .unwrap();
         }
-    }
+    }))
+    .buffer_unordered(50)
+    .collect::<Vec<()>>();
+    download_tasks.await;*/
+
     Ok(())
 }
 
@@ -190,24 +212,31 @@ async fn download_libraries(
     libraries: &Vec<serde_json::Value>,
     version: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let mut download_tasks = vec![];
-
     let mut libraries_arg: String = String::from("");
+
+    let mut download_tasks = vec![];
 
     for download in libraries.clone() {
         let mc_version: String = String::from(version);
         let mut must_download: bool = true;
 
-        if let Some(rules) = download["downloads"].get("rules") {
+        if let Some(rules) = download.get("rules") {
             for rule in rules.as_array().unwrap().iter() {
                 if let Some(action) = rule.get("action").and_then(|a| a.as_str()) {
                     if action == "allow" {
-                        if let Some(os) = rule
-                            .get("os")
-                            .and_then(|os| os.get("name").and_then(|n| n.as_str()))
-                        {
-                            if os != "windows" {
-                                must_download = false;
+                        if let Some(os) = rule.get("os") {
+                            if let Some(name) = os.get("name") {
+                                if name.as_str().unwrap() != "windows" {
+                                    must_download = false;
+                                }
+                            }
+                        }
+                    } else if action == "disallow" {
+                        if let Some(os) = rule.get("os") {
+                            if let Some(name) = os.get("name") {
+                                if name.as_str().unwrap() == "windows" {
+                                    must_download = false;
+                                }
                             }
                         }
                     }
@@ -223,7 +252,7 @@ async fn download_libraries(
                     let url: &str = artifact["url"].as_str().unwrap_or_default();
                     let hash: &str = artifact["sha1"].as_str().unwrap_or_default();
                     let library_path: &str = artifact["path"].as_str().unwrap_or_default();
-                    download_file(
+                    file::download_as_vec(
                         &url,
                         &hash,
                         1,
@@ -252,7 +281,7 @@ async fn download_libraries(
                         let url: &str = windows_natives["url"].as_str().unwrap_or_default();
                         let hash: &str = windows_natives["sha1"].as_str().unwrap_or_default();
 
-                        download_file(
+                        file::download_as_vec(
                             &url,
                             hash,
                             1,

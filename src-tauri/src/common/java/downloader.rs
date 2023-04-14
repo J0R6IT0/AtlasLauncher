@@ -1,8 +1,7 @@
-use reqwest;
 use serde_json::{self, Value};
 use std::{env, path::PathBuf};
 
-use crate::{common::utils::download_file, utils::directory_checker::check_directory};
+use crate::{common::utils::file, utils::directory::check_directory};
 
 pub async fn download(version: u8) -> Result<(), Box<dyn std::error::Error>> {
     if !check_java(version).await {
@@ -16,7 +15,7 @@ pub async fn download(version: u8) -> Result<(), Box<dyn std::error::Error>> {
     let link: &str = binary["package"]["link"].as_str().unwrap();
 
     // Download the file
-    download_file::download_file(link, checksum, 56, path.to_str().unwrap(), true)
+    file::download_as_vec(link, checksum, 56, path.to_str().unwrap(), true)
         .await
         .unwrap();
 
@@ -34,15 +33,11 @@ async fn get_version_info(version: u8) -> Result<Value, Box<dyn std::error::Erro
         _ => env::consts::OS,
     };
 
-    let response: serde_json::Value = reqwest::get(format!(
+    let json: Value = file::download_as_json(&format!(
         "https://api.adoptium.net/v3/assets/feature_releases/{version}/ga?os={os}&architecture={arch}&image_type=jre"
-    ))
-    .await?
-    .json()
-    .await
-    .map_err(|e| format!("Failed to get json: {}", e))?;
+    ), "", 1, "", false).await?;
 
-    let binaries: &Vec<Value> = response.as_array().unwrap()[0]["binaries"]
+    let binaries: &Vec<Value> = json.as_array().unwrap()[0]["binaries"]
         .as_array()
         .unwrap();
 

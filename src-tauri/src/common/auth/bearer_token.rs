@@ -1,10 +1,9 @@
-use crate::auth::{login, xbox};
+use crate::{auth::{login, xbox}, common::utils::directory};
 use reqwest::Client;
 use serde_json::Value;
 use tauri::Manager;
 
 use std::{
-    env,
     fs::{self, DirEntry},
     path::PathBuf,
 };
@@ -48,11 +47,7 @@ pub async fn get_bearer_token(code: &str, app: &tauri::AppHandle) {
 pub async fn refresh_bearer_tokens(app: &tauri::AppHandle) {
     let mut accounts: Vec<login::AccountInfo> = Vec::new();
 
-    let auth_path: PathBuf = env::current_exe()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join("launcher/auth");
+    let auth_path: PathBuf = directory::check_directory("launcher/auth").await;
 
     for entry in fs::read_dir(auth_path).unwrap() {
         let entry: DirEntry = entry.unwrap();

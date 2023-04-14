@@ -1,4 +1,4 @@
-use crate::utils::directory_checker::check_directory;
+use crate::utils::directory::check_directory;
 use std::{
     fs::{self, DirEntry},
     path::PathBuf,

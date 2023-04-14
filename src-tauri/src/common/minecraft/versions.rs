@@ -1,6 +1,5 @@
-use reqwest;
 use serde::{Deserialize, Serialize};
-use serde_json;
+use serde_json::Value;
 use std::{
     collections::HashMap,
     env,
@@ -9,7 +8,7 @@ use std::{
     path::PathBuf,
 };
 
-use crate::common::utils::directory_checker::check_directory;
+use crate::common::utils::{directory, file};
 
 #[derive(Serialize, Deserialize)]
 pub struct VersionData {
@@ -18,20 +17,19 @@ pub struct VersionData {
 }
 
 pub async fn download_version_manifest() -> Result<(), Box<dyn std::error::Error>> {
-    let exe_path: PathBuf = env::current_exe()?;
-    check_directory("launcher/version-info").await;
-
-    let response: serde_json::Value =
-        reqwest::get("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json")
-            .await?
-            .json()
-            .await
-            .map_err(|e| format!("Failed to get json: {}", e))?;
+    let json: Value = file::download_as_json(
+        "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json",
+        "",
+        1,
+        "",
+        false,
+    )
+    .await?;
 
     let mut version_data: HashMap<&str, Vec<VersionData>> =
         HashMap::<&str, Vec<VersionData>>::new();
 
-    for version in response["versions"].as_array().unwrap() {
+    for version in json["versions"].as_array().unwrap() {
         if let (Some(id), Some(r#type), Some(url)) = (
             version["id"].as_str(),
             version["type"].as_str(),
@@ -52,7 +50,7 @@ pub async fn download_version_manifest() -> Result<(), Box<dyn std::error::Error
     }
 
     for (version_type, data) in version_data.iter() {
-        write_data_to_file(version_type, data, &exe_path)?;
+        write_data_to_file(version_type, data)?;
     }
 
     Ok(())
@@ -61,12 +59,9 @@ pub async fn download_version_manifest() -> Result<(), Box<dyn std::error::Error
 fn write_data_to_file<T: Serialize>(
     file_name: &str,
     data: &T,
-    exe_path: &PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let file_path: PathBuf = exe_path
-        .parent()
-        .ok_or("Failed to get parent directory of current exe path")?
-        .join(format!("launcher/version-info/{}.json", file_name));
+    let file_path =
+        directory::check_directory_sync("launcher/version-info/").join(format!("{file_name}.json"));
 
     let file: File = File::create(&file_path)?;
 

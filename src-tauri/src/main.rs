@@ -3,7 +3,6 @@
 
 use std::env;
 use tauri::AppHandle;
-use tokio;
 
 mod common;
 use common::{auth, java, minecraft, utils};
