@@ -102,33 +102,33 @@ function App(): JSX.Element {
                     <img src={UserIcon} />
                 </div>
             </div>
-            <Toaster toastOptions={{
-                success: {
-                    duration: 10000,
-                    position: 'bottom-center',
-                    className: 'toast-notification',
-                    iconTheme: {
-                        primary: 'var(--icons-color-hover)',
-                        secondary: 'var(--icons-color)'
+            <Toaster
+                position='bottom-center'
+                toastOptions={{
+                    success: {
+                        duration: 6000,
+                        className: 'toast-notification',
+                        iconTheme: {
+                            primary: 'var(--icons-color-hover)',
+                            secondary: 'var(--text-color-primary)'
+                        }
+                    },
+                    error: {
+                        duration: 10000,
+                        className: 'toast-notification',
+                        iconTheme: {
+                            primary: 'var(--icons-color-hover)',
+                            secondary: 'var(--text-color-primary)'
+                        }
+                    },
+                    loading: {
+                        className: 'toast-notification',
+                        iconTheme: {
+                            primary: 'var(--icons-color-hover)',
+                            secondary: 'var(--icons-color)'
+                        }
                     }
-                },
-                error: {
-                    duration: 10000,
-                    position: 'bottom-center',
-                    iconTheme: {
-                        primary: 'var(--icons-color)',
-                        secondary: 'var(--icons-color-hover)'
-                    }
-                },
-                loading: {
-                    position: 'bottom-center',
-                    className: 'toast-notification',
-                    iconTheme: {
-                        primary: 'var(--icons-color-hover)',
-                        secondary: 'var(--icons-color)'
-                    }
-                }
-            }}/>
+                }}/>
         </div>
     );
 }

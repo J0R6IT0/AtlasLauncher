@@ -110,16 +110,7 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
             </div>)}
             <div className='account-items' id='add-account' onClick={() => {
                 invoke('start_oauth').catch(e => {});
-                toast.loading('Logging In.', {
-                    id: 'currentLoginNotification',
-                    position: 'bottom-center',
-                    className: 'toast-notification',
-                    duration: 60000,
-                    iconTheme: {
-                        primary: 'var(--icons-color-hover)',
-                        secondary: 'var(--icons-color)'
-                    }
-                });
+                toast.loading('Logging In.', { id: 'currentLoginNotification' });
             }}>
                 <div>
                     <img src={UserPlus} alt="" />
