@@ -51,17 +51,26 @@ pub fn create_login_window(handle: tauri::AppHandle) {
                 .to_string()
                 .starts_with("https://login.live.com/oauth20_desktop.srf")
             {
-                let code: String = url.to_owned().query_pairs().next().unwrap().1.to_string();
+                if url.to_string().contains("?error") {
+                    app.emit_all(
+                        "auth",
+                        LoginEventPayload {
+                            message: format!("Auth canceled."),
+                            status: String::from("Hide"),
+                        },
+                    )
+                    .unwrap();
+                } else {
+                    let code: String = url.to_owned().query_pairs().next().unwrap().1.to_string();
 
-                let app: AppHandle = app.to_owned();
+                    let app: AppHandle = app.to_owned();
+                    app.emit_all("close-auth-window", ()).unwrap();
 
+                    tauri::async_runtime::spawn(async move {
+                        auth::bearer_token::get_bearer_token(code.as_str(), &app).await;
+                    });
+                }
                 close_auth_window(&app);
-
-                app.emit_all("close-auth-window", ()).unwrap();
-
-                tauri::async_runtime::spawn(async move {
-                    auth::bearer_token::get_bearer_token(code.as_str(), &app).await;
-                });
             }
             true
         })
@@ -127,8 +136,9 @@ pub fn get_active_account() -> String {
 
 pub async fn get_active_account_info() -> Value {
     let active_account = get_active_account();
-    let account =
-        file::read_as_json(format!("launcher/auth/{active_account}.json").as_str()).await.unwrap();
+    let account = file::read_as_json(format!("launcher/auth/{active_account}.json").as_str())
+        .await
+        .unwrap();
 
     account
 }
