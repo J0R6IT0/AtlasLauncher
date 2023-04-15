@@ -128,3 +128,7 @@
     white-space: nowrap;
 }
 
+.instance-version span {
+    align-items: flex-start;
+}
+
