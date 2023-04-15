@@ -3,7 +3,7 @@ import '../styles/Library.css';
 import { invoke } from '@tauri-apps/api/tauri';
 import type { InstanceInfo } from '../../App';
 import GrassBlock from '../../assets/images/grass-block.webp';
-import InstanceBackground from '../../assets/images/instance-background.jpg';
+import InstanceBackground from '../../assets/images/instance-background.webp';
 import BoxIcon from '../../assets/icons/box.svg';
 
 interface LibraryProps {
