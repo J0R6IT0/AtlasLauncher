@@ -40,45 +40,90 @@
 .instance {
     position: relative;
     aspect-ratio: 1.4 / 1;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.instance:hover {
+    transform: scale(1.05);
 }
 
 .instance-background {
     position: absolute;
     opacity: 1;
-    filter: blur(1.5px);
+    filter: blur(0.75px);
+    height: 100%;
 }
 
 .instance-content {
     width: 100%;
     position: absolute;
-    background-color: #202832;
     height: 100%;
     bottom: 0;
-    border-radius: 0.5rem;
+    border-radius: 0.7rem;
     overflow: hidden;
-
+    box-shadow: 0 0 0.2rem rgb(0 0 0 / 10%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .instance-info {
     position: absolute;
-    background-color: #202832d2;
+    background-color: #202832c6;
     width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-color-secondary);
+    transition: all 0.15s ease-in-out;
 
+}
+
+.instance:hover .instance-info {
+    background-color: #20283291;
+    color: var(--text-color-primary);
+
+}
+
+.instance-type img {
+    filter: var(--text-filter-secondary);
+    transition: all 0.15s ease-in-out;
+}
+
+.instance-content span img {
+    margin-bottom: 0.5rem;
+    width: 35%;
+}
+
+.instance:hover .instance-type img {
+    filter: var(--text-filter-primary);
 }
 
 .instance-content span {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 65%;
+    width: 100%;
 }
 
-.instance-content span img {
-    margin-bottom: 0.5rem;
-    width: 50%;
+.instance-type {
+    left: 0.2rem;
+    width: 1rem;
+}
+
+.instance-info div {
+    position: absolute;
+    top: 0.2rem;
+    right: 0.2rem;
+    background-color: var(--side-bar-color);
+    opacity: 0.5;
+    padding: 0.25rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    word-wrap: none;
+    font-size: 0.9rem;
+    max-width: 35%;
+    white-space: nowrap;
 }

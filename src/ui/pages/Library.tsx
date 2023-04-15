@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/tauri';
 import type { InstanceInfo } from '../../App';
 import GrassBlock from '../../assets/images/grass-block.webp';
 import InstanceBackground from '../../assets/images/instance-background.jpg';
+import BoxIcon from '../../assets/icons/box.svg';
 
 interface LibraryProps {
     instances: InstanceInfo[]
@@ -24,10 +25,11 @@ function Library(props: LibraryProps): JSX.Element {
                         <img className='instance-background' src={InstanceBackground} />
                         <div className='instance-info'>
                             <span><img src={GrassBlock} />{element.name}</span>
+                            <div className='instance-version'><span>{element.version}</span></div>
+                            <div className='instance-type'><img src={BoxIcon} /></div>
                         </div>
                     </div>
                 </div>)}
-
             </div>
         </div>
     );

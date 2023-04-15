@@ -4,7 +4,7 @@ import MinecraftForge from '../../assets/images/minecraft-forge.webp';
 import MinecraftFabric from '../../assets/images/minecraft-fabric.webp';
 import MinecraftCover from '../../assets/images/minecraft-cover.webp';
 import CreateInstance from '../components/CreateInstance';
-import BoxIcon from '../../assets/icons/box.svg';
+import BoxIcon from '../../assets/icons/box-thin.svg';
 import ForgeIcon from '../../assets/icons/forge.svg';
 import FabricIcon from '../../assets/icons/fabric.svg';
 
