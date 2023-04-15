@@ -57,35 +57,11 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
         listen('auth', (event: LoginEvent) => {
             if (event.payload.status === 'Success') {
                 getAccounts().catch(e => {});
-                toast.success(event.payload.message, {
-                    id: 'currentLoginNotification',
-                    duration: 6000,
-                    position: 'bottom-center',
-                    iconTheme: {
-                        primary: 'var(--icons-color)',
-                        secondary: 'var(--icons-color-hover)'
-                    }
-                });
+                toast.success(event.payload.message, { id: 'currentLoginNotification' });
             } else if (event.payload.status === 'Error') {
-                toast.error(event.payload.message, {
-                    id: 'currentLoginNotification',
-                    duration: 10000,
-                    position: 'bottom-center',
-                    iconTheme: {
-                        primary: 'var(--icons-color)',
-                        secondary: 'var(--icons-color-hover)'
-                    }
-                });
+                toast.error(event.payload.message, { id: 'currentLoginNotification' });
             } else if (event.payload.status === 'Loading') {
-                toast.loading(event.payload.message, {
-                    id: 'currentLoginNotification',
-                    position: 'bottom-center',
-                    className: 'toast-notification',
-                    iconTheme: {
-                        primary: 'var(--icons-color-hover)',
-                        secondary: 'var(--icons-color)'
-                    }
-                });
+                toast.loading(event.payload.message, { id: 'currentLoginNotification' });
             } else {
                 toast.dismiss('currentLoginNotification');
             }

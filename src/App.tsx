@@ -53,35 +53,11 @@ function App(): JSX.Element {
             console.log(Math.random());
             if (event.payload.status === 'Success') {
                 getInstances().catch(e => {});
-                toast.success(event.payload.message, {
-                    id: event.payload.name,
-                    duration: 6000,
-                    position: 'bottom-center',
-                    iconTheme: {
-                        primary: 'var(--icons-color)',
-                        secondary: 'var(--icons-color-hover)'
-                    }
-                });
+                toast.success(event.payload.message, { id: event.payload.name });
             } else if (event.payload.status === 'Error') {
-                toast.error(event.payload.message, {
-                    id: event.payload.name,
-                    duration: 10000,
-                    position: 'bottom-center',
-                    iconTheme: {
-                        primary: 'var(--icons-color)',
-                        secondary: 'var(--icons-color-hover)'
-                    }
-                });
+                toast.error(event.payload.message, { id: event.payload.name });
             } else if (event.payload.status === 'Loading') {
-                toast.loading(event.payload.message, {
-                    id: event.payload.name,
-                    position: 'bottom-center',
-                    className: 'toast-notification',
-                    iconTheme: {
-                        primary: 'var(--icons-color-hover)',
-                        secondary: 'var(--icons-color)'
-                    }
-                });
+                toast.loading(event.payload.message, { id: event.payload.name });
             } else {
                 toast.dismiss(event.payload.name);
             }
@@ -126,7 +102,33 @@ function App(): JSX.Element {
                     <img src={UserIcon} />
                 </div>
             </div>
-            <Toaster />
+            <Toaster toastOptions={{
+                success: {
+                    duration: 10000,
+                    position: 'bottom-center',
+                    className: 'toast-notification',
+                    iconTheme: {
+                        primary: 'var(--icons-color-hover)',
+                        secondary: 'var(--icons-color)'
+                    }
+                },
+                error: {
+                    duration: 10000,
+                    position: 'bottom-center',
+                    iconTheme: {
+                        primary: 'var(--icons-color)',
+                        secondary: 'var(--icons-color-hover)'
+                    }
+                },
+                loading: {
+                    position: 'bottom-center',
+                    className: 'toast-notification',
+                    iconTheme: {
+                        primary: 'var(--icons-color-hover)',
+                        secondary: 'var(--icons-color)'
+                    }
+                }
+            }}/>
         </div>
     );
 }
