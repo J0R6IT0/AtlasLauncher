@@ -54,19 +54,16 @@ interface LoginEventPayload {
     message: string
 }
 
-let instancesFirstRun: InstanceInfo[] = await invoke('get_instances').catch(e => {}) as InstanceInfo[];
-
 function App(): JSX.Element {
     const [activePage, setActivePage] = useState(2);
     const [accountSelectorActive, setAccountSelectorActive] = useState(false);
-    const [instances, setInstances] = useState(instancesFirstRun);
+    const [instances, setInstances] = useState<InstanceInfo[]>([]);
 
     const [accounts, setAccounts] = useState<AccountInfo[]>([]);
     const [activeAccount, setActiveAccount] = useState('');
 
     async function getInstances(): Promise<void> {
         const newInstances = await invoke('get_instances').catch(e => {}) as InstanceInfo[];
-        instancesFirstRun = newInstances;
         setInstances(newInstances);
     }
 
@@ -84,9 +81,6 @@ function App(): JSX.Element {
             if (user !== null && user !== undefined) {
                 accountsIcon?.setAttribute('src', `https://crafatar.com/avatars/${activeAccount}?overlay`);
                 button?.classList.add('active-user');
-
-                const usernameSpan = document.querySelector('#accounts-button span');
-                if (usernameSpan !== null) usernameSpan.textContent = user.username;
             }
         } else {
             accountsIcon?.setAttribute('src', UserIcon);
@@ -130,9 +124,10 @@ function App(): JSX.Element {
         }).catch(e => {});
 
         getAccounts().catch(e => {});
+        getInstances().catch(e => {});
 
         function contextMenuHandler(event: Event): void {
-            // event.preventDefault();
+            event.preventDefault();
         }
 
         document.addEventListener('contextmenu', contextMenuHandler);
@@ -172,7 +167,9 @@ function App(): JSX.Element {
             }}/>}
             <div className='content'>
                 {activePage === 1 && <NewInstance />}
-                {activePage === 2 && <Library instances={instances}/>}
+                {activePage === 2 && <Library instances={instances} updateInstances={() => {
+                    getInstances().catch(e => {});
+                }}/>}
             </div>
             <div className='secondary-buttons'>
                 <div>

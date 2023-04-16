@@ -11,7 +11,7 @@ use std::{
 
 use regex::Regex;
 
-use crate::utils::directory::check_directory;
+use crate::{utils::directory::check_directory, common::utils::directory::check_directory_sync};
 use crate::{common::auth::login::get_active_account_info, minecraft::downloader};
 use crate::{
     common::utils::file,
@@ -344,4 +344,8 @@ pub async fn get_instances() -> Vec<InstanceInfo> {
     }
 
     instances
+}
+
+pub fn remove_instance(name: &str) {
+    fs::remove_dir_all(check_directory_sync(format!("instances/{name}").as_str())).unwrap();
 }

@@ -62,6 +62,11 @@ async fn launch_instance(name: &str, handle: tauri::AppHandle) -> Result<(), ()>
     Ok(())
 }
 
+#[tauri::command]
+fn remove_instance(name: &str) {
+    minecraft::instance::remove_instance(name);
+}
+
 #[tokio::main]
 async fn main() {
     // to avoid problems due to having multiple async runtimes running
@@ -85,6 +90,7 @@ async fn main() {
             create_instance,
             get_instances,
             launch_instance,
+            remove_instance,
         ])
         .setup(|app| {
             let handle: AppHandle = app.handle();

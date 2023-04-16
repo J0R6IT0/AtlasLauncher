@@ -10,6 +10,7 @@ import ContextMenu from '../components/ContextMenu';
 
 interface LibraryProps {
     instances: InstanceInfo[]
+    updateInstances: () => void
 }
 
 function Library(props: LibraryProps): JSX.Element {
@@ -46,7 +47,7 @@ function Library(props: LibraryProps): JSX.Element {
                 </div>)}
             </div>
             {showContextMenu && (
-                <ContextMenu target={contextMenuTarget} onClose={() => { setShowContextMenu(false); }} position={contextMenuPosition} />
+                <ContextMenu target={contextMenuTarget} onClose={() => { setShowContextMenu(false); }} position={contextMenuPosition} updateInstances={props.updateInstances}/>
             )}
         </div>
     );
