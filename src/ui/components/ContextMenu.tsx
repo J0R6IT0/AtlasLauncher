@@ -54,9 +54,6 @@ function ContextMenu(props: ContextMenuProps): JSX.Element {
         };
     }, [props.position.x, props.position.y]);
 
-    /*
-
-     */
     return (
         <div ref={menuRef} className='context-menu' style={{ left: props.position.x, top: props.position.y }}>
             <div className='context-menu-item' onClick={() => {

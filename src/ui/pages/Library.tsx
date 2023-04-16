@@ -31,20 +31,22 @@ function Library(props: LibraryProps): JSX.Element {
                 <span>Your Minecraft worlds are awaiting</span>
             </div>
             <div className='instances'>
-                {props.instances.map((element, key) => <div key={key} className='instance' onClick={() => {
-                    invoke('launch_instance', { name: element.name }).catch(e => {});
-                    toast.loading(`Launching ${element.name}`, { id: 'startInstance' });
-                }}
-                onContextMenu={handleContextMenu}>
-                    <div className='instance-content'>
-                        <img className='instance-background' src={InstanceBackground} />
-                        <div className='instance-info'>
-                            <span><img src={GrassBlock} />{element.name}</span>
-                            <div className='instance-version'><span>{element.version}</span></div>
-                            <div className='instance-type'><img src={BoxIcon} /></div>
+                <div className='grid'>
+                    {props.instances.map((element, key) => <div key={key} className='instance' onClick={() => {
+                        invoke('launch_instance', { name: element.name }).catch(e => {});
+                        toast.loading(`Launching ${element.name}`, { id: 'startInstance' });
+                    }}
+                    onContextMenu={handleContextMenu}>
+                        <div className='instance-content'>
+                            <img className='instance-background' src={InstanceBackground} />
+                            <div className='instance-info'>
+                                <span><img src={GrassBlock} />{element.name}</span>
+                                <div className='instance-version'><span>{element.version}</span></div>
+                                <div className='instance-type'><img src={BoxIcon} /></div>
+                            </div>
                         </div>
-                    </div>
-                </div>)}
+                    </div>)}
+                </div>
             </div>
             {showContextMenu && (
                 <ContextMenu target={contextMenuTarget} onClose={() => { setShowContextMenu(false); }} position={contextMenuPosition} updateInstances={props.updateInstances}/>
