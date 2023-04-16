@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import SideBar from './ui/components/SideBar';
 import NewInstance from './ui/pages/NewInstance';
 import Library from './ui/pages/Library';
@@ -40,6 +40,20 @@ export interface InstanceInfo {
     version: string
 }
 
+export interface AccountInfo {
+    username: string
+    uuid: string
+}
+
+interface LoginEvent {
+    payload: LoginEventPayload
+}
+
+interface LoginEventPayload {
+    status: string
+    message: string
+}
+
 let instancesFirstRun: InstanceInfo[] = await invoke('get_instances').catch(e => {}) as InstanceInfo[];
 
 function App(): JSX.Element {
@@ -47,14 +61,37 @@ function App(): JSX.Element {
     const [accountSelectorActive, setAccountSelectorActive] = useState(false);
     const [instances, setInstances] = useState(instancesFirstRun);
 
+    const [accounts, setAccounts] = useState<AccountInfo[]>([]);
+    const [activeAccount, setActiveAccount] = useState('');
+
     async function getInstances(): Promise<void> {
         const newInstances = await invoke('get_instances').catch(e => {}) as InstanceInfo[];
         instancesFirstRun = newInstances;
         setInstances(newInstances);
     }
 
-    function accountSelectorHandle(): void {
-        setAccountSelectorActive(!accountSelectorActive);
+    const accountButtonRef = useRef<HTMLDivElement>(null);
+
+    async function getAccounts(): Promise<void> {
+        const accounts = await invoke('get_accounts').catch(e => {}) as AccountInfo[];
+        const activeAccount = await invoke('get_active_account').catch(e => {}) as string;
+        setAccounts(accounts);
+        setActiveAccount(activeAccount);
+        const button = accountButtonRef.current;
+        const accountsIcon = button?.querySelector('img');
+        if (activeAccount !== null && activeAccount.length > 1) {
+            const user = accounts.find(user => user.uuid === activeAccount);
+            if (user !== null && user !== undefined) {
+                accountsIcon?.setAttribute('src', `https://crafatar.com/avatars/${activeAccount}?overlay`);
+                button?.classList.add('active-user');
+
+                const usernameSpan = document.querySelector('#accounts-button span');
+                if (usernameSpan !== null) usernameSpan.textContent = user.username;
+            }
+        } else {
+            accountsIcon?.setAttribute('src', UserIcon);
+            button?.classList.remove('active-user');
+        }
     }
 
     useEffect(() => {
@@ -79,9 +116,23 @@ function App(): JSX.Element {
                 toast.loading(event.payload.message, { id: 'startInstance' });
             }
         }).catch(e => {});
+        listen('auth', (event: LoginEvent) => {
+            if (event.payload.status === 'Success') {
+                getAccounts().catch(e => {});
+                toast.success(event.payload.message, { id: 'currentLoginNotification' });
+            } else if (event.payload.status === 'Error') {
+                toast.error(event.payload.message, { id: 'currentLoginNotification' });
+            } else if (event.payload.status === 'Loading') {
+                toast.loading(event.payload.message, { id: 'currentLoginNotification' });
+            } else {
+                toast.dismiss('currentLoginNotification');
+            }
+        }).catch(e => {});
+
+        getAccounts().catch(e => {});
 
         function contextMenuHandler(event: Event): void {
-            event.preventDefault();
+            // event.preventDefault();
         }
 
         document.addEventListener('contextmenu', contextMenuHandler);
@@ -115,7 +166,10 @@ function App(): JSX.Element {
                 </div>
             </div>
             <SideBar setActivePage={setActivePage} activePage={activePage}/>
-            <AccountSelector visible={accountSelectorActive} setVisible={setAccountSelectorActive}/>
+            {accountSelectorActive && <AccountSelector onClose={() => { setAccountSelectorActive(false); }} accounts={accounts} activeAccount={activeAccount} updateAccounts={() => {
+                console.log('ye');
+                getAccounts().catch(e => {});
+            }}/>}
             <div className='content'>
                 {activePage === 1 && <NewInstance />}
                 {activePage === 2 && <Library instances={instances}/>}
@@ -124,7 +178,9 @@ function App(): JSX.Element {
                 <div>
                     <img src={BellIcon} />
                 </div>
-                <div onClick={accountSelectorHandle} id='accounts-button'>
+                <div onClick={() => {
+                    if (!accountSelectorActive) setAccountSelectorActive(true);
+                }} ref={accountButtonRef}>
                     <img src={UserIcon} />
                 </div>
             </div>

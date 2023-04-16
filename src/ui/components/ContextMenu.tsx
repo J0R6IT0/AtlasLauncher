@@ -12,13 +12,12 @@ function ContextMenu(props: ContextMenuProps): JSX.Element {
     const menuRef = useRef<HTMLDivElement>(null);
 
     const handleOutsideClick = (event: MouseEvent): void => {
-        console.log(Math.random());
         const menu = document.querySelector('.context-menu') as HTMLElement;
         if (!menu.contains(event.target as Node)) {
             menuRef.current?.classList.remove('visible');
             setTimeout(() => {
                 props.onClose();
-            }, 300);
+            }, 200);
         }
     };
 
