@@ -79,6 +79,15 @@ function App(): JSX.Element {
                 toast.loading(event.payload.message, { id: 'startInstance' });
             }
         }).catch(e => {});
+
+        function contextMenuHandler(event: Event): void {
+            event.preventDefault();
+        }
+
+        document.addEventListener('contextmenu', contextMenuHandler);
+        return () => {
+            document.removeEventListener('contextmenu', contextMenuHandler);
+        };
     }, []);
 
     return (
