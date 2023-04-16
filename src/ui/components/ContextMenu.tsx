@@ -11,11 +11,24 @@ interface ContextMenuProps {
 function ContextMenu(props: ContextMenuProps): JSX.Element {
     const menuRef = useRef<HTMLDivElement>(null);
 
+    const handleOutsideClick = (event: MouseEvent): void => {
+        console.log(Math.random());
+        const menu = document.querySelector('.context-menu') as HTMLElement;
+        if (!menu.contains(event.target as Node)) {
+            menuRef.current?.classList.remove('visible');
+            setTimeout(() => {
+                props.onClose();
+            }, 300);
+        }
+    };
+
     useEffect(() => {
         if (menuRef.current == null) {
             return;
         }
-
+        setTimeout(() => {
+            menuRef.current?.classList.add('visible');
+        }, 10);
         const rect = menuRef.current.getBoundingClientRect();
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
@@ -28,6 +41,12 @@ function ContextMenu(props: ContextMenuProps): JSX.Element {
             const newTop = props.position.y - rect.height;
             menuRef.current.style.top = `${newTop}px`;
         }
+
+        document.addEventListener('click', handleOutsideClick);
+
+        return () => {
+            document.removeEventListener('click', handleOutsideClick);
+        };
     }, [props.position.x, props.position.y]);
 
     return (
