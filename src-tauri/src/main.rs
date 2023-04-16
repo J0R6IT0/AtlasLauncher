@@ -67,6 +67,11 @@ fn remove_instance(name: &str) {
     minecraft::instance::remove_instance(name);
 }
 
+#[tauri::command]
+fn open_instance_folder(name: &str) {
+    minecraft::instance::open_folder(name);
+}
+
 #[tokio::main]
 async fn main() {
     // to avoid problems due to having multiple async runtimes running
@@ -91,6 +96,7 @@ async fn main() {
             get_instances,
             launch_instance,
             remove_instance,
+            open_instance_folder,
         ])
         .setup(|app| {
             let handle: AppHandle = app.handle();

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import '../styles/ContextMenu.css';
 import TrashIcon from '../../assets/icons/trash.svg';
+import FolderIcon from '../../assets/icons/folder.svg';
 import { invoke } from '@tauri-apps/api';
 
 interface ContextMenuProps {
@@ -56,6 +57,13 @@ function ContextMenu(props: ContextMenuProps): JSX.Element {
 
     return (
         <div ref={menuRef} className='context-menu' style={{ left: props.position.x, top: props.position.y }}>
+            <div className='context-menu-item' onClick={() => {
+                invoke('open_instance_folder', { name: props.target?.querySelector('span')?.innerText }).then(() => {
+                }).catch(e => {});
+            }}>
+                <img src={FolderIcon} />
+                <span>Open Folder</span>
+            </div>
             <div className='context-menu-item' onClick={() => {
                 closeMenu();
                 invoke('remove_instance', { name: props.target?.querySelector('span')?.innerText }).then(() => {

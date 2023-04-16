@@ -11,8 +11,8 @@ use std::{
 
 use regex::Regex;
 
-use crate::{utils::directory::check_directory, common::utils::directory::check_directory_sync};
 use crate::{common::auth::login::get_active_account_info, minecraft::downloader};
+use crate::{common::utils::directory::check_directory_sync, utils::directory::check_directory};
 use crate::{
     common::utils::file,
     java::{downloader as javaDownloader, get_java_path::get_java_path},
@@ -348,4 +348,14 @@ pub async fn get_instances() -> Vec<InstanceInfo> {
 
 pub fn remove_instance(name: &str) {
     fs::remove_dir_all(check_directory_sync(format!("instances/{name}").as_str())).unwrap();
+}
+
+pub fn open_folder(name: &str) {
+    let path: String = check_directory_sync(format!("instances/{name}").as_str())
+        .to_str()
+        .unwrap()
+        .to_owned()
+        .replace("/", "\\");
+
+    Command::new("explorer").arg(path).spawn().unwrap();
 }
