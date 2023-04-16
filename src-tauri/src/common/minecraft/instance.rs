@@ -3,8 +3,10 @@ use serde_json::Value;
 use std::{
     env,
     fs::{self, DirEntry},
+    io::{BufRead, BufReader},
+    os::windows::process::CommandExt,
     path::PathBuf,
-    process::Command,
+    process::{Command, Stdio},
 };
 
 use regex::Regex;
@@ -22,6 +24,12 @@ use tauri::Manager;
 pub struct CreateInstanceEventPayload {
     pub name: String,
     pub version: String,
+    pub message: String,
+    pub status: String,
+}
+
+#[derive(Clone, Serialize)]
+pub struct StartInstanceEventPayload {
     pub message: String,
     pub status: String,
 }
@@ -112,7 +120,7 @@ pub async fn create_instance(
     .unwrap();
 }
 
-pub async fn launch_instance(name: &str) {
+pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
     // instance info
     let instance_info: Value =
         file::read_as_json(format!("instances/{name}/atlas_instance.json").as_str())
@@ -224,7 +232,7 @@ pub async fn launch_instance(name: &str) {
         })
         .collect();
 
-    // const CREATE_NO_WINDOW: u32 = 0x08000000;
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
 
     // we change the working dir to avoid old versions creating files out of their instance folder
     let working_dir: PathBuf = env::current_dir().unwrap();
@@ -288,9 +296,32 @@ pub async fn launch_instance(name: &str) {
         ))
         .arg(main_class)
         .args(args)
-        //.creation_flags(CREATE_NO_WINDOW)
+        .creation_flags(CREATE_NO_WINDOW)
+        .stdout(Stdio::piped())
         .spawn()
         .expect("failed to execute java process");
+
+    let output = process.stdout.as_mut().unwrap();
+    let reader = BufReader::new(output);
+    let lines = reader.lines();
+
+    let mut first_line_printed: bool = false;
+
+    for line in lines {
+        if !first_line_printed {
+            first_line_printed = true;
+            app.emit_all(
+                "start_instance",
+                StartInstanceEventPayload {
+                    message: format!("Successfully launched {name}"),
+                    status: String::from("Success"),
+                },
+            )
+            .unwrap();
+        }
+        let line: String = line.unwrap();
+        println!("{line}");
+    }
 
     std::env::set_current_dir(working_dir).unwrap();
 

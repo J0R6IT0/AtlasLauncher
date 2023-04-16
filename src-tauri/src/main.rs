@@ -57,8 +57,8 @@ async fn create_instance(
 }
 
 #[tauri::command]
-async fn launch_instance(name: &str) -> Result<(), ()> {
-    minecraft::instance::launch_instance(name).await;
+async fn launch_instance(name: &str, handle: tauri::AppHandle) -> Result<(), ()> {
+    minecraft::instance::launch_instance(name, &handle).await;
     Ok(())
 }
 

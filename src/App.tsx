@@ -26,6 +26,15 @@ interface CreateInstanceEventPayload {
     version: string
 }
 
+interface StartInstanceEvent {
+    payload: StartInstanceEventPayload
+}
+
+interface StartInstanceEventPayload {
+    status: string
+    message: string
+}
+
 export interface InstanceInfo {
     name: string
     version: string
@@ -50,7 +59,6 @@ function App(): JSX.Element {
 
     useEffect(() => {
         listen('create_instance', (event: CreateInstanceEvent) => {
-            console.log(Math.random());
             if (event.payload.status === 'Success') {
                 getInstances().catch(e => {});
                 toast.success(event.payload.message, { id: event.payload.name });
@@ -60,6 +68,15 @@ function App(): JSX.Element {
                 toast.loading(event.payload.message, { id: event.payload.name });
             } else {
                 toast.dismiss(event.payload.name);
+            }
+        }).catch(e => {});
+        listen('start_instance', (event: StartInstanceEvent) => {
+            if (event.payload.status === 'Success') {
+                toast.success(event.payload.message, { id: 'startInstance' });
+            } else if (event.payload.status === 'Error') {
+                toast.error(event.payload.message, { id: 'startInstance' });
+            } else {
+                toast.loading(event.payload.message, { id: 'startInstance' });
             }
         }).catch(e => {});
     }, []);
