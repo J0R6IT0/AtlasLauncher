@@ -38,6 +38,7 @@ pub struct StartInstanceEventPayload {
 pub struct InstanceInfo {
     pub name: String,
     pub version: String,
+    pub libraries: String,
 }
 
 pub async fn create_instance(
@@ -301,6 +302,8 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         .spawn()
         .expect("failed to execute java process");
 
+    std::env::set_current_dir(working_dir).unwrap();
+
     let output = process.stdout.as_mut().unwrap();
     let reader = BufReader::new(output);
     let lines = reader.lines();
@@ -322,8 +325,6 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         let line: String = line.unwrap();
         println!("{line}");
     }
-
-    std::env::set_current_dir(working_dir).unwrap();
 
     let status: i32 = process.wait().unwrap().code().unwrap();
     println!("{status}");
@@ -358,4 +359,39 @@ pub fn open_folder(name: &str) {
         .replace("/", "\\");
 
     Command::new("explorer").arg(path).spawn().unwrap();
+}
+
+pub fn read_instance(name: &str) -> InstanceInfo {
+    let path: PathBuf =
+        check_directory_sync(format!("instances/{name}").as_str()).join("atlas_instance.json");
+
+    let contents: String = fs::read_to_string(&path).unwrap();
+    let instance: InstanceInfo = serde_json::from_str(&contents).unwrap();
+    instance
+}
+
+pub fn write_instance(name: &str, new_name: &str, version: &str) {
+    let instances_path: PathBuf = check_directory_sync(format!("instances").as_str());
+    let dir_to_rename: PathBuf = instances_path.join(name);
+    let new_dir_name: PathBuf = instances_path.join(new_name);
+
+    if name != new_name {
+        fs::rename(dir_to_rename, new_dir_name).unwrap();
+    }
+    let atlas_instance_path: PathBuf = instances_path.join(&new_name).join("atlas_instance.json");
+    println!("{:?}", atlas_instance_path);
+    let contents: String = fs::read_to_string(&atlas_instance_path).unwrap();
+
+    let mut instance: InstanceInfo = serde_json::from_str(&contents).unwrap();
+
+    instance.name = new_name.to_string();
+    instance.version = version.to_string();
+
+    let serialized_instance: String = serde_json::to_string(&instance).unwrap();
+
+    file::write_str(
+        &serialized_instance,
+        format!("instances/{new_name}/atlas_instance.json").as_str(),
+    )
+    .unwrap();
 }

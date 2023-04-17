@@ -40,7 +40,7 @@ function NewInstance(): JSX.Element {
                             <span>{element.name}</span>
                         </div>
                         <div className='flavour-content'>
-                            <CreateInstance flavour={selectedFlavour} setFlavour={setSelectedFlavour}/>
+                            <CreateInstance flavour={selectedFlavour}/>
                         </div>
                     </div>
                 </div>)}

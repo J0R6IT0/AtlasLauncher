@@ -13,10 +13,6 @@
   "tauri": {
     "allowlist": {
       "all": false,
-      "fs": {
-        "all": true,
-        "scope": ["$EXE/*"]
-      },
       "window": {
         "all": false,
         "create": true,

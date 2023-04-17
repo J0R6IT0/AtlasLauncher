@@ -72,6 +72,16 @@ fn open_instance_folder(name: &str) {
     minecraft::instance::open_folder(name);
 }
 
+#[tauri::command]
+fn read_instance_data(name: &str) -> minecraft::instance::InstanceInfo {
+    minecraft::instance::read_instance(name)
+}
+
+#[tauri::command]
+fn write_instance_data(name: &str, new_name: &str, version: &str) {
+    minecraft::instance::write_instance(name, new_name, version);
+}
+
 #[tokio::main]
 async fn main() {
     // to avoid problems due to having multiple async runtimes running
@@ -97,6 +107,8 @@ async fn main() {
             launch_instance,
             remove_instance,
             open_instance_folder,
+            read_instance_data,
+            write_instance_data,
         ])
         .setup(|app| {
             let handle: AppHandle = app.handle();

@@ -7,6 +7,7 @@ import InstanceBackground from '../../assets/images/instance-background.webp';
 import BoxIcon from '../../assets/icons/box.svg';
 import { toast } from 'react-hot-toast';
 import ContextMenu from '../components/ContextMenu';
+import ManageInstance from '../components/ManageInstance';
 
 interface LibraryProps {
     instances: InstanceInfo[]
@@ -17,6 +18,7 @@ function Library(props: LibraryProps): JSX.Element {
     const [showContextMenu, setShowContextMenu] = useState(false);
     const [contextMenuTarget, setShowContextMenuTarget] = useState<Element | null>(null);
     const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
+    const [showManageInstance, setShowManageInstance] = useState(false);
 
     const handleContextMenu = (event: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
         setShowContextMenu(true);
@@ -49,8 +51,9 @@ function Library(props: LibraryProps): JSX.Element {
                 </div>
             </div>
             {showContextMenu && (
-                <ContextMenu target={contextMenuTarget} onClose={() => { setShowContextMenu(false); }} position={contextMenuPosition} updateInstances={props.updateInstances}/>
+                <ContextMenu target={contextMenuTarget} onClose={() => { setShowContextMenu(false); }} position={contextMenuPosition} updateInstances={props.updateInstances} manageInstance={() => { setShowManageInstance(true); }} />
             )}
+            {showManageInstance && <ManageInstance onClose={() => { setShowManageInstance(false); }} target={contextMenuTarget} updateInstances={props.updateInstances}/>}
         </div>
     );
 }

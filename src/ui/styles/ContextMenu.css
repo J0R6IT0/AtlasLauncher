@@ -4,7 +4,7 @@
     max-height: 0;
     background: var(--background-transparent);
     backdrop-filter: blur(10px);
-    z-index: 5000;
+    z-index: 1000;
     position: fixed;
     transition: max-height 0.2s ease-in-out;
     box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
@@ -22,6 +22,7 @@
     justify-content: left;
     align-items: center;
     color: var(--text-color-secondary);
+    cursor: pointer;
 }
 
 .context-menu-item span {

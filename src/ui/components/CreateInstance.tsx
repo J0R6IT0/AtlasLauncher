@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import '../styles/CreateInstance.css';
 import CheckIcon from '../../assets/icons/check.svg';
 import AlertIcon from '../../assets/icons/alert-triangle.svg';
+import TextInput from './TextInput';
 
 const releaseArray: string[] = await invoke('list_minecraft_versions', { versionType: 'release' });
 const snapshotArray: string[] = await invoke('list_minecraft_versions', { versionType: 'snapshot' });
@@ -11,7 +12,6 @@ const oldAlphaArray: string[] = await invoke('list_minecraft_versions', { versio
 
 interface CreateInstanceProps {
     flavour: number | null
-    setFlavour: (flavour: number | null) => void
 }
 
 function CreateInstance(props: CreateInstanceProps): JSX.Element {
@@ -30,11 +30,7 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
 
     return (
         <div className='create-instance'>
-            <div className='input'>
-                <input type="text" value={titleInputValue} required spellCheck='false' onChange={handleTitleInputChange} maxLength={32} title=''/>
-                <span className="floating-input-label">Instance Name</span>
-                <img className="input-image" src={titleInputValid ? CheckIcon : AlertIcon} alt="" />
-            </div>
+            <TextInput value={titleInputValue} onChange={handleTitleInputChange} name='Instance name' inputValid={titleInputValid}/>
             <div className='create-instance-version'>
                 <div className='version-tabs'>
                     <div className={`version-type ${selectedVersionType === 'release' ? 'selected' : ''}`} onClick={() => { setSelectedVersionType('release'); }}><span>Release</span></div>

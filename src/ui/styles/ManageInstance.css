@@ -1,0 +1,77 @@
+.manage-instance-container {
+    position: absolute;
+    width: calc(100% + 1rem);
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.manage-instance {
+    width: 80%;
+    height: 0;
+    position: relative;
+    transition: height 0.2s ease-in-out;
+    background: var(--background-transparent);
+    box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
+    backdrop-filter: blur(10px);
+    border-radius: 0.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    overflow: hidden;
+}
+
+.manage-instance.visible {
+    height: 80%
+}
+
+.manage-instance-title {
+    position: absolute;
+    width: 100%;
+    height: auto;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 1.5rem;
+    top: 1.5rem;
+    color: var(--text-color-primary)
+}
+
+.manage-instance-side {
+    height: calc(100% - 4.5rem);
+    margin-right: 1.5rem;
+    margin-left: 1.5rem;
+    width: 100%;
+}
+
+.manage-instance-fields {
+    height: calc(100% - 4.5rem);
+    width: 180%;
+}
+
+.manage-instance-apply {
+    width: 100%;
+    max-width: 15rem;
+    background-color: var(--side-bar-color);
+    color: var(--text-color-secondary);
+    border-radius: 0.5rem;
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: not-allowed;
+    transition: all 0.15s ease-in-out;
+
+}
+
+.manage-instance-apply.valid {
+    cursor: pointer;
+    background-color: var(--icons-color-hover);
+    color: var(--text-color-primary);
+}
+
+.manage-instance-apply.valid:hover {
+    color: var(--icons-color);
+}
