@@ -172,38 +172,6 @@ async fn download_assets(
     .collect::<Vec<_>>();
 
     download_tasks.await;
-    /*let download_tasks = stream::iter(objects.into_iter().map(|object| async move {
-        let mc_instance: String = String::from(instance_name);
-        let assets_id: String = String::from(id);
-
-        let object_hash: &str = object.1.get("hash").unwrap().as_str().unwrap();
-        let object_url: String = format!(
-            "https://resources.download.minecraft.net/{}/{}",
-            &object_hash[0..2],
-            &object_hash
-        );
-
-        let path: String;
-        if assets_id == "legacy" || assets_id == "pre-1.6" {
-            path = format!("assets/virtual/legacy/{}", object.0);
-        } else {
-            path = format!("assets/objects/{}/{}", &object_hash[0..2], &object_hash);
-        }
-        let vec: Vec<u8> = file::download_as_vec(&object_url, object_hash, 1, &path, false)
-            .await
-            .unwrap();
-
-        if assets_id == "pre-1.6" {
-            file::write_vec(
-                &vec,
-                format!("instances/{}/resources/{}", mc_instance, object.0).as_str(),
-            )
-            .unwrap();
-        }
-    }))
-    .buffer_unordered(50)
-    .collect::<Vec<()>>();
-    download_tasks.await;*/
 
     Ok(())
 }

@@ -7,9 +7,10 @@ use std::{
     fs::{self, File},
     io::{self, Cursor, Write},
     path::Path,
-    path::PathBuf
+    path::PathBuf,
 };
-use zip::{ZipArchive, read::ZipFile};
+use tokio::time::{sleep, Duration};
+use zip::{read::ZipFile, ZipArchive};
 
 use super::directory::{self, check_directory_sync};
 
@@ -79,7 +80,7 @@ pub async fn download_as_vec(
     }
 
     if !vec.is_none() {
-        let vec = Some(vec).unwrap().unwrap();
+        let vec: Vec<u8> = Some(vec).unwrap().unwrap();
         if verify_hash(checksum, checksum_type, &vec).await? {
             return Ok(vec);
         }
@@ -92,16 +93,13 @@ pub async fn download_as_vec(
         let response: Response = match reqwest::get(url).await {
             Ok(response) => response,
             Err(error) => {
-                if error.is_connect() || error.is_timeout() {
-                    // Connection timed out error, retry
-                    if retry_count >= 3 {
-                        return Err(Box::new(error)); // Maximum number of retries reached
-                    }
-                    retry_count += 1;
-                    continue;
-                } else {
+                if retry_count >= 3 {
                     return Err(Box::new(error));
                 }
+                retry_count += 1;
+                sleep(Duration::from_secs((1 + retry_count).into())).await;
+                println!("retryting {}", retry_count);
+                continue;
             }
         };
 
