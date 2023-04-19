@@ -8,10 +8,10 @@ mod common;
 use common::{auth, java, minecraft, utils};
 
 #[tauri::command]
-fn list_minecraft_versions(version_type: &str) -> Vec<String> {
-    match minecraft::versions::get_versions(version_type) {
-        Ok(version_list) => version_list.iter().map(|v| v.id.clone()).collect(),
-        Err(_) => [].to_vec(),
+async fn list_minecraft_versions(version_type: &str) -> Result<Vec<String>, ()> {
+    match minecraft::versions::get_versions(version_type).await {
+        Ok(version_list) => Ok(version_list.iter().map(|v| v.id.clone()).collect()),
+        Err(_) => Ok([].to_vec()),
     }
 }
 
@@ -78,8 +78,8 @@ fn read_instance_data(name: &str) -> minecraft::instance::InstanceInfo {
 }
 
 #[tauri::command]
-fn write_instance_data(name: &str, new_name: &str, version: &str) {
-    minecraft::instance::write_instance(name, new_name, version);
+fn write_instance_data(name: &str, new_name: &str, version: &str, background: &str) {
+    minecraft::instance::write_instance(name, new_name, version, background);
 }
 
 #[tokio::main]

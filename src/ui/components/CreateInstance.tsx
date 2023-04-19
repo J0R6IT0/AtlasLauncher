@@ -1,17 +1,12 @@
 import { invoke } from '@tauri-apps/api/tauri';
 import React, { useState } from 'react';
 import '../styles/CreateInstance.css';
-import CheckIcon from '../../assets/icons/check.svg';
-import AlertIcon from '../../assets/icons/alert-triangle.svg';
 import TextInput from './TextInput';
-
-const releaseArray: string[] = await invoke('list_minecraft_versions', { versionType: 'release' });
-const snapshotArray: string[] = await invoke('list_minecraft_versions', { versionType: 'snapshot' });
-const oldBetaArray: string[] = await invoke('list_minecraft_versions', { versionType: 'old_beta' });
-const oldAlphaArray: string[] = await invoke('list_minecraft_versions', { versionType: 'old_alpha' });
+import VersionMenu from './VersionMenu';
 
 interface CreateInstanceProps {
     flavour: number | null
+    goToLibrary: () => void
 }
 
 function CreateInstance(props: CreateInstanceProps): JSX.Element {
@@ -31,28 +26,11 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
     return (
         <div className='create-instance'>
             <TextInput value={titleInputValue} onChange={handleTitleInputChange} name='Instance name' inputValid={titleInputValid}/>
-            <div className='create-instance-version'>
-                <div className='version-tabs'>
-                    <div className={`version-type ${selectedVersionType === 'release' ? 'selected' : ''}`} onClick={() => { setSelectedVersionType('release'); }}><span>Release</span></div>
-                    <div className={`version-type ${selectedVersionType === 'snapshot' ? 'selected' : ''}`} onClick={() => { setSelectedVersionType('snapshot'); }}><span>Snapshot</span></div>
-                    <div className={`version-type ${selectedVersionType === 'old_beta' ? 'selected' : ''}`} onClick={() => { setSelectedVersionType('old_beta'); }}><span>Beta</span></div>
-                    <div className={`version-type ${selectedVersionType === 'old_alpha' ? 'selected' : ''}`} onClick={() => { setSelectedVersionType('old_alpha'); }}><span>Alpha</span></div>
-                </div>
-                <img className="input-image" src={selectedVersion.length > 0 ? CheckIcon : AlertIcon} alt="" />
-                <div className='version-container'>
-                    {selectedVersionType === 'release' && releaseArray.map((element, index) => <div key={index} className={`version ${selectedVersion === element ? 'selected' : ''}`} onClick={() => { setSelectedVersion(element); } }><span>{selectedVersion === element && <div className='dot'></div>}{element}</span></div>)}
-                    {selectedVersionType === 'snapshot' && snapshotArray.map((element, index) => <div key={index} className={`version ${selectedVersion === element ? 'selected' : ''}`} onClick={() => { setSelectedVersion(element); } }><span>{selectedVersion === element && <div className='dot'></div>}{element}</span></div>)}
-                    {selectedVersionType === 'old_beta' && oldBetaArray.map((element, index) => <div key={index} className={`version ${selectedVersion === element ? 'selected' : ''}`} onClick={() => { setSelectedVersion(element); } }><span>{selectedVersion === element && <div className='dot'></div>}{element}</span></div>)}
-                    {selectedVersionType === 'old_alpha' && oldAlphaArray.map((element, index) => <div key={index} className={`version ${selectedVersion === element ? 'selected' : ''}`} onClick={() => { setSelectedVersion(element); } }><span>{selectedVersion === element && <div className='dot'></div>}{element}</span></div>)}
-                </div>
-            </div>
+            <VersionMenu selectedVersionType={selectedVersionType} selectedVersion={selectedVersion} setSelectedVersionType={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>
             <div className={`create-button ${titleInputValid && selectedVersion.length > 0 ? 'valid' : ''}`} onClick={() => {
                 if (titleInputValid && selectedVersion.length > 0) {
                     invoke('create_instance', { name: titleInputValue.trim(), version: selectedVersion, versionType: selectedVersionType }).catch(e => { console.log(e); });
-                    setTitleInputValid(false);
-                    setTitleInputValue('');
-                    setSelectedVersionType('release');
-                    setSelectedVersion('');
+                    props.goToLibrary();
                 }
             }}><span>Create</span></div>
         </div>

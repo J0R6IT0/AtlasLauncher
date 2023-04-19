@@ -3,6 +3,9 @@ import '../styles/ManageInstance.css';
 import TextInput from './TextInput';
 import { type InstanceInfo } from '../../App';
 import { invoke } from '@tauri-apps/api';
+import { convertFileSrc } from '@tauri-apps/api/tauri';
+import { open } from '@tauri-apps/api/dialog';
+import InstanceBackground from '../../assets/images/instance-background.webp';
 
 interface ManageInstanceProps {
     onClose: () => void
@@ -14,6 +17,7 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
     const [instanceName, setInstanceName] = useState('');
     const [titleInputValue, setTitleInputValue] = useState('');
     const [titleInputValid, setTitleInputValid] = useState(true);
+    const [newBackground, setNewBackground] = useState('');
     const [instanceInfo, setInstanceInfo] = useState<InstanceInfo>();
 
     function handleTitleInputChange(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -24,8 +28,10 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
     };
 
     const menuRef = useRef<HTMLDivElement>(null);
+    const backgroundRef = useRef<HTMLImageElement>(null);
 
     const closeMenu = (): void => {
+        menuRef.current?.classList.remove('visible');
         setTimeout(() => {
             props.onClose();
         }, 200);
@@ -34,7 +40,6 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
     const handleOutsideClick = (event: MouseEvent): void => {
         const menu = document.querySelector('.manage-instance') as HTMLElement;
         if (!menu.contains(event.target as Node)) {
-            menuRef.current?.classList.remove('visible');
             closeMenu();
         }
     };
@@ -65,13 +70,31 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
     return (
         <div className='manage-instance-container'>
             <div ref={menuRef} className='manage-instance'>
-                <div className='manage-instance-title'><span>{props.target?.querySelector('span')?.innerText}</span></div>
+                <div className='manage-instance-title'><span>{instanceName}</span></div>
                 <div className='manage-instance-side'>
-                    <div className={`manage-instance-apply ${titleInputValid && titleInputValue !== instanceName ? 'valid' : ''}`} onClick={() => {
-                        invoke('write_instance_data', { name: instanceName, newName: titleInputValue, version: instanceInfo?.version }).then(() => {
-                            props.updateInstances();
-                            closeMenu();
-                        }).catch(e => {});
+                    <div className='manage-instance-background' onClick={() => {
+                        open({
+                            multiple: false,
+                            filters: [{
+                                name: 'Instance Background',
+                                extensions: ['png', 'jpeg', 'webp', 'gif']
+                            }]
+                        }).then((selected) => {
+                            if (selected !== null && !Array.isArray(selected)) {
+                                backgroundRef.current?.setAttribute('src', convertFileSrc(selected));
+                                setNewBackground(selected);
+                            }
+                        }).catch((e) => {});
+                    }}>
+                        <img ref={backgroundRef} src={instanceInfo?.background !== undefined && instanceInfo?.background.length > 0 ? convertFileSrc(instanceInfo.background) : InstanceBackground}/>
+                    </div>
+                    <div className={`manage-instance-apply ${titleInputValid && (titleInputValue !== instanceName || newBackground.length > 0) ? 'valid' : ''}`} onClick={(event) => {
+                        if (event.currentTarget.classList.contains('valid')) {
+                            invoke('write_instance_data', { name: instanceName, newName: titleInputValue, version: instanceInfo?.version, background: newBackground }).then(() => {
+                                props.updateInstances();
+                                closeMenu();
+                            }).catch(e => {});
+                        }
                     }}>Apply Changes</div>
                 </div>
                 <div className='manage-instance-fields'>

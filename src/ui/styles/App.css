@@ -45,7 +45,7 @@
   justify-content: flex-end;
 }
 
-.secondary-buttons img {
+.secondary-button img {
   height: 1.5rem;
   filter: var(--text-filter-primary);
   transition: all 0.1s ease;
@@ -53,7 +53,7 @@
 
 }
 
-.secondary-buttons div {
+.secondary-button {
   width: auto;
   height: auto;
   margin-left: 0.5rem;
@@ -82,12 +82,12 @@
 }
 
 
-.secondary-buttons div:hover img {
+.secondary-button div:hover img {
   filter: var(--icons-filter-hover);
 
 }
 
-.secondary-buttons .active-user:hover img {
+.secondary-button .active-user:hover img {
   filter: none;
 }
 

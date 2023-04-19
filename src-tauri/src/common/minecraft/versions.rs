@@ -1,14 +1,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{
-    collections::HashMap,
-    env,
-    fs::File,
-    io::{BufReader, BufWriter},
-    path::PathBuf,
-};
+use std::collections::HashMap;
 
-use crate::common::utils::{directory, file};
+use crate::common::utils::file;
 
 #[derive(Serialize, Deserialize)]
 pub struct VersionData {
@@ -41,8 +35,7 @@ pub async fn download_version_manifest() -> Result<(), Box<dyn std::error::Error
             };
             match r#type {
                 "release" | "snapshot" | "old_beta" | "old_alpha" => {
-                    let versions: &mut Vec<VersionData> = version_data.entry(r#type).or_default();
-                    versions.push(data);
+                    version_data.entry(r#type).or_default().push(data);
                 }
                 _ => continue,
             }
@@ -50,41 +43,19 @@ pub async fn download_version_manifest() -> Result<(), Box<dyn std::error::Error
     }
 
     for (version_type, data) in version_data.iter() {
-        write_data_to_file(version_type, data)?;
+        file::write_vec(
+            &serde_json::to_vec(&data).unwrap(),
+            format!("launcher/version-info/{}.json", version_type).as_str(),
+        )?;
     }
 
     Ok(())
 }
 
-fn write_data_to_file<T: Serialize>(
-    file_name: &str,
-    data: &T,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let file_path =
-        directory::check_directory_sync("launcher/version-info/").join(format!("{file_name}.json"));
+pub async fn get_versions(r#type: &str) -> Result<Vec<VersionData>, Box<dyn std::error::Error>> {
+    let bytes: Vec<u8> =
+        file::read_as_vec(format!("launcher/version-info/{}.json", r#type).as_str()).await?;
+    let content: Vec<VersionData> = serde_json::from_slice(&bytes)?;
 
-    let file: File = File::create(&file_path)?;
-
-    let writer: BufWriter<File> = BufWriter::new(file);
-    let mut serializer: serde_json::Serializer<BufWriter<File>> =
-        serde_json::Serializer::new(writer);
-
-    data.serialize(&mut serializer)?;
-    Ok(())
-}
-
-pub fn get_versions(r#type: &str) -> Result<Vec<VersionData>, Box<dyn std::error::Error>> {
-    let exe_path: PathBuf = env::current_exe()?;
-
-    let file_path: PathBuf = exe_path
-        .parent()
-        .ok_or("Failed to get parent directory of current exe path")?
-        .join(format!("launcher/version-info/{}.json", r#type));
-
-    let file: File = File::open(&file_path)?;
-
-    let reader: BufReader<File> = BufReader::new(file);
-    let items: Vec<VersionData> = serde_json::from_reader(reader)?;
-
-    Ok(items)
+    Ok(content)
 }

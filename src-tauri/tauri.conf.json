@@ -15,15 +15,23 @@
       "all": false,
       "window": {
         "all": false,
-        "create": true,
         "close": true,
         "minimize": true,
         "maximize": true,
         "startDragging": true
       },
+      "dialog": {
+        "all": false,
+        "open": true
+      },
       "shell": {
         "all": false,
         "open": true
+      },
+      "protocol": {
+        "all": false,
+        "asset": true,
+        "assetScope": ["**"]
       }
     },
     "bundle": {
@@ -39,7 +47,7 @@
       "targets": "all"
     },
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost"
     },
     "updater": {
       "active": false

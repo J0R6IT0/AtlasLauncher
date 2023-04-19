@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import '../styles/Library.css';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke, convertFileSrc } from '@tauri-apps/api/tauri';
 import type { InstanceInfo } from '../../App';
 import GrassBlock from '../../assets/images/grass-block.webp';
 import InstanceBackground from '../../assets/images/instance-background.webp';
@@ -40,7 +40,7 @@ function Library(props: LibraryProps): JSX.Element {
                     }}
                     onContextMenu={handleContextMenu}>
                         <div className='instance-content'>
-                            <img className='instance-background' src={InstanceBackground} />
+                            <img className='instance-background' src={element.background.length > 0 ? convertFileSrc(element.background) : InstanceBackground} />
                             <div className='instance-info'>
                                 <span><img src={GrassBlock} />{element.name}</span>
                                 <div className='instance-version'><span>{element.version}</span></div>

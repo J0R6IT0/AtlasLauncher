@@ -7,9 +7,9 @@ use std::{
     fs::{self, File},
     io::{self, Cursor, Write},
     path::Path,
-    path::PathBuf,
+    path::PathBuf
 };
-use zip::ZipArchive;
+use zip::{ZipArchive, read::ZipFile};
 
 use super::directory::{self, check_directory_sync};
 
@@ -114,8 +114,8 @@ pub async fn download_as_vec(
 
     if path != "" {
         if extract {
-            let mut reader = Cursor::new(bytes.to_vec());
-            let path = check_directory_sync(path);
+            let mut reader: Cursor<Vec<u8>> = Cursor::new(bytes.to_vec());
+            let path: PathBuf = check_directory_sync(path);
             extract_zip(path, &mut reader).await?;
         } else {
             write_vec(&bytes.to_vec(), path)?;
@@ -132,7 +132,7 @@ pub async fn download_as_json(
     path: &str,
     extract: bool,
 ) -> Result<Value, Box<dyn std::error::Error>> {
-    let vec = download_as_vec(url, checksum, checksum_type, path, extract).await?;
+    let vec: Vec<u8> = download_as_vec(url, checksum, checksum_type, path, extract).await?;
     let json: Value = serde_json::from_slice(&vec)?;
     Ok(json)
 }
@@ -144,9 +144,10 @@ pub async fn verify_hash(
     checksum_type: u8,
     data: &[u8],
 ) -> Result<bool, Box<dyn std::error::Error>> {
-    if checksum == "" {
+    if checksum.is_empty() {
         return Ok(true);
     };
+
     let actual_checksum: String;
 
     let mut bytes: &[u8] = data;
@@ -172,11 +173,11 @@ pub async fn extract_zip(
     path: PathBuf,
     reader: &mut Cursor<Vec<u8>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut archive = ZipArchive::new(reader).unwrap();
+    let mut archive: ZipArchive<&mut Cursor<Vec<u8>>> = ZipArchive::new(reader).unwrap();
 
     for i in 0..archive.len() {
-        let mut file = archive.by_index(i)?;
-        let outpath = path.join(file.mangled_name());
+        let mut file: ZipFile = archive.by_index(i)?;
+        let outpath: PathBuf = path.join(file.mangled_name());
 
         if (&*file.name()).starts_with("META-INF/") {
             // Skip extracting the file if it's inside META-INF/
@@ -184,14 +185,14 @@ pub async fn extract_zip(
         }
 
         if (&*file.name()).ends_with('/') {
-            std::fs::create_dir_all(&outpath)?;
+            fs::create_dir_all(&outpath)?;
         } else {
             if let Some(p) = outpath.parent() {
                 if !p.exists() {
-                    std::fs::create_dir_all(&p)?;
+                    fs::create_dir_all(&p)?;
                 }
             }
-            let mut outfile = File::create(&outpath)?;
+            let mut outfile: File = File::create(&outpath)?;
             io::copy(&mut file, &mut outfile)?;
         }
     }

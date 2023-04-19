@@ -20,7 +20,11 @@ const flavours = [
     { id: Flavours.Fabric, name: 'Fabric', background: MinecraftFabric, icon: FabricIcon }
 ];
 
-function NewInstance(): JSX.Element {
+interface NewInstanceProps {
+    goToLibrary: () => void
+}
+
+const NewInstance = React.memo((props: NewInstanceProps) => {
     const [selectedFlavour, setSelectedFlavour] = useState<number | null>(null);
     return (
         <div className='new-instance'>
@@ -40,13 +44,15 @@ function NewInstance(): JSX.Element {
                             <span>{element.name}</span>
                         </div>
                         <div className='flavour-content'>
-                            <CreateInstance flavour={selectedFlavour}/>
+                            {selectedFlavour === element.id && <CreateInstance flavour={selectedFlavour} goToLibrary={props.goToLibrary}/>}
                         </div>
                     </div>
                 </div>)}
             </div>
         </div>
     );
-}
+});
+
+NewInstance.displayName = 'NewInstance';
 
 export default NewInstance;

@@ -38,6 +38,7 @@ interface StartInstanceEventPayload {
 export interface InstanceInfo {
     name: string
     version: string
+    background: string
 }
 
 export interface AccountInfo {
@@ -54,20 +55,10 @@ interface LoginEventPayload {
     message: string
 }
 
-function App(): JSX.Element {
-    const [activePage, setActivePage] = useState(2);
+function SecondaryButtons(): JSX.Element {
     const [accountSelectorActive, setAccountSelectorActive] = useState(false);
-    const [instances, setInstances] = useState<InstanceInfo[]>([]);
-
     const [accounts, setAccounts] = useState<AccountInfo[]>([]);
     const [activeAccount, setActiveAccount] = useState('');
-
-    async function getInstances(): Promise<void> {
-        const newInstances = await invoke('get_instances').catch(e => {}) as InstanceInfo[];
-        setInstances(newInstances);
-    }
-
-    const accountButtonRef = useRef<HTMLDivElement>(null);
 
     async function getAccounts(): Promise<void> {
         const accounts = await invoke('get_accounts').catch(e => {}) as AccountInfo[];
@@ -86,6 +77,51 @@ function App(): JSX.Element {
             accountsIcon?.setAttribute('src', UserIcon);
             button?.classList.remove('active-user');
         }
+    }
+
+    const accountButtonRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        listen('auth', (event: LoginEvent) => {
+            if (event.payload.status === 'Success') {
+                getAccounts().catch(e => {});
+                toast.success(event.payload.message, { id: 'currentLoginNotification' });
+            } else if (event.payload.status === 'Error') {
+                toast.error(event.payload.message, { id: 'currentLoginNotification' });
+            } else if (event.payload.status === 'Loading') {
+                toast.loading(event.payload.message, { id: 'currentLoginNotification' });
+            } else {
+                toast.dismiss('currentLoginNotification');
+            }
+        }).catch(e => {});
+
+        getAccounts().catch(e => {});
+    }, []);
+
+    return (
+        <div className='secondary-buttons'>
+            <div className='secondary-button'>
+                <img src={BellIcon} />
+            </div>
+            <div className='secondary-button' onClick={() => {
+                if (!accountSelectorActive) setAccountSelectorActive(true);
+            }} ref={accountButtonRef}>
+                <img src={UserIcon} />
+            </div>
+            {accountSelectorActive && <AccountSelector onClose={() => { setAccountSelectorActive(false); }} accounts={accounts} activeAccount={activeAccount} updateAccounts={() => {
+                getAccounts().catch(e => {});
+            }}/>}
+        </div>
+    );
+}
+
+function App(): JSX.Element {
+    const [activePage, setActivePage] = useState(2);
+    const [instances, setInstances] = useState<InstanceInfo[]>([]);
+
+    async function getInstances(): Promise<void> {
+        const newInstances = await invoke('get_instances').catch(e => {}) as InstanceInfo[];
+        setInstances(newInstances);
     }
 
     useEffect(() => {
@@ -110,26 +146,11 @@ function App(): JSX.Element {
                 toast.loading(event.payload.message, { id: 'startInstance' });
             }
         }).catch(e => {});
-        listen('auth', (event: LoginEvent) => {
-            if (event.payload.status === 'Success') {
-                getAccounts().catch(e => {});
-                toast.success(event.payload.message, { id: 'currentLoginNotification' });
-            } else if (event.payload.status === 'Error') {
-                toast.error(event.payload.message, { id: 'currentLoginNotification' });
-            } else if (event.payload.status === 'Loading') {
-                toast.loading(event.payload.message, { id: 'currentLoginNotification' });
-            } else {
-                toast.dismiss('currentLoginNotification');
-            }
-        }).catch(e => {});
-
-        getAccounts().catch(e => {});
         getInstances().catch(e => {});
 
         function contextMenuHandler(event: Event): void {
             event.preventDefault();
         }
-
         document.addEventListener('contextmenu', contextMenuHandler);
         return () => {
             document.removeEventListener('contextmenu', contextMenuHandler);
@@ -161,26 +182,15 @@ function App(): JSX.Element {
                 </div>
             </div>
             <SideBar setActivePage={setActivePage} activePage={activePage}/>
-            {accountSelectorActive && <AccountSelector onClose={() => { setAccountSelectorActive(false); }} accounts={accounts} activeAccount={activeAccount} updateAccounts={() => {
-                console.log('ye');
-                getAccounts().catch(e => {});
-            }}/>}
             <div className='content'>
-                {activePage === 1 && <NewInstance />}
+                {activePage === 1 && <NewInstance goToLibrary={() => {
+                    setActivePage(2);
+                }}/>}
                 {activePage === 2 && <Library instances={instances} updateInstances={() => {
                     getInstances().catch(e => {});
                 }}/>}
             </div>
-            <div className='secondary-buttons'>
-                <div>
-                    <img src={BellIcon} />
-                </div>
-                <div onClick={() => {
-                    if (!accountSelectorActive) setAccountSelectorActive(true);
-                }} ref={accountButtonRef}>
-                    <img src={UserIcon} />
-                </div>
-            </div>
+            <SecondaryButtons />
             <Toaster
                 position='bottom-center'
                 toastOptions={{

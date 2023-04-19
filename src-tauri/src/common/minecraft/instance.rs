@@ -5,8 +5,9 @@ use std::{
     fs::{self, DirEntry},
     io::{BufRead, BufReader},
     os::windows::process::CommandExt,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::{Command, Stdio},
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 use regex::Regex;
@@ -39,6 +40,7 @@ pub struct InstanceInfo {
     pub name: String,
     pub version: String,
     pub libraries: String,
+    pub background: String,
 }
 
 pub async fn create_instance(
@@ -98,6 +100,7 @@ pub async fn create_instance(
             {{
                 "name": "{name}",
                 "version": "{version}",
+                "background": "",
                 "libraries": "{libraries_arg}"
             }}
         "#
@@ -340,7 +343,10 @@ pub async fn get_instances() -> Vec<InstanceInfo> {
         let path: PathBuf = entry.path();
 
         let contents: String = fs::read_to_string(&path.join("atlas_instance.json")).unwrap();
-        let instance: InstanceInfo = serde_json::from_str(&contents).unwrap();
+        let mut instance: InstanceInfo = serde_json::from_str(&contents).unwrap();
+        if !instance.background.is_empty() {
+            instance.background = path.join(instance.background).to_str().unwrap().to_string();
+        }
         instances.push(instance);
     }
 
@@ -362,30 +368,46 @@ pub fn open_folder(name: &str) {
 }
 
 pub fn read_instance(name: &str) -> InstanceInfo {
-    let path: PathBuf =
+    let mut path: PathBuf =
         check_directory_sync(format!("instances/{name}").as_str()).join("atlas_instance.json");
 
     let contents: String = fs::read_to_string(&path).unwrap();
-    let instance: InstanceInfo = serde_json::from_str(&contents).unwrap();
+    let mut instance: InstanceInfo = serde_json::from_str(&contents).unwrap();
+    path.pop();
+    if !instance.background.is_empty() {
+        instance.background = path.join(instance.background).to_str().unwrap().to_string();
+    }
     instance
 }
 
-pub fn write_instance(name: &str, new_name: &str, version: &str) {
+pub fn write_instance(name: &str, new_name: &str, _version: &str, background: &str) {
     let instances_path: PathBuf = check_directory_sync(format!("instances").as_str());
-    let dir_to_rename: PathBuf = instances_path.join(name);
-    let new_dir_name: PathBuf = instances_path.join(new_name);
+    let old_instance_path: PathBuf = instances_path.join(name);
+    let new_instance_path: PathBuf = instances_path.join(new_name);
 
     if name != new_name {
-        fs::rename(dir_to_rename, new_dir_name).unwrap();
+        fs::rename(old_instance_path, &new_instance_path).unwrap();
     }
-    let atlas_instance_path: PathBuf = instances_path.join(&new_name).join("atlas_instance.json");
-    println!("{:?}", atlas_instance_path);
+    let atlas_instance_path: PathBuf = new_instance_path.join("atlas_instance.json");
     let contents: String = fs::read_to_string(&atlas_instance_path).unwrap();
 
     let mut instance: InstanceInfo = serde_json::from_str(&contents).unwrap();
-
     instance.name = new_name.to_string();
-    instance.version = version.to_string();
+
+    if !background.is_empty() {
+        let now: SystemTime = SystemTime::now();
+        let since_epoch: std::time::Duration = now.duration_since(UNIX_EPOCH).unwrap();
+        let timestamp: String = since_epoch.as_secs().to_string();
+        let extension: &str = Path::new(background)
+            .extension()
+            .unwrap_or_default()
+            .to_str()
+            .unwrap_or("");
+        let background_name: String = timestamp + "-background." + extension;
+        fs::remove_file(new_instance_path.join(instance.background)).unwrap();
+        instance.background = background_name.clone();
+        fs::copy(background, new_instance_path.join(background_name)).unwrap();
+    }
 
     let serialized_instance: String = serde_json::to_string(&instance).unwrap();
 
