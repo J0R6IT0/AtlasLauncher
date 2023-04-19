@@ -404,7 +404,9 @@ pub fn write_instance(name: &str, new_name: &str, _version: &str, background: &s
             .to_str()
             .unwrap_or("");
         let background_name: String = timestamp + "-background." + extension;
-        fs::remove_file(new_instance_path.join(instance.background)).unwrap();
+        if !instance.background.is_empty() {
+            fs::remove_file(new_instance_path.join(instance.background)).unwrap();
+        }
         instance.background = background_name.clone();
         fs::copy(background, new_instance_path.join(background_name)).unwrap();
     }
