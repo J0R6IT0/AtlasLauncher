@@ -16,29 +16,8 @@
     cursor: default;
 }
 
-.create-button {
-    position: relative;
+.create-instance .text-button {
     bottom: -1rem;
     width: 60%;
     max-width: 15rem;
-    background-color: var(--side-bar-color);
-    color: var(--text-color-secondary);
-    border-radius: 0.5rem;
-    height: 2rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: not-allowed;
-    transition: all 0.15s ease-in-out;
-
-}
-
-.create-button.valid {
-    cursor: pointer;
-    background-color: var(--icons-color-hover);
-    color: var(--text-color-primary);
-}
-
-.create-button.valid:hover {
-    color: var(--icons-color);
 }

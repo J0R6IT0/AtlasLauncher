@@ -57,8 +57,6 @@
   width: auto;
   height: auto;
   margin-left: 0.5rem;
-  cursor: pointer;
-
 }
 
 .active-user {
@@ -82,12 +80,12 @@
 }
 
 
-.secondary-button div:hover img {
+.secondary-button:hover img {
   filter: var(--icons-filter-hover);
 
 }
 
-.secondary-button .active-user:hover img {
+.secondary-button.active-user:hover img {
   filter: none;
 }
 
@@ -102,7 +100,6 @@
 }
 
 .titlebar-button {
-  cursor: pointer;
   display: inline-flex;
   justify-content: center;
   align-items: center;

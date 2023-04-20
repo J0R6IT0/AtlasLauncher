@@ -1,0 +1,23 @@
+.text-button {
+    position: relative;
+    background-color: var(--side-bar-color);
+    color: var(--text-color-secondary);
+    border-radius: 0.5rem;
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: not-allowed !important;
+    transition: all 0.15s ease-in-out;
+
+}
+
+.text-button.valid {
+    cursor: pointer !important;
+    background-color: var(--icons-color-hover);
+    color: var(--text-color-primary);
+}
+
+.text-button.valid:hover {
+    color: var(--icons-color);
+}

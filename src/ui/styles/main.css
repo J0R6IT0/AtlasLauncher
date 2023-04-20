@@ -68,3 +68,14 @@
 .fabric-icon {
   transform: scale(0.9) scaleX(-1);
 }
+
+.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+}
+
+.clickable:active {
+  transform: scale(0.9);
+}
+
+

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import '../styles/ManageInstance.css';
 import TextInput from './TextInput';
+import TextButton from './TextButton';
 import { type InstanceInfo } from '../../App';
 import { invoke } from '@tauri-apps/api';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
@@ -72,7 +73,7 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
             <div ref={menuRef} className='manage-instance'>
                 <div className='manage-instance-title'><span>{instanceName}</span></div>
                 <div className='manage-instance-side'>
-                    <div className='manage-instance-background' onClick={() => {
+                    <div className='manage-instance-background clickable' onClick={() => {
                         open({
                             multiple: false,
                             filters: [{
@@ -88,14 +89,12 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
                     }}>
                         <img ref={backgroundRef} src={instanceInfo?.background !== undefined && instanceInfo?.background.length > 0 ? convertFileSrc(instanceInfo.background) : InstanceBackground}/>
                     </div>
-                    <div className={`manage-instance-apply ${titleInputValid && (titleInputValue !== instanceName || newBackground.length > 0) ? 'valid' : ''}`} onClick={(event) => {
-                        if (event.currentTarget.classList.contains('valid')) {
-                            invoke('write_instance_data', { name: instanceName, newName: titleInputValue, version: instanceInfo?.version, background: newBackground }).then(() => {
-                                props.updateInstances();
-                                closeMenu();
-                            }).catch(e => {});
-                        }
-                    }}>Apply Changes</div>
+                    <TextButton text='Apply Changes' onClick={() => {
+                        invoke('write_instance_data', { name: instanceName, newName: titleInputValue, version: instanceInfo?.version, background: newBackground }).then(() => {
+                            props.updateInstances();
+                            closeMenu();
+                        }).catch(e => {});
+                    }} clickable={titleInputValid && (titleInputValue !== instanceName || newBackground.length > 0)}/>
                 </div>
                 <div className='manage-instance-fields'>
                     <TextInput value={titleInputValue} onChange={handleTitleInputChange} name='Instance name' inputValid={titleInputValid}/>

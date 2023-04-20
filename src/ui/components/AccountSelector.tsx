@@ -40,7 +40,7 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
     return (
         <div className='account-selector' ref={menuRef}>
             {props.accounts.map((element, index) => <div key={index} className={`account-items ${props.activeAccount === element.uuid ? 'active' : ''}`}>
-                <div
+                <div className='clickable'
                     onClick={() => {
                         invoke('set_active_account', { uuid: element.uuid }).catch(e => {});
                     }}>
@@ -53,9 +53,9 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
                     invoke('remove_account', { uuid: element.uuid }).then(() => {
                         props.updateAccounts();
                     }).catch(e => {});
-                }} className='remove-account' src={TrashIcon} alt="" />
+                }} className='remove-account clickable' src={TrashIcon} alt="" />
             </div>)}
-            <div className='account-items' id='add-account' onClick={() => {
+            <div className='account-items clickable' id='add-account' onClick={() => {
                 invoke('start_oauth').catch(e => {});
                 toast.loading('Logging In.', { id: 'currentLoginNotification' });
             }}>

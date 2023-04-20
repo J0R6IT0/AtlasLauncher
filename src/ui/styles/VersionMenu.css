@@ -25,21 +25,26 @@
     align-items: center;
     justify-content: center;
     border-radius: 0.3rem;
-    background-color: rgb(0 0 0 / 15%);
     cursor: pointer;
 }
 
 .version-tabs span {
-    padding: 10%;
+    width: 100%;
+    text-align: center;
+    padding: 0.3rem;
 }
 
 .version-menu img {
     margin-top: -2.2rem;
 }
 
-.version-tabs div:hover,
+.version-tabs div:hover {
+    background-color: rgb(0 0 0 / 20%);
+}
+
 .version-tabs div.selected {
     background-color: rgb(0 0 0 / 30%);
+    color: var(--text-color-primary);
 }
 
 .version-container {

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import '../styles/CreateInstance.css';
 import TextInput from './TextInput';
 import VersionMenu from './VersionMenu';
+import TextButton from './TextButton';
 
 interface CreateInstanceProps {
     flavour: number | null
@@ -27,12 +28,10 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
         <div className='create-instance'>
             <TextInput value={titleInputValue} onChange={handleTitleInputChange} name='Instance name' inputValid={titleInputValid}/>
             <VersionMenu selectedVersionType={selectedVersionType} selectedVersion={selectedVersion} setSelectedVersionType={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>
-            <div className={`create-button ${titleInputValid && selectedVersion.length > 0 ? 'valid' : ''}`} onClick={() => {
-                if (titleInputValid && selectedVersion.length > 0) {
-                    invoke('create_instance', { name: titleInputValue.trim(), version: selectedVersion, versionType: selectedVersionType }).catch(e => { console.log(e); });
-                    props.goToLibrary();
-                }
-            }}><span>Create</span></div>
+            <TextButton onClick={() => {
+                invoke('create_instance', { name: titleInputValue.trim(), version: selectedVersion, versionType: selectedVersionType }).catch(e => { console.log(e); });
+                props.goToLibrary();
+            }} text='Create' clickable={titleInputValid && selectedVersion.length > 0}/>
         </div>
     );
 }

@@ -100,10 +100,10 @@ function SecondaryButtons(): JSX.Element {
 
     return (
         <div className='secondary-buttons'>
-            <div className='secondary-button'>
+            <div className='secondary-button clickable'>
                 <img src={BellIcon} />
             </div>
-            <div className='secondary-button' onClick={() => {
+            <div className='secondary-button clickable' onClick={() => {
                 if (!accountSelectorActive) setAccountSelectorActive(true);
             }} ref={accountButtonRef}>
                 <img src={UserIcon} />
@@ -164,20 +164,13 @@ function App(): JSX.Element {
                 <img className='background-image' src={BackgroundImage} />
             </div>
             <div data-tauri-drag-region className="titlebar">
-                <div className="titlebar-button" id="titlebar-minimize" onClick={() => { appWindow.minimize().catch(e => {}); }}>
-                    <img
-                        src={MinusIcon}
-                        alt="minimize"
-                    />
+                <div className="titlebar-button clickable" onClick={() => { appWindow.minimize().catch(e => {}); }}>
+                    <img src={MinusIcon} />
                 </div>
-                <div className="titlebar-button" id="titlebar-maximize" onClick={() => { appWindow.maximize().catch(e => {}); }}>
-                    <img
-                        src={SquareIcon}
-                        alt="maximize"
-                        style={{ height: '0.8rem' }}
-                    />
+                <div className="titlebar-button clickable" onClick={() => { appWindow.maximize().catch(e => {}); }}>
+                    <img src={SquareIcon} style={{ height: '0.8rem' }} />
                 </div>
-                <div className="titlebar-button" id="titlebar-close" onClick={() => { appWindow.close().catch(e => {}); }}>
+                <div className="titlebar-button clickable" onClick={() => { appWindow.close().catch(e => {}); }}>
                     <img src={XIcon} />
                 </div>
             </div>

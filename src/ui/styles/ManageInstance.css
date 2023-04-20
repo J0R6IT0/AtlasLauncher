@@ -55,7 +55,6 @@
     overflow: hidden;
     margin-bottom: 1rem;
     height: fit-content;
-    cursor: pointer;
     aspect-ratio: 1.4 / 1;
     justify-content: center;
     display: flex;
@@ -66,33 +65,11 @@
 .manage-instance-background img {
     position: absolute;
     height: 100%;
+    width: 100%;
+    object-fit: cover;
 }
 
 .manage-instance-fields {
     height: calc(100% - 4.5rem);
     width: 180%;
-}
-
-.manage-instance-apply {
-    width: 100%;
-    background-color: var(--side-bar-color);
-    color: var(--text-color-secondary);
-    border-radius: 0.5rem;
-    height: 2rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: not-allowed;
-    transition: all 0.15s ease-in-out;
-
-}
-
-.manage-instance-apply.valid {
-    cursor: pointer;
-    background-color: var(--icons-color-hover);
-    color: var(--text-color-primary);
-}
-
-.manage-instance-apply.valid:hover {
-    color: var(--icons-color);
 }

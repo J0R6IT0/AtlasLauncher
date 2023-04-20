@@ -55,6 +55,8 @@
 .flavour-background {
   position: absolute;
   height: 100%;
+  width: 100%;
+  object-fit: cover;
   opacity: 0.25;
   transition: all 0.3s ease-in-out;
   filter: blur(2px);
@@ -126,6 +128,7 @@
 .flavour.selected .flavour-wrapper {
   height: 100%;
   align-items: flex-start;
+  cursor: default;
 }
 
 .flavour.selected .flavour-data {
