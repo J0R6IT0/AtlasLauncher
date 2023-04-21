@@ -3,27 +3,16 @@ use crate::common::{
     utils::{directory, file},
 };
 
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use crate::data::{
+    constants,
+    models::{LoginEventPayload, MinecraftAccount},
+};
+
 use std::{
-    env,
     fs::{self, DirEntry},
     path::PathBuf,
 };
 use tauri::{AppHandle, Manager, Window};
-
-#[derive(Clone, Serialize)]
-pub struct LoginEventPayload {
-    pub message: String,
-    pub status: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AccountInfo {
-    pub username: String,
-    pub uuid: String,
-    pub refresh_token: String,
-}
 
 pub fn create_login_window(handle: tauri::AppHandle) {
     match handle.get_window("auth") {
@@ -31,14 +20,7 @@ pub fn create_login_window(handle: tauri::AppHandle) {
         None => (),
     }
 
-    let url: String = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize".to_owned()
-        // This is the official launcher ID
-        + "?client_id=00000000402b5328"
-        + "&response_type=code"
-        + "&response_mode=query"
-        + "&redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf"
-        + "&scope=XboxLive.signin%20offline_access"
-        + "&prompt=select_account";
+    let url: String = format!("https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?client_id={}&response_type=code&response_mode=query&redirect_uri={}&scope={}&prompt=select_account", constants::OAUTH_CLIENT_ID, constants::OAUTH_ENCODED_REDIRECT_URI, constants::OAUTH_SCOPE);
 
     let app: AppHandle = handle.to_owned();
 
@@ -46,10 +28,7 @@ pub fn create_login_window(handle: tauri::AppHandle) {
         .inner_size(500.0, 550.0)
         .title("Sign in to Minecraft")
         .on_navigation(move |url| {
-            if url
-                .to_string()
-                .starts_with("https://login.live.com/oauth20_desktop.srf")
-            {
+            if url.to_string().starts_with(constants::OAUTH_REDIRECT_URI) {
                 if url.to_string().contains("?error") {
                     app.emit_all(
                         "auth",
@@ -66,10 +45,11 @@ pub fn create_login_window(handle: tauri::AppHandle) {
                     app.emit_all("close-auth-window", ()).unwrap();
 
                     tauri::async_runtime::spawn(async move {
-                        auth::bearer_token::get_bearer_token(code.as_str(), &app).await;
+                        auth::bearer_token::get_bearer_token(code.as_str(), &app, false).await;
                     });
                 }
-                close_auth_window(&app);
+                let window: Window = app.get_window("auth").unwrap();
+                window.close().unwrap();
             }
             true
         })
@@ -90,92 +70,62 @@ pub fn create_login_window(handle: tauri::AppHandle) {
         });
 }
 
-fn close_auth_window(app: &AppHandle) {
-    let window: Window = app.get_window("auth").unwrap();
-    window.close().unwrap();
-}
-
-pub fn get_accounts() -> Vec<AccountInfo> {
-    let mut accounts: Vec<AccountInfo> = Vec::new();
+pub fn get_accounts() -> Vec<MinecraftAccount> {
+    let mut accounts: Vec<MinecraftAccount> = Vec::new();
 
     let auth_path: PathBuf = directory::check_directory_sync("launcher/auth");
 
     for entry in fs::read_dir(auth_path).unwrap() {
         let entry: DirEntry = entry.unwrap();
         let path: PathBuf = entry.path();
-        let file_name: &str = path.file_name().unwrap().to_str().unwrap();
 
-        if !file_name.starts_with("active_account") {
-            let contents: String = fs::read_to_string(&path).unwrap();
-            let account: AccountInfo = serde_json::from_str(&contents).unwrap();
-            accounts.push(account);
-        }
+        let contents: Vec<u8> = fs::read(&path).unwrap();
+        let account: MinecraftAccount = serde_json::from_slice(&contents).unwrap();
+
+        accounts.push(account);
     }
 
     accounts
 }
 
-pub fn get_active_account() -> String {
-    let path: PathBuf = env::current_exe()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join("launcher/auth/active_account.json");
-
-    if !path.exists() {
-        return String::from("");
-    }
-
-    let content = fs::read_to_string(&path).unwrap();
-
-    let my_json: Value = serde_json::from_str(&content).unwrap();
-
-    my_json["uuid"].as_str().unwrap().to_string()
+pub fn remove_account(uuid: &str) {
+    file::delete(format!("launcher/auth/{}.json", uuid).as_str());
 }
 
-pub async fn get_active_account_info() -> Value {
-    let active_account = get_active_account();
-    let account = file::read_as_json(format!("launcher/auth/{active_account}.json").as_str())
-        .await
-        .unwrap();
+pub fn get_active_account() -> Result<MinecraftAccount, Box<dyn std::error::Error>> {
+    let accounts: Vec<MinecraftAccount> = get_accounts();
 
-    account
+    for account in accounts {
+        if account.active {
+            return Ok(account);
+        }
+    }
+
+    return Err(Box::new(std::io::Error::new(
+        std::io::ErrorKind::Other,
+        "No active account found",
+    )));
 }
 
 pub fn set_active_account(uuid: &str) {
-    let active_account: String = format!(
-        r#"
-            {{
-                "uuid": "{uuid}"
-            }}
-        "#
-    );
+    let auth_path: PathBuf = directory::check_directory_sync("launcher/auth");
 
-    file::write_str(&active_account, "launcher/auth/active_account.json").unwrap();
-}
+    for entry in fs::read_dir(auth_path).unwrap() {
+        let entry: DirEntry = entry.unwrap();
+        let path: PathBuf = entry.path();
 
-pub fn remove_account(uuid: &str) {
-    let path: PathBuf = env::current_exe()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join(format!("launcher/auth/{}.json", uuid));
+        let contents: Vec<u8> = fs::read(&path).unwrap();
+        let mut account: MinecraftAccount = serde_json::from_slice(&contents).unwrap();
+        if account.uuid == uuid {
+            account.active = true;
+        } else {
+            account.active = false;
+        }
 
-    if !path.exists() {
-        return;
-    }
-
-    fs::remove_file(path).unwrap();
-
-    let active_account: String = get_active_account();
-
-    if String::from(uuid) == active_account {
-        let path: PathBuf = env::current_exe()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .join("launcher/auth/active_account.json");
-
-        fs::remove_file(path).unwrap();
+        file::write_vec(
+            &serde_json::to_vec(&account).unwrap(),
+            format!("launcher/auth/{}.json", { account.uuid }).as_str(),
+        )
+        .unwrap();
     }
 }

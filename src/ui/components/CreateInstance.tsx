@@ -29,7 +29,7 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
             <TextInput value={titleInputValue} onChange={handleTitleInputChange} name='Instance name' inputValid={titleInputValid}/>
             <VersionMenu selectedVersionType={selectedVersionType} selectedVersion={selectedVersion} setSelectedVersionType={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>
             <TextButton onClick={() => {
-                invoke('create_instance', { name: titleInputValue.trim(), version: selectedVersion, versionType: selectedVersionType }).catch(e => { console.log(e); });
+                invoke('create_instance', { name: titleInputValue.trim(), id: selectedVersion }).catch(e => { console.log(e); });
                 props.goToLibrary();
             }} text='Create' clickable={titleInputValid && selectedVersion.length > 0}/>
         </div>

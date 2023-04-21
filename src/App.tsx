@@ -44,6 +44,7 @@ export interface InstanceInfo {
 export interface AccountInfo {
     username: string
     uuid: string
+    active: boolean
 }
 
 interface LoginEvent {
@@ -58,21 +59,16 @@ interface LoginEventPayload {
 function SecondaryButtons(): JSX.Element {
     const [accountSelectorActive, setAccountSelectorActive] = useState(false);
     const [accounts, setAccounts] = useState<AccountInfo[]>([]);
-    const [activeAccount, setActiveAccount] = useState('');
 
     async function getAccounts(): Promise<void> {
         const accounts = await invoke('get_accounts').catch(e => {}) as AccountInfo[];
-        const activeAccount = await invoke('get_active_account').catch(e => {}) as string;
         setAccounts(accounts);
-        setActiveAccount(activeAccount);
         const button = accountButtonRef.current;
         const accountsIcon = button?.querySelector('img');
-        if (activeAccount !== null && activeAccount.length > 1) {
-            const user = accounts.find(user => user.uuid === activeAccount);
-            if (user !== null && user !== undefined) {
-                accountsIcon?.setAttribute('src', `https://crafatar.com/avatars/${activeAccount}?overlay`);
-                button?.classList.add('active-user');
-            }
+        const activeAccount = accounts.filter(acc => acc.active)[0];
+        if (activeAccount !== null && activeAccount !== undefined) {
+            accountsIcon?.setAttribute('src', `https://crafatar.com/avatars/${activeAccount.uuid}?overlay`);
+            button?.classList.add('active-user');
         } else {
             accountsIcon?.setAttribute('src', UserIcon);
             button?.classList.remove('active-user');
@@ -108,7 +104,7 @@ function SecondaryButtons(): JSX.Element {
             }} ref={accountButtonRef}>
                 <img src={UserIcon} />
             </div>
-            {accountSelectorActive && <AccountSelector onClose={() => { setAccountSelectorActive(false); }} accounts={accounts} activeAccount={activeAccount} updateAccounts={() => {
+            {accountSelectorActive && <AccountSelector onClose={() => { setAccountSelectorActive(false); }} accounts={accounts} updateAccounts={() => {
                 getAccounts().catch(e => {});
             }}/>}
         </div>

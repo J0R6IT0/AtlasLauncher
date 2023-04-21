@@ -11,7 +11,6 @@ interface AccountSelectorProps {
     onClose: () => void
     updateAccounts: () => void
     accounts: AccountInfo[]
-    activeAccount: string
 }
 
 function AccountSelector(props: AccountSelectorProps): JSX.Element {
@@ -39,14 +38,15 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
 
     return (
         <div className='account-selector' ref={menuRef}>
-            {props.accounts.map((element, index) => <div key={index} className={`account-items ${props.activeAccount === element.uuid ? 'active' : ''}`}>
+            {props.accounts.map((element, index) => <div key={index} className={`account-items ${element.active ? 'active' : ''}`}>
                 <div className='clickable'
                     onClick={() => {
                         invoke('set_active_account', { uuid: element.uuid }).catch(e => {});
+                        props.updateAccounts();
                     }}>
                     <img src={`https://crafatar.com/avatars/${element.uuid}?overlay`} alt="" />
                     <span>{element.username}
-                        <span id='active-account-label'>{props.activeAccount === element.uuid ? '\nActive' : ''}</span>
+                        <span id='active-account-label'>{element.active ? '\nActive' : ''}</span>
                     </span>
                 </div>
                 <img onClick={() => {

@@ -1,62 +1,70 @@
-use crate::auth::{login, minecraft};
-use async_recursion::async_recursion;
+use crate::auth::minecraft;
+use crate::data::models::{
+    LoginEventPayload, MinecraftXSTSProperties, MinecraftXSTSRequest, XboxAuthProperties,
+    XboxAuthRequest,
+};
 use reqwest::Client;
 use serde_json::Value;
 use tauri::Manager;
 
-#[async_recursion]
-pub async fn login(
+pub async fn xbox_login(
     token: &str,
-    site: u8,
     app: &tauri::AppHandle,
     refresh_token: &str,
-    from_refresh: bool,
+    is_refresh: bool,
 ) {
-    // we use the same function for xbox login (site 0) and minecraft xsts token (site 1)
-    let auth_request: String = if site == 0 {
-        format!(
-            r#"
-            {{
-                "Properties": {{
-                    "AuthMethod": "RPS",
-                    "SiteName": "user.auth.xboxlive.com",
-                    "RpsTicket": "d={token}"
-                }},
-                "RelyingParty": "http://auth.xboxlive.com",
-                "TokenType": "JWT"
-            }}
-            "#
-        )
-    } else {
-        format!(
-            r#"
-            {{
-                "Properties": {{
-                    "SandboxId": "RETAIL",
-                    "UserTokens": [
-                        "{token}"
-                    ]
-                }},
-                "RelyingParty": "rp://api.minecraftservices.com/",
-                "TokenType": "JWT"
-             }}
-            "#
-        )
+    let properties: XboxAuthProperties = XboxAuthProperties {
+        auth_method: String::from("RPS"),
+        site_name: String::from("user.auth.xboxlive.com"),
+        rps_ticket: format!("d={token}"),
     };
-
-    let json: Value = serde_json::from_str(&auth_request).unwrap();
+    let xbox_request: XboxAuthRequest = XboxAuthRequest {
+        properties,
+        relying_party: String::from("http://auth.xboxlive.com"),
+        token_type: String::from("JWT"),
+    };
 
     let client: Client = Client::new();
 
     let response: Result<Value, reqwest::Error> = client
-        .post(if site == 0 {
-            "https://user.auth.xboxlive.com/user/authenticate"
-        } else {
-            "https://xsts.auth.xboxlive.com/xsts/authorize"
-        })
+        .post("https://user.auth.xboxlive.com/user/authenticate")
         .header("Content-Type", "application/json")
         .header("Accept", "application/json")
-        .json(&json)
+        .json(&xbox_request)
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await;
+
+    let response: Value = match response {
+        Ok(reponse) => reponse,
+        Err(_) => return,
+    };
+
+    let token: &str = response["Token"].as_str().unwrap_or_default();
+
+    xsts_token(token, app, refresh_token, is_refresh).await
+}
+
+async fn xsts_token(token: &str, app: &tauri::AppHandle, refresh_token: &str, is_refresh: bool) {
+    let properties: MinecraftXSTSProperties = MinecraftXSTSProperties {
+        sandbox_id: String::from("RETAIL"),
+        user_tokens: vec![format!("{}", token)],
+    };
+    let minecraft_request: MinecraftXSTSRequest = MinecraftXSTSRequest {
+        properties,
+        relying_party: String::from("rp://api.minecraftservices.com/"),
+        token_type: String::from("JWT"),
+    };
+
+    let client: Client = Client::new();
+
+    let response: Result<Value, reqwest::Error> = client
+        .post("https://xsts.auth.xboxlive.com/xsts/authorize")
+        .header("Content-Type", "application/json")
+        .header("Accept", "application/json")
+        .json(&minecraft_request)
         .send()
         .await
         .unwrap()
@@ -72,19 +80,15 @@ pub async fn login(
     let uhs: &str = response["DisplayClaims"]["xui"][0]["uhs"]
         .as_str()
         .unwrap_or_default();
-    if site == 0 {
-        login(token, 1, app, refresh_token, from_refresh).await;
-    } else {
-        if !from_refresh {
-            app.emit_all(
-                "auth",
-                login::LoginEventPayload {
-                    message: format!("Obtaining Minecraft token."),
-                    status: String::from("Loading"),
-                },
-            )
-            .unwrap();
-        }
-        minecraft::login(token, uhs, app, refresh_token, from_refresh).await;
+    if !is_refresh {
+        app.emit_all(
+            "auth",
+            LoginEventPayload {
+                message: format!("Obtaining Minecraft token."),
+                status: String::from("Loading"),
+            },
+        )
+        .unwrap();
     }
+    minecraft::login(token, uhs, app, refresh_token, is_refresh).await;
 }

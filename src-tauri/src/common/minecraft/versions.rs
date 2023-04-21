@@ -1,61 +1,60 @@
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::collections::HashMap;
-
 use crate::common::utils::file;
-
-#[derive(Serialize, Deserialize)]
-pub struct VersionData {
-    pub id: String,
-    pub url: String,
-}
+use crate::data::models::MinecraftVersionData;
 
 pub async fn download_version_manifest() -> Result<(), Box<dyn std::error::Error>> {
-    let json: Value = file::download_as_json(
+    file::download_as_vec(
         "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json",
         "",
         1,
-        "",
+        "launcher/version-info/version_manifest_v2.json",
         false,
     )
     .await?;
-
-    let mut version_data: HashMap<&str, Vec<VersionData>> =
-        HashMap::<&str, Vec<VersionData>>::new();
-
-    for version in json["versions"].as_array().unwrap() {
-        if let (Some(id), Some(r#type), Some(url)) = (
-            version["id"].as_str(),
-            version["type"].as_str(),
-            version["url"].as_str(),
-        ) {
-            let data: VersionData = VersionData {
-                id: id.to_owned(),
-                url: url.to_owned(),
-            };
-            match r#type {
-                "release" | "snapshot" | "old_beta" | "old_alpha" => {
-                    version_data.entry(r#type).or_default().push(data);
-                }
-                _ => continue,
-            }
-        }
-    }
-
-    for (version_type, data) in version_data.iter() {
-        file::write_vec(
-            &serde_json::to_vec(&data).unwrap(),
-            format!("launcher/version-info/{}.json", version_type).as_str(),
-        )?;
-    }
-
     Ok(())
 }
 
-pub async fn get_versions(r#type: &str) -> Result<Vec<VersionData>, Box<dyn std::error::Error>> {
+pub async fn get_versions() -> Result<Vec<MinecraftVersionData>, Box<dyn std::error::Error>> {
     let bytes: Vec<u8> =
-        file::read_as_vec(format!("launcher/version-info/{}.json", r#type).as_str()).await?;
-    let content: Vec<VersionData> = serde_json::from_slice(&bytes)?;
+        file::read_as_vec(format!("launcher/version-info/version_manifest_v2.json").as_str())
+            .await?;
+    let data: serde_json::Value = serde_json::from_slice(&bytes)?;
 
-    Ok(content)
+    let versions: &Vec<serde_json::Value> =
+        data["versions"].as_array().ok_or("Invalid manifest JSON")?;
+
+    let minecraft_versions: Vec<MinecraftVersionData> = versions
+        .iter()
+        .map(|version| MinecraftVersionData {
+            id: version["id"].as_str().unwrap_or("").to_owned(),
+            url: version["url"].as_str().unwrap_or("").to_owned(),
+            r#type: version["type"].as_str().unwrap_or("").to_owned(),
+        })
+        .collect();
+
+    Ok(minecraft_versions)
+}
+
+pub async fn get_version(id: &str) -> Result<MinecraftVersionData, Box<dyn std::error::Error>> {
+    let bytes: Vec<u8> =
+        file::read_as_vec(format!("launcher/version-info/version_manifest_v2.json").as_str())
+            .await?;
+    let data: serde_json::Value = serde_json::from_slice(&bytes)?;
+
+    let versions: &Vec<serde_json::Value> =
+        data["versions"].as_array().ok_or("Invalid manifest JSON")?;
+
+    let minecraft_version: Option<MinecraftVersionData> = versions.iter().find_map(|version| {
+        let version_id: &str = version["id"].as_str()?;
+        if version_id == id {
+            Some(MinecraftVersionData {
+                id: version_id.to_owned(),
+                url: version["url"].as_str().unwrap_or("").to_owned(),
+                r#type: version["type"].as_str().unwrap_or("").to_owned(),
+            })
+        } else {
+            None
+        }
+    });
+
+    Ok(minecraft_version.unwrap())
 }

@@ -135,7 +135,7 @@ pub async fn download_as_json(
     Ok(json)
 }
 
-// Other
+// Verify
 
 pub async fn verify_hash(
     checksum: &str,
@@ -167,6 +167,8 @@ pub async fn verify_hash(
     Ok(true)
 }
 
+// Extract
+
 pub async fn extract_zip(
     path: PathBuf,
     reader: &mut Cursor<Vec<u8>>,
@@ -195,4 +197,16 @@ pub async fn extract_zip(
         }
     }
     Ok(())
+}
+
+// Delete
+
+pub fn delete(path: &str) {
+    let path: PathBuf = env::current_exe().unwrap().parent().unwrap().join(path);
+
+    if !path.exists() {
+        return;
+    }
+
+    fs::remove_file(path).unwrap();
 }

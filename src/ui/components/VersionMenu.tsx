@@ -4,10 +4,12 @@ import CheckIcon from '../../assets/icons/check.svg';
 import AlertIcon from '../../assets/icons/alert-triangle.svg';
 import '../styles/VersionMenu.css';
 
-const releaseArray: string[] = await invoke('list_minecraft_versions', { versionType: 'release' });
-const snapshotArray: string[] = await invoke('list_minecraft_versions', { versionType: 'snapshot' });
-const oldBetaArray: string[] = await invoke('list_minecraft_versions', { versionType: 'old_beta' });
-const oldAlphaArray: string[] = await invoke('list_minecraft_versions', { versionType: 'old_alpha' });
+interface MinecraftVersion {
+    id: string
+    type: string
+}
+
+const versions: MinecraftVersion[] = await invoke('get_minecraft_versions');
 
 interface VersionMenuProps {
     selectedVersion: string
@@ -15,7 +17,6 @@ interface VersionMenuProps {
     selectedVersionType: string
     setSelectedVersionType: (type: string) => void
 }
-
 function VersionMenu(props: VersionMenuProps): JSX.Element {
     return (
         <div className='version-menu'>
@@ -27,10 +28,10 @@ function VersionMenu(props: VersionMenuProps): JSX.Element {
             </div>
             <img className="input-image" src={props.selectedVersion.length > 0 ? CheckIcon : AlertIcon} alt="" />
             <div className='version-container'>
-                {props.selectedVersionType === 'release' && releaseArray.map((element, index) => <div key={index} className={`version clickable ${props.selectedVersion === element ? 'selected' : ''}`} onClick={() => { props.setSelectedVersion(element); } }><span>{props.selectedVersion === element && <div className='dot'></div>}{element}</span></div>)}
-                {props.selectedVersionType === 'snapshot' && snapshotArray.map((element, index) => <div key={index} className={`version clickable ${props.selectedVersion === element ? 'selected' : ''}`} onClick={() => { props.setSelectedVersion(element); } }><span>{props.selectedVersion === element && <div className='dot'></div>}{element}</span></div>)}
-                {props.selectedVersionType === 'old_beta' && oldBetaArray.map((element, index) => <div key={index} className={`version clickable ${props.selectedVersion === element ? 'selected' : ''}`} onClick={() => { props.setSelectedVersion(element); } }><span>{props.selectedVersion === element && <div className='dot'></div>}{element}</span></div>)}
-                {props.selectedVersionType === 'old_alpha' && oldAlphaArray.map((element, index) => <div key={index} className={`version clickable ${props.selectedVersion === element ? 'selected' : ''}`} onClick={() => { props.setSelectedVersion(element); } }><span>{props.selectedVersion === element && <div className='dot'></div>}{element}</span></div>)}
+                {props.selectedVersionType === 'release' && versions.filter(element => element.type === 'release').map((element, index) => <div key={index} className={`version clickable ${props.selectedVersion === element.id ? 'selected' : ''}`} onClick={() => { props.setSelectedVersion(element.id); } }><span>{props.selectedVersion === element.id && <div className='dot'></div>}{element.id}</span></div>)}
+                {props.selectedVersionType === 'snapshot' && versions.filter(element => element.type === 'snapshot').map((element, index) => <div key={index} className={`version clickable ${props.selectedVersion === element.id ? 'selected' : ''}`} onClick={() => { props.setSelectedVersion(element.id); } }><span>{props.selectedVersion === element.id && <div className='dot'></div>}{element.id}</span></div>)}
+                {props.selectedVersionType === 'old_beta' && versions.filter(element => element.type === 'old_beta').map((element, index) => <div key={index} className={`version clickable ${props.selectedVersion === element.id ? 'selected' : ''}`} onClick={() => { props.setSelectedVersion(element.id); } }><span>{props.selectedVersion === element.id && <div className='dot'></div>}{element.id}</span></div>)}
+                {props.selectedVersionType === 'old_alpha' && versions.filter(element => element.type === 'old_alpha').map((element, index) => <div key={index} className={`version clickable ${props.selectedVersion === element.id ? 'selected' : ''}`} onClick={() => { props.setSelectedVersion(element.id); } }><span>{props.selectedVersion === element.id && <div className='dot'></div>}{element.id}</span></div>)}
             </div>
         </div>
     );

@@ -12,7 +12,7 @@ use std::{
 
 use regex::Regex;
 
-use crate::{common::auth::login::get_active_account_info, minecraft::downloader};
+use crate::{common::auth::login::get_active_account, minecraft::downloader, data::models::MinecraftAccount};
 use crate::{common::utils::directory::check_directory_sync, utils::directory::check_directory};
 use crate::{
     common::utils::file,
@@ -44,8 +44,7 @@ pub struct InstanceInfo {
 }
 
 pub async fn create_instance(
-    version_type: &str,
-    version: &str,
+    id: &str,
     name: &str,
     app: &tauri::AppHandle,
 ) {
@@ -55,7 +54,7 @@ pub async fn create_instance(
         r#"
             {{
                 "name": "{name}",
-                "version": "{version}"
+                "version": "{id}"
             }}
         "#
     );
@@ -69,7 +68,7 @@ pub async fn create_instance(
     app.emit_all(
         "create_instance",
         CreateInstanceEventPayload {
-            version: String::from(version),
+            version: String::from(id),
             name: String::from(name),
             message: format!("Downloading Java"),
             status: String::from("Loading"),
@@ -83,7 +82,7 @@ pub async fn create_instance(
     app.emit_all(
         "create_instance",
         CreateInstanceEventPayload {
-            version: String::from(version),
+            version: String::from(id),
             name: String::from(name),
             message: format!("Downloading game files"),
             status: String::from("Loading"),
@@ -91,7 +90,7 @@ pub async fn create_instance(
     )
     .unwrap();
 
-    let libraries_arg = downloader::download(version_type, version, name)
+    let libraries_arg = downloader::download(id, name)
         .await
         .unwrap();
 
@@ -99,7 +98,7 @@ pub async fn create_instance(
         r#"
             {{
                 "name": "{name}",
-                "version": "{version}",
+                "version": "{id}",
                 "background": "",
                 "libraries": "{libraries_arg}"
             }}
@@ -115,7 +114,7 @@ pub async fn create_instance(
     app.emit_all(
         "create_instance",
         CreateInstanceEventPayload {
-            version: String::from(version),
+            version: String::from(id),
             name: String::from(name),
             message: format!("Instance created successfully"),
             status: String::from("Success"),
@@ -189,7 +188,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
 
     let cp: String = format!("{version_path};{libraries}");
 
-    let active_user: Value = get_active_account_info().await;
+    let active_user: MinecraftAccount = get_active_account().unwrap();
 
     let main_class: &str = version_info["mainClass"].as_str().unwrap();
 
@@ -200,11 +199,11 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
     let replaced_arguments = arguments
         .replace(
             "${auth_player_name}",
-            active_user["username"].as_str().unwrap(),
+            &active_user.username,
         )
         .replace(
             "${auth_session}",
-            active_user["access_token"].as_str().unwrap(),
+            &active_user.access_token,
         )
         .replace(
             "${game_directory}",
@@ -214,10 +213,10 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         .replace("${version_name}", version)
         .replace("${assets_root}", &assets_path)
         .replace("${assets_index_name}", asset_index)
-        .replace("${auth_uuid}", active_user["uuid"].as_str().unwrap())
+        .replace("${auth_uuid}", &active_user.uuid)
         .replace(
             "${auth_access_token}",
-            active_user["access_token"].as_str().unwrap(),
+            &active_user.access_token,
         )
         .replace("${user_properties}", "{}")
         .replace("${user_type}", "msa")

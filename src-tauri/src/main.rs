@@ -5,12 +5,14 @@ use std::env;
 use tauri::AppHandle;
 
 mod common;
+mod data;
 use common::{auth, java, minecraft, utils};
+use data::models;
 
 #[tauri::command]
-async fn list_minecraft_versions(version_type: &str) -> Result<Vec<String>, ()> {
-    match minecraft::versions::get_versions(version_type).await {
-        Ok(version_list) => Ok(version_list.iter().map(|v| v.id.clone()).collect()),
+async fn get_minecraft_versions() -> Result<Vec<models::MinecraftVersionData>, ()> {
+    match minecraft::versions::get_versions().await {
+        Ok(version_list) => Ok(version_list),
         Err(_) => Ok([].to_vec()),
     }
 }
@@ -21,13 +23,8 @@ async fn start_oauth(handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
-fn get_accounts() -> Vec<auth::login::AccountInfo> {
+fn get_accounts() -> Vec<models::MinecraftAccount> {
     auth::login::get_accounts()
-}
-
-#[tauri::command]
-fn get_active_account() -> String {
-    auth::login::get_active_account()
 }
 
 #[tauri::command]
@@ -47,12 +44,11 @@ async fn get_instances() -> Vec<minecraft::instance::InstanceInfo> {
 
 #[tauri::command]
 async fn create_instance(
-    version_type: &str,
-    version: &str,
     name: &str,
+    id: &str,
     handle: tauri::AppHandle,
 ) -> Result<(), ()> {
-    minecraft::instance::create_instance(version_type, version, name, &handle).await;
+    minecraft::instance::create_instance(id, name, &handle).await;
     Ok(())
 }
 
@@ -96,10 +92,9 @@ async fn main() {
     // build the tauri app
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            list_minecraft_versions,
+            get_minecraft_versions,
             start_oauth,
             get_accounts,
-            get_active_account,
             set_active_account,
             remove_account,
             create_instance,

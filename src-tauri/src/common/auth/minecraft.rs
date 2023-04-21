@@ -2,7 +2,7 @@ use reqwest::Client;
 use serde_json::Value;
 use tauri::Manager;
 
-use crate::auth::login::LoginEventPayload;
+use crate::data::models::{LoginEventPayload, MinecraftAccount, MinecraftLoginRequest};
 use crate::utils::file;
 
 pub async fn login(
@@ -12,16 +12,9 @@ pub async fn login(
     refresh_token: &str,
     from_refresh: bool,
 ) {
-    // We are using the same function for Xbox login (site 0) and minecraft XSTS token (site 1)
-    let auth_request: String = format!(
-        r#"
-        {{
-            "identityToken": "XBL3.0 x={hash};{token}"
-        }}
-    "#
-    );
-
-    let json: Value = serde_json::from_str(&auth_request).unwrap();
+    let auth_request: MinecraftLoginRequest = MinecraftLoginRequest {
+        identity_token: format!("XBL3.0 x={hash};{token}"),
+    };
 
     let client: Client = Client::new();
 
@@ -29,7 +22,7 @@ pub async fn login(
         .post("https://api.minecraftservices.com/authentication/login_with_xbox")
         .header("Content-Type", "application/json")
         .header("Accept", "application/json")
-        .json(&json)
+        .json(&auth_request)
         .send()
         .await
         .unwrap()
@@ -87,28 +80,33 @@ pub async fn get_account_info(
         )
         .unwrap();
     } else {
-        let account_info: String = format!(
-            r#"
-                {{
-                    "access_token": "{token}",
-                    "username": "{username}",
-                    "uuid": "{uuid}",
-                    "refresh_token": "{refresh_token}"
-                }}
-            "#
-        );
+        let account_info: MinecraftAccount =
+            match file::read_as_vec(format!("launcher/auth/{uuid}.json").as_str()).await {
+                Ok(account_bytes) => {
+                    let mut account_info: MinecraftAccount =
+                        serde_json::from_slice(&account_bytes).unwrap();
+                    account_info.access_token = String::from(token);
+                    account_info.username = String::from(username);
+                    account_info.uuid = String::from(uuid);
+                    account_info.refresh_token = String::from(refresh_token);
+                    account_info
+                }
+                Err(_) => MinecraftAccount {
+                    username: String::from(username),
+                    uuid: String::from(uuid),
+                    access_token: String::from(token),
+                    refresh_token: String::from(refresh_token),
+                    active: true,
+                },
+            };
 
-        let active_account: String = format!(
-            r#"
-                {{
-                    "uuid": "{uuid}"
-                }}
-            "#
-        );
-        file::write_str(&account_info, &format!("launcher/auth/{uuid}.json")).unwrap();
+        file::write_vec(
+            &serde_json::to_vec(&account_info).unwrap(),
+            format!("launcher/auth/{}.json", { uuid }).as_str(),
+        )
+        .unwrap();
 
         if !from_refresh {
-            file::write_str(&active_account, "launcher/auth/active_account.json").unwrap();
             app.emit_all(
                 "auth",
                 LoginEventPayload {

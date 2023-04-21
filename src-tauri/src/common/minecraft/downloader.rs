@@ -6,6 +6,8 @@ use tauri::async_runtime;
 use crate::utils::file;
 use serde_json::{self, Map, Value};
 
+use super::versions::get_version;
+
 #[derive(Serialize, Deserialize)]
 struct VersionInfo {
     id: String,
@@ -13,26 +15,26 @@ struct VersionInfo {
 }
 
 pub async fn download(
-    version_type: &str,
-    version: &str,
+    id: &str,
     instance_name: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let url = get_version_url(version_type, version).await?;
+    let version: crate::data::models::MinecraftVersionData = get_version(id).await?;
+    let url: String = version.url;
 
-    let json = file::download_as_json(
+    let json: Value = file::download_as_json(
         &url,
         "",
         1,
-        format!("versions/{version}/{version}.json").as_str(),
+        format!("versions/{id}/{id}.json").as_str(),
         false,
     )
     .await?;
 
-    let mut download_tasks = vec![];
+    let mut download_tasks: Vec<async_runtime::JoinHandle<()>> = vec![];
 
     // client.jar
     let json_copy = json.clone();
-    let version_copy = version.clone().to_owned();
+    let version_copy = id.clone().to_owned();
     let download_task = tauri::async_runtime::spawn(async move {
         let client_url: &str = json_copy["downloads"]["client"]["url"]
             .as_str()
@@ -93,28 +95,10 @@ pub async fn download(
 
     // libraries
     let libraries: &Vec<serde_json::Value> = json["libraries"].as_array().unwrap();
-    let libraries_arg = download_libraries(&libraries, &version).await?;
+    let libraries_arg = download_libraries(&libraries, &id).await?;
 
     join_all(download_tasks).await;
     return Ok(libraries_arg);
-}
-
-async fn get_version_url(
-    version_type: &str,
-    version: &str,
-) -> Result<String, Box<dyn std::error::Error>> {
-    let json: Value =
-        file::read_as_json(&("launcher/version-info/".to_string() + version_type + ".json"))
-            .await?;
-    let versions = json.as_array().unwrap();
-
-    for item in versions.iter() {
-        if item["id"].as_str().unwrap() == version {
-            return Ok(item["url"].as_str().unwrap().to_string());
-        }
-    }
-
-    Err("Version not found".into())
 }
 
 async fn download_assets(
