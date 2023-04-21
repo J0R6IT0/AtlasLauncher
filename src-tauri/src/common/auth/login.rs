@@ -18,7 +18,7 @@ pub struct LoginEventPayload {
     pub status: String,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct AccountInfo {
     pub username: String,
     pub uuid: String,
@@ -27,10 +27,9 @@ pub struct AccountInfo {
 
 pub fn create_login_window(handle: tauri::AppHandle) {
     match handle.get_window("auth") {
-        Some(window) => window.close(),
-        None => Ok(()),
+        Some(_) => return,
+        None => (),
     }
-    .unwrap();
 
     let url: String = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize".to_owned()
         // This is the official launcher ID
