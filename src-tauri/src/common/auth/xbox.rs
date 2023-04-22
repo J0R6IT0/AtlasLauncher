@@ -1,7 +1,7 @@
 use crate::auth::minecraft;
 use crate::data::models::{
-    LoginEventPayload, MinecraftXSTSProperties, MinecraftXSTSRequest, XboxAuthProperties,
-    XboxAuthRequest,
+    BaseEventPayload, MinecraftXSTSProperties, MinecraftXSTSRequest, XboxAuthProperties,
+    XboxAuthRequest, LoginEventPayload,
 };
 use reqwest::Client;
 use serde_json::Value;
@@ -84,8 +84,10 @@ async fn xsts_token(token: &str, app: &tauri::AppHandle, refresh_token: &str, is
         app.emit_all(
             "auth",
             LoginEventPayload {
-                message: format!("Obtaining Minecraft token."),
-                status: String::from("Loading"),
+                base: BaseEventPayload {
+                    message: format!("Obtaining Minecraft token."),
+                    status: String::from("Loading"),
+                },
             },
         )
         .unwrap();

@@ -1,6 +1,6 @@
 use crate::auth::{login, xbox};
 use crate::data::constants;
-use crate::data::models::{LoginEventPayload, MinecraftAccount};
+use crate::data::models::{BaseEventPayload, LoginEventPayload, MinecraftAccount};
 use reqwest::Client;
 use serde_json::Value;
 use tauri::Manager;
@@ -40,8 +40,10 @@ pub async fn get_bearer_token(code: &str, app: &tauri::AppHandle, is_refresh: bo
         app.emit_all(
             "auth",
             LoginEventPayload {
-                message: format!("Logging in to Xbox."),
-                status: String::from("Loading"),
+                base: BaseEventPayload {
+                    message: format!("Logging in to Xbox."),
+                    status: String::from("Loading"),
+                },
             },
         )
         .unwrap();

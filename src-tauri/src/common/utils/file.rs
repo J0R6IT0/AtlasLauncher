@@ -1,4 +1,5 @@
 use reqwest::Response;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha1::Sha1;
 use sha2::{Digest, Sha256};
@@ -13,6 +14,11 @@ use tokio::time::{sleep, Duration};
 use zip::{read::ZipFile, ZipArchive};
 
 use super::directory::{self, check_directory_sync};
+
+pub enum ChecksumType {
+    Sha1,
+    Sha256,
+}
 
 // Read
 
@@ -32,12 +38,14 @@ pub async fn read_as_vec(path: &str) -> Result<Vec<u8>, Box<dyn std::error::Erro
     Ok(contents)
 }
 
-pub async fn read_as_json(path: &str) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-    let bytes: Vec<u8> = read_as_vec(path).await?;
+pub async fn read_as_value<T>(path: &str) -> Result<T, Box<dyn std::error::Error>>
+where
+    T: for<'de> Deserialize<'de>,
+{
+    let bytes: Vec<u8> = read_as_vec(path).await.unwrap();
+    let result: T = serde_json::from_slice(&bytes)?;
 
-    let json_value: Value = serde_json::from_slice(&bytes)?;
-
-    Ok(json_value)
+    Ok(result)
 }
 
 // Write
@@ -56,9 +64,9 @@ pub fn write_vec(data: &Vec<u8>, path: &str) -> Result<(), Box<dyn std::error::E
     Ok(())
 }
 
-pub fn write_str(data: &str, path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let bytes: &[u8] = data.as_bytes();
-    write_vec(&bytes.to_vec(), path)?;
+pub fn write_value<T: Serialize>(data: &T, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let bytes: Vec<u8> = serde_json::to_vec(&data).unwrap();
+    write_vec(&bytes, path)?;
 
     Ok(())
 }
@@ -68,7 +76,7 @@ pub fn write_str(data: &str, path: &str) -> Result<(), Box<dyn std::error::Error
 pub async fn download_as_vec(
     url: &str,
     checksum: &str,
-    checksum_type: u8,
+    checksum_type: &ChecksumType,
     path: &str,
     extract: bool,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
@@ -93,7 +101,7 @@ pub async fn download_as_vec(
         let response: Response = match reqwest::get(url).await {
             Ok(response) => response,
             Err(error) => {
-                if retry_count >= 3 {
+                if retry_count >= 5 {
                     return Err(Box::new(error));
                 }
                 retry_count += 1;
@@ -126,7 +134,7 @@ pub async fn download_as_vec(
 pub async fn download_as_json(
     url: &str,
     checksum: &str,
-    checksum_type: u8,
+    checksum_type: &ChecksumType,
     path: &str,
     extract: bool,
 ) -> Result<Value, Box<dyn std::error::Error>> {
@@ -139,7 +147,7 @@ pub async fn download_as_json(
 
 pub async fn verify_hash(
     checksum: &str,
-    checksum_type: u8,
+    checksum_type: &ChecksumType,
     data: &[u8],
 ) -> Result<bool, Box<dyn std::error::Error>> {
     if checksum.is_empty() {
@@ -150,14 +158,17 @@ pub async fn verify_hash(
 
     let mut bytes: &[u8] = data;
 
-    if checksum_type == 1 {
-        let mut hasher = Sha1::new();
-        io::copy(&mut bytes, &mut hasher)?;
-        actual_checksum = format!("{:x}", hasher.finalize());
-    } else {
-        let mut hasher = Sha256::new();
-        io::copy(&mut bytes, &mut hasher)?;
-        actual_checksum = format!("{:x}", hasher.finalize());
+    match checksum_type {
+        ChecksumType::Sha1 => {
+            let mut hasher = Sha1::new();
+            io::copy(&mut bytes, &mut hasher)?;
+            actual_checksum = format!("{:x}", hasher.finalize());
+        }
+        ChecksumType::Sha256 => {
+            let mut hasher = Sha256::new();
+            io::copy(&mut bytes, &mut hasher)?;
+            actual_checksum = format!("{:x}", hasher.finalize());
+        }
     }
 
     if actual_checksum != checksum {

@@ -20,10 +20,8 @@ interface CreateInstanceEvent {
 }
 
 interface CreateInstanceEventPayload {
-    status: string
-    message: string
+    base: BaseEventPayload
     name: string
-    version: string
 }
 
 interface StartInstanceEvent {
@@ -31,8 +29,7 @@ interface StartInstanceEvent {
 }
 
 interface StartInstanceEventPayload {
-    status: string
-    message: string
+    base: BaseEventPayload
 }
 
 export interface InstanceInfo {
@@ -52,6 +49,10 @@ interface LoginEvent {
 }
 
 interface LoginEventPayload {
+    base: BaseEventPayload
+}
+
+interface BaseEventPayload {
     status: string
     message: string
 }
@@ -79,13 +80,14 @@ function SecondaryButtons(): JSX.Element {
 
     useEffect(() => {
         listen('auth', (event: LoginEvent) => {
-            if (event.payload.status === 'Success') {
+            if (event.payload.base.status === 'Success') {
                 getAccounts().catch(e => {});
-                toast.success(event.payload.message, { id: 'currentLoginNotification' });
-            } else if (event.payload.status === 'Error') {
-                toast.error(event.payload.message, { id: 'currentLoginNotification' });
-            } else if (event.payload.status === 'Loading') {
-                toast.loading(event.payload.message, { id: 'currentLoginNotification' });
+                toast.success(event.payload.base.message, { id: 'currentLoginNotification' });
+            } else if (event.payload.base.status === 'Error') {
+                toast.error(event.payload.base.message, { id: 'currentLoginNotification' });
+            } else if (event.payload.base.status === 'Loading') {
+                console.log('e');
+                toast.loading(event.payload.base.message, { id: 'currentLoginNotification' });
             } else {
                 toast.dismiss('currentLoginNotification');
             }
@@ -122,24 +124,24 @@ function App(): JSX.Element {
 
     useEffect(() => {
         listen('create_instance', (event: CreateInstanceEvent) => {
-            if (event.payload.status === 'Success') {
+            if (event.payload.base.status === 'Success') {
                 getInstances().catch(e => {});
-                toast.success(event.payload.message, { id: event.payload.name });
-            } else if (event.payload.status === 'Error') {
-                toast.error(event.payload.message, { id: event.payload.name });
-            } else if (event.payload.status === 'Loading') {
-                toast.loading(event.payload.message, { id: event.payload.name });
+                toast.success(event.payload.base.message, { id: event.payload.name });
+            } else if (event.payload.base.status === 'Error') {
+                toast.error(event.payload.base.message, { id: event.payload.name });
+            } else if (event.payload.base.status === 'Loading') {
+                toast.loading(event.payload.base.message, { id: event.payload.name });
             } else {
                 toast.dismiss(event.payload.name);
             }
         }).catch(e => {});
         listen('start_instance', (event: StartInstanceEvent) => {
-            if (event.payload.status === 'Success') {
-                toast.success(event.payload.message, { id: 'startInstance' });
-            } else if (event.payload.status === 'Error') {
-                toast.error(event.payload.message, { id: 'startInstance' });
+            if (event.payload.base.status === 'Success') {
+                toast.success(event.payload.base.message, { id: 'startInstance' });
+            } else if (event.payload.base.status === 'Error') {
+                toast.error(event.payload.base.message, { id: 'startInstance' });
             } else {
-                toast.loading(event.payload.message, { id: 'startInstance' });
+                toast.loading(event.payload.base.message, { id: 'startInstance' });
             }
         }).catch(e => {});
         getInstances().catch(e => {});

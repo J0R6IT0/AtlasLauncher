@@ -3,8 +3,11 @@ use std::{env, path::PathBuf};
 
 use crate::{common::utils::file, utils::directory::check_directory};
 
+use super::get_java_path::get_java_path;
+
 pub async fn download(version: u8) -> Result<(), Box<dyn std::error::Error>> {
-    if !check_java(version).await {
+    let java_path: String = get_java_path(version).await;
+    if !java_path.is_empty() {
         return Ok(());
     }
     let path: PathBuf = check_directory(&format!("java/{version}")).await;
@@ -15,9 +18,15 @@ pub async fn download(version: u8) -> Result<(), Box<dyn std::error::Error>> {
     let link: &str = binary["package"]["link"].as_str().unwrap();
 
     // Download the file
-    file::download_as_vec(link, checksum, 56, path.to_str().unwrap(), true)
-        .await
-        .unwrap();
+    file::download_as_vec(
+        link,
+        checksum,
+        &file::ChecksumType::Sha256,
+        path.to_str().unwrap(),
+        true,
+    )
+    .await
+    .unwrap();
 
     Ok(())
 }
@@ -35,19 +44,11 @@ async fn get_version_info(version: u8) -> Result<Value, Box<dyn std::error::Erro
 
     let json: Value = file::download_as_json(&format!(
         "https://api.adoptium.net/v3/assets/feature_releases/{version}/ga?os={os}&architecture={arch}&image_type=jre"
-    ), "", 1, "", false).await?;
+    ), "", &file::ChecksumType::Sha1, "", false).await?;
 
-    let binaries: &Vec<Value> = json.as_array().unwrap()[0]["binaries"]
-        .as_array()
-        .unwrap();
+    let binaries: &Vec<Value> = json.as_array().unwrap()[0]["binaries"].as_array().unwrap();
 
     let binary: Value = binaries[0].clone();
 
     Ok(binary)
-}
-
-async fn check_java(version: u8) -> bool {
-    let path: PathBuf = check_directory(&format!("java/{version}")).await;
-
-    path.read_dir().unwrap().next().is_none()
 }

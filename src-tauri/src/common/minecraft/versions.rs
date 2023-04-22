@@ -5,7 +5,7 @@ pub async fn download_version_manifest() -> Result<(), Box<dyn std::error::Error
     file::download_as_vec(
         "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json",
         "",
-        1,
+        &file::ChecksumType::Sha1,
         "launcher/version-info/version_manifest_v2.json",
         false,
     )
@@ -14,10 +14,10 @@ pub async fn download_version_manifest() -> Result<(), Box<dyn std::error::Error
 }
 
 pub async fn get_versions() -> Result<Vec<MinecraftVersionData>, Box<dyn std::error::Error>> {
-    let bytes: Vec<u8> =
-        file::read_as_vec(format!("launcher/version-info/version_manifest_v2.json").as_str())
-            .await?;
-    let data: serde_json::Value = serde_json::from_slice(&bytes)?;
+    let data: serde_json::Value =
+        file::read_as_value(format!("launcher/version-info/version_manifest_v2.json").as_str())
+            .await
+            .unwrap();
 
     let versions: &Vec<serde_json::Value> =
         data["versions"].as_array().ok_or("Invalid manifest JSON")?;
@@ -35,10 +35,10 @@ pub async fn get_versions() -> Result<Vec<MinecraftVersionData>, Box<dyn std::er
 }
 
 pub async fn get_version(id: &str) -> Result<MinecraftVersionData, Box<dyn std::error::Error>> {
-    let bytes: Vec<u8> =
-        file::read_as_vec(format!("launcher/version-info/version_manifest_v2.json").as_str())
-            .await?;
-    let data: serde_json::Value = serde_json::from_slice(&bytes)?;
+    let data: serde_json::Value =
+        file::read_as_value(format!("launcher/version-info/version_manifest_v2.json").as_str())
+            .await
+            .unwrap();
 
     let versions: &Vec<serde_json::Value> =
         data["versions"].as_array().ok_or("Invalid manifest JSON")?;

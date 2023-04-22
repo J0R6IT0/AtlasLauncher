@@ -14,17 +14,14 @@ struct VersionInfo {
     url: String,
 }
 
-pub async fn download(
-    id: &str,
-    instance_name: &str,
-) -> Result<String, Box<dyn std::error::Error>> {
+pub async fn download(id: &str, instance_name: &str) -> Result<String, Box<dyn std::error::Error>> {
     let version: crate::data::models::MinecraftVersionData = get_version(id).await?;
     let url: String = version.url;
 
     let json: Value = file::download_as_json(
         &url,
         "",
-        1,
+        &file::ChecksumType::Sha1,
         format!("versions/{id}/{id}.json").as_str(),
         false,
     )
@@ -33,9 +30,9 @@ pub async fn download(
     let mut download_tasks: Vec<async_runtime::JoinHandle<()>> = vec![];
 
     // client.jar
-    let json_copy = json.clone();
-    let version_copy = id.clone().to_owned();
-    let download_task = tauri::async_runtime::spawn(async move {
+    let json_copy: Value = json.clone();
+    let version_copy: String = id.clone().to_owned();
+    let download_task: async_runtime::JoinHandle<()> = tauri::async_runtime::spawn(async move {
         let client_url: &str = json_copy["downloads"]["client"]["url"]
             .as_str()
             .unwrap_or_default();
@@ -47,7 +44,7 @@ pub async fn download(
         file::download_as_vec(
             client_url,
             client_checksum,
-            1,
+            &file::ChecksumType::Sha1,
             format!("versions/{version_copy}/{version_copy}.jar").as_str(),
             false,
         )
@@ -57,9 +54,9 @@ pub async fn download(
     download_tasks.push(download_task);
 
     // assets
-    let json_copy = json.clone();
-    let instance_name_copy = instance_name.clone().to_owned();
-    let download_task = tauri::async_runtime::spawn(async move {
+    let json_copy: Value = json.clone();
+    let instance_name_copy: String = instance_name.clone().to_owned();
+    let download_task: async_runtime::JoinHandle<()> = tauri::async_runtime::spawn(async move {
         let assets_url: &str = json_copy["assetIndex"]["url"].as_str().unwrap_or_default();
         let assets_index: &str = json_copy["assetIndex"]["id"].as_str().unwrap_or_default();
         download_assets(assets_url, assets_index, &instance_name_copy)
@@ -69,19 +66,19 @@ pub async fn download(
     download_tasks.push(download_task);
 
     // logging
-    let json_copy = json.clone();
-    let download_task = tauri::async_runtime::spawn(async move {
+    let json_copy: Value = json.clone();
+    let download_task: async_runtime::JoinHandle<()> = tauri::async_runtime::spawn(async move {
         if let Some(logging) = json_copy.get("logging") {
             if let Some(client) = logging.get("client") {
                 if let Some(file) = client.get("file") {
-                    let url = file["url"].as_str().unwrap();
-                    let sha1 = file["sha1"].as_str().unwrap();
-                    let id = file["id"].as_str().unwrap();
+                    let url: &str = file["url"].as_str().unwrap();
+                    let sha1: &str = file["sha1"].as_str().unwrap();
+                    let id: &str = file["id"].as_str().unwrap();
 
                     file::download_as_vec(
                         url,
                         sha1,
-                        1,
+                        &file::ChecksumType::Sha1,
                         format!("assets/log_configs/{id}").as_str(),
                         false,
                     )
@@ -95,7 +92,7 @@ pub async fn download(
 
     // libraries
     let libraries: &Vec<serde_json::Value> = json["libraries"].as_array().unwrap();
-    let libraries_arg = download_libraries(&libraries, &id).await?;
+    let libraries_arg: String = download_libraries(&libraries, &id).await?;
 
     join_all(download_tasks).await;
     return Ok(libraries_arg);
@@ -109,7 +106,7 @@ async fn download_assets(
     let json: Value = file::download_as_json(
         url,
         "",
-        1,
+        &file::ChecksumType::Sha1,
         format!("assets/indexes/{id}.json").as_str(),
         false,
     )
@@ -118,8 +115,8 @@ async fn download_assets(
     let objects: Map<String, Value> = json.get("objects").unwrap().as_object().unwrap().to_owned();
 
     let download_tasks = stream::iter(objects.into_iter().map(|object| async {
-        let id_copy = id.clone().to_owned();
-        let instance_name_copy = instance_name.clone().to_owned();
+        let id_copy: String = id.clone().to_owned();
+        let instance_name_copy: String = instance_name.clone().to_owned();
         async_runtime::spawn(async move {
             let mc_instance: String = String::from(instance_name_copy);
             let assets_id: String = String::from(id_copy);
@@ -137,9 +134,15 @@ async fn download_assets(
             } else {
                 path = format!("assets/objects/{}/{}", &object_hash[0..2], &object_hash);
             }
-            let vec: Vec<u8> = file::download_as_vec(&object_url, object_hash, 1, &path, false)
-                .await
-                .unwrap();
+            let vec: Vec<u8> = file::download_as_vec(
+                &object_url,
+                object_hash,
+                &file::ChecksumType::Sha1,
+                &path,
+                false,
+            )
+            .await
+            .unwrap();
 
             if assets_id == "pre-1.6" {
                 file::write_vec(
@@ -197,27 +200,28 @@ async fn download_libraries(
         }
         if must_download {
             if let Some(artifact) = download["downloads"].get("artifact") {
-                let artifact = artifact.to_owned();
+                let artifact: Value = artifact.to_owned();
                 let library_path: &str = artifact["path"].as_str().unwrap_or_default();
                 libraries_arg = format!("{libraries_arg}[libraries_path]/{library_path};",);
-                let download_task = tauri::async_runtime::spawn(async move {
-                    let url: &str = artifact["url"].as_str().unwrap_or_default();
-                    let hash: &str = artifact["sha1"].as_str().unwrap_or_default();
-                    let library_path: &str = artifact["path"].as_str().unwrap_or_default();
-                    file::download_as_vec(
-                        &url,
-                        &hash,
-                        1,
-                        format!("libraries/{}", &library_path).as_str(),
-                        false,
-                    )
-                    .await
-                    .unwrap();
-                });
+                let download_task: async_runtime::JoinHandle<()> =
+                    tauri::async_runtime::spawn(async move {
+                        let url: &str = artifact["url"].as_str().unwrap_or_default();
+                        let hash: &str = artifact["sha1"].as_str().unwrap_or_default();
+                        let library_path: &str = artifact["path"].as_str().unwrap_or_default();
+                        file::download_as_vec(
+                            &url,
+                            &hash,
+                            &file::ChecksumType::Sha1,
+                            format!("libraries/{}", &library_path).as_str(),
+                            false,
+                        )
+                        .await
+                        .unwrap();
+                    });
                 download_tasks.push(download_task);
             }
             if let Some(natives) = download["downloads"].get("classifiers") {
-                let natives = natives.to_owned();
+                let natives: Value = natives.to_owned();
                 let arch: &str = match env::consts::ARCH {
                     "x86" => "32",
                     "x86_64" => "64",
@@ -227,22 +231,23 @@ async fn download_libraries(
                     .get("natives-windows")
                     .or_else(|| natives.get("natives-windows-".to_string() + arch))
                 {
-                    let windows_natives = windows_natives.to_owned();
+                    let windows_natives: Value = windows_natives.to_owned();
 
-                    let download_task = tauri::async_runtime::spawn(async move {
-                        let url: &str = windows_natives["url"].as_str().unwrap_or_default();
-                        let hash: &str = windows_natives["sha1"].as_str().unwrap_or_default();
+                    let download_task: async_runtime::JoinHandle<()> =
+                        tauri::async_runtime::spawn(async move {
+                            let url: &str = windows_natives["url"].as_str().unwrap_or_default();
+                            let hash: &str = windows_natives["sha1"].as_str().unwrap_or_default();
 
-                        file::download_as_vec(
-                            &url,
-                            hash,
-                            1,
-                            format!("natives/{mc_version}").as_str(),
-                            true,
-                        )
-                        .await
-                        .unwrap();
-                    });
+                            file::download_as_vec(
+                                &url,
+                                hash,
+                                &file::ChecksumType::Sha1,
+                                format!("natives/{mc_version}").as_str(),
+                                true,
+                            )
+                            .await
+                            .unwrap();
+                        });
                     download_tasks.push(download_task);
                 }
             }

@@ -1,11 +1,14 @@
-use crate::common::{
-    auth,
-    utils::{directory, file},
+use crate::{
+    common::{
+        auth,
+        utils::{directory, file},
+    },
+    data::models::LoginEventPayload,
 };
 
 use crate::data::{
     constants,
-    models::{LoginEventPayload, MinecraftAccount},
+    models::{BaseEventPayload, MinecraftAccount},
 };
 
 use std::{
@@ -33,8 +36,10 @@ pub fn create_login_window(handle: tauri::AppHandle) {
                     app.emit_all(
                         "auth",
                         LoginEventPayload {
-                            message: format!("Auth canceled."),
-                            status: String::from("Hide"),
+                            base: BaseEventPayload {
+                                message: format!("Auth canceled."),
+                                status: String::from("Hide"),
+                            },
                         },
                     )
                     .unwrap();
@@ -61,8 +66,10 @@ pub fn create_login_window(handle: tauri::AppHandle) {
                     .emit_all(
                         "auth",
                         LoginEventPayload {
-                            message: format!("Window closed"),
-                            status: String::from("Hide"),
+                            base: BaseEventPayload {
+                                message: format!("Window closed"),
+                                status: String::from("Hide"),
+                            },
                         },
                     )
                     .unwrap();

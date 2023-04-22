@@ -2,7 +2,9 @@ use reqwest::Client;
 use serde_json::Value;
 use tauri::Manager;
 
-use crate::data::models::{LoginEventPayload, MinecraftAccount, MinecraftLoginRequest};
+use crate::data::models::{
+    BaseEventPayload, LoginEventPayload, MinecraftAccount, MinecraftLoginRequest,
+};
 use crate::utils::file;
 
 pub async fn login(
@@ -35,8 +37,10 @@ pub async fn login(
         app.emit_all(
             "auth",
             LoginEventPayload {
-                message: format!("Fetching Minecraft profile."),
-                status: String::from("Loading"),
+                base: BaseEventPayload {
+                    message: format!("Fetching Minecraft profile."),
+                    status: String::from("Loading"),
+                },
             },
         )
         .unwrap();
@@ -72,10 +76,12 @@ pub async fn get_account_info(
         app.emit_all(
             "auth",
             LoginEventPayload {
-                message: String::from(
-                    "This account does not own Minecraft. An official account is required to play.",
-                ),
-                status: String::from("Error"),
+                base: BaseEventPayload {
+                    message: String::from(
+                        "This account does not own Minecraft. An official account is required to play.",
+                    ),
+                    status: String::from("Error"),
+                },
             },
         )
         .unwrap();
@@ -110,8 +116,10 @@ pub async fn get_account_info(
             app.emit_all(
                 "auth",
                 LoginEventPayload {
-                    message: format!("Successfully logged in to account {username}."),
-                    status: String::from("Success"),
+                    base: BaseEventPayload {
+                        message: format!("Successfully logged in to account {username}."),
+                        status: String::from("Success"),
+                    },
                 },
             )
             .unwrap();

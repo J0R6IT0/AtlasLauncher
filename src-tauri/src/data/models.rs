@@ -9,6 +9,20 @@ pub struct MinecraftVersionData {
     pub r#type: String,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
+pub struct InstanceInfo {
+    pub name: String,
+    pub version: String,
+    pub libraries: String,
+    pub background: String,
+    pub java_version: u64,
+    pub minecraft_args: String,
+    pub asset_index: String,
+    pub version_type: String,
+    pub main_class: String,
+    pub jvm_args: Vec<String>,
+}
+
 // Auth
 
 #[derive(Serialize, Deserialize)]
@@ -60,7 +74,23 @@ pub struct MinecraftLoginRequest {
 // Events
 
 #[derive(Clone, Serialize)]
-pub struct LoginEventPayload {
+pub struct BaseEventPayload {
     pub message: String,
     pub status: String,
+}
+
+#[derive(Clone, Serialize)]
+pub struct LoginEventPayload {
+    pub base: BaseEventPayload,
+}
+
+#[derive(Clone, Serialize)]
+pub struct CreateInstanceEventPayload {
+    pub name: String,
+    pub base: BaseEventPayload,
+}
+
+#[derive(Clone, Serialize)]
+pub struct StartInstanceEventPayload {
+    pub base: BaseEventPayload,
 }

@@ -7,7 +7,7 @@ use tauri::AppHandle;
 mod common;
 mod data;
 use common::{auth, java, minecraft, utils};
-use data::models;
+use data::models::{self, InstanceInfo};
 
 #[tauri::command]
 async fn get_minecraft_versions() -> Result<Vec<models::MinecraftVersionData>, ()> {
@@ -38,7 +38,7 @@ fn remove_account(uuid: &str) {
 }
 
 #[tauri::command]
-async fn get_instances() -> Vec<minecraft::instance::InstanceInfo> {
+async fn get_instances() -> Vec<InstanceInfo> {
     minecraft::instance::get_instances().await
 }
 
@@ -69,8 +69,8 @@ fn open_instance_folder(name: &str) {
 }
 
 #[tauri::command]
-fn read_instance_data(name: &str) -> minecraft::instance::InstanceInfo {
-    minecraft::instance::read_instance(name)
+async fn read_instance_data(name: &str) -> Result<InstanceInfo, ()> {
+    Ok(minecraft::instance::read_instance(name).await)
 }
 
 #[tauri::command]
