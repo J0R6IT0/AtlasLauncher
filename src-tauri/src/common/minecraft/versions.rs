@@ -9,6 +9,7 @@ pub async fn download_version_manifest() -> Result<(), Box<dyn std::error::Error
         &file::ChecksumType::Sha1,
         "launcher/version-info/version_manifest_v2.json",
         false,
+        true,
     )
     .await?;
 
@@ -18,6 +19,7 @@ pub async fn download_version_manifest() -> Result<(), Box<dyn std::error::Error
         &file::ChecksumType::Sha1,
         "launcher/version-info/hidden_version_manifest.json",
         false,
+        true,
     )
     .await?;
 

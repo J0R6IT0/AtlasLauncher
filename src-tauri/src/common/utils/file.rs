@@ -79,18 +79,21 @@ pub async fn download_as_vec(
     checksum_type: &ChecksumType,
     path: &str,
     extract: bool,
+    force: bool,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    let mut vec: Option<Vec<u8>> = None;
+    if !force {
+        let mut vec: Option<Vec<u8>> = None;
 
-    match read_as_vec(path).await {
-        Ok(file_vec) => vec = Some(file_vec),
-        Err(_) => {}
-    }
+        match read_as_vec(path).await {
+            Ok(file_vec) => vec = Some(file_vec),
+            Err(_) => {}
+        }
 
-    if !vec.is_none() {
-        let vec: Vec<u8> = Some(vec).unwrap().unwrap();
-        if verify_hash(checksum, checksum_type, &vec).await? {
-            return Ok(vec);
+        if !vec.is_none() {
+            let vec: Vec<u8> = Some(vec).unwrap().unwrap();
+            if verify_hash(checksum, checksum_type, &vec).await? {
+                return Ok(vec);
+            }
         }
     }
 
@@ -137,8 +140,9 @@ pub async fn download_as_json(
     checksum_type: &ChecksumType,
     path: &str,
     extract: bool,
+    force: bool,
 ) -> Result<Value, Box<dyn std::error::Error>> {
-    let vec: Vec<u8> = download_as_vec(url, checksum, checksum_type, path, extract).await?;
+    let vec: Vec<u8> = download_as_vec(url, checksum, checksum_type, path, extract, force).await?;
     let json: Value = serde_json::from_slice(&vec)?;
     Ok(json)
 }

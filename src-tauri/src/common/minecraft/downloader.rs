@@ -24,6 +24,7 @@ pub async fn download(id: &str, instance_name: &str) -> Result<String, Box<dyn s
         &file::ChecksumType::Sha1,
         format!("versions/{id}/{id}.json").as_str(),
         false,
+        false,
     )
     .await?;
 
@@ -46,6 +47,7 @@ pub async fn download(id: &str, instance_name: &str) -> Result<String, Box<dyn s
             client_checksum,
             &file::ChecksumType::Sha1,
             format!("versions/{version_copy}/{version_copy}.jar").as_str(),
+            false,
             false,
         )
         .await
@@ -81,6 +83,7 @@ pub async fn download(id: &str, instance_name: &str) -> Result<String, Box<dyn s
                         &file::ChecksumType::Sha1,
                         format!("assets/log_configs/{id}").as_str(),
                         false,
+                        false,
                     )
                     .await
                     .unwrap();
@@ -108,6 +111,7 @@ async fn download_assets(
         "",
         &file::ChecksumType::Sha1,
         format!("assets/indexes/{id}.json").as_str(),
+        false,
         false,
     )
     .await?;
@@ -139,6 +143,7 @@ async fn download_assets(
                 object_hash,
                 &file::ChecksumType::Sha1,
                 &path,
+                false,
                 false,
             )
             .await
@@ -214,6 +219,7 @@ async fn download_libraries(
                             &file::ChecksumType::Sha1,
                             format!("libraries/{}", &library_path).as_str(),
                             false,
+                            false,
                         )
                         .await
                         .unwrap();
@@ -244,6 +250,7 @@ async fn download_libraries(
                                 &file::ChecksumType::Sha1,
                                 format!("natives/{mc_version}").as_str(),
                                 true,
+                                false,
                             )
                             .await
                             .unwrap();
