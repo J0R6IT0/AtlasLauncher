@@ -56,7 +56,7 @@ function Library(props: LibraryProps): JSX.Element {
                     </div>)}
                 </div>
             </div>
-            {showRetryModal !== null && <BaseModal title='IMPORTANT' description='Old rd-xxxxxx versions usually crash multiple times until they finally launch. Atlas will attempt to launch the instance multiple times. You may see a flashing window.' onClose={() => {
+            {showRetryModal !== null && <BaseModal title='IMPORTANT' description='Old Pre-Classic versions usually crash multiple times until they finally launch. Atlas will attempt to launch the instance multiple times. You may see a window popping up multiple times.' onClose={() => {
                 setShowRetryModal(null);
             }} onAccept={() => {
                 invoke('launch_instance', { name: showRetryModal }).catch(e => {});

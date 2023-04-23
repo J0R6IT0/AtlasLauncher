@@ -276,7 +276,9 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         }
 
         let status: i32 = process.wait().unwrap().code().unwrap();
-        if !first_line_printed { should_retry = true };
+        if !first_line_printed {
+            should_retry = true
+        };
         println!("{status}");
 
         version.starts_with("rd-") && retries <= 10 && should_retry
