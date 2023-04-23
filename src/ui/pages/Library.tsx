@@ -8,6 +8,7 @@ import BoxIcon from '../../assets/icons/box.svg';
 import { toast } from 'react-hot-toast';
 import ContextMenu from '../components/ContextMenu';
 import ManageInstance from '../components/ManageInstance';
+import BaseModal from '../components/BaseModal';
 
 interface LibraryProps {
     instances: InstanceInfo[]
@@ -19,6 +20,7 @@ function Library(props: LibraryProps): JSX.Element {
     const [contextMenuTarget, setShowContextMenuTarget] = useState<Element | null>(null);
     const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
     const [showManageInstance, setShowManageInstance] = useState(false);
+    const [showRetryModal, setShowRetryModal] = useState<string | null>(null);
 
     const handleContextMenu = (event: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
         setShowContextMenu(true);
@@ -35,8 +37,12 @@ function Library(props: LibraryProps): JSX.Element {
             <div className='instances'>
                 <div className='grid'>
                     {props.instances.map((element, key) => <div key={key} className='instance' onClick={() => {
-                        invoke('launch_instance', { name: element.name }).catch(e => {});
-                        toast.loading(`Launching ${element.name}`, { id: 'startInstance' });
+                        if (element.version.startsWith('rd-')) {
+                            setShowRetryModal(element.name);
+                        } else {
+                            invoke('launch_instance', { name: element.name }).catch(e => {});
+                            toast.loading(`Launching ${element.name}`, { id: 'startInstance' });
+                        }
                     }}
                     onContextMenu={handleContextMenu}>
                         <div className='instance-content'>
@@ -50,6 +56,12 @@ function Library(props: LibraryProps): JSX.Element {
                     </div>)}
                 </div>
             </div>
+            {showRetryModal !== null && <BaseModal title='IMPORTANT' description='Old rd-xxxxxx versions usually crash multiple times until they finally launch. Atlas will attempt to launch the instance multiple times. You may see a flashing window.' onClose={() => {
+                setShowRetryModal(null);
+            }} onAccept={() => {
+                invoke('launch_instance', { name: showRetryModal }).catch(e => {});
+                setShowRetryModal(null);
+            }}/>}
             {showContextMenu && (
                 <ContextMenu target={contextMenuTarget} onClose={() => { setShowContextMenu(false); }} position={contextMenuPosition} updateInstances={props.updateInstances} manageInstance={() => { setShowManageInstance(true); }} />
             )}

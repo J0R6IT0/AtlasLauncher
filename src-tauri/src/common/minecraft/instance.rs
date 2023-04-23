@@ -5,7 +5,7 @@ use std::{
     io::{BufRead, BufReader},
     os::windows::process::CommandExt,
     path::{Path, PathBuf},
-    process::{Command, Stdio},
+    process::{Child, Command, Stdio},
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -235,12 +235,66 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         })
         .collect();
 
-    const CREATE_NO_WINDOW: u32 = 0x08000000;
+    let mut retries: u8 = 0;
+    let version: String = instance_info.version.to_owned();
 
+    while {
+        retries += 1;
+        let mut should_retry: bool = false;
+
+        let mut process: Child = launch(
+            &instance_path,
+            &java_path,
+            &cp,
+            instance_info.to_owned(),
+            &args,
+        )
+        .await;
+
+        let output: &mut std::process::ChildStdout = process.stdout.as_mut().unwrap();
+        let reader: BufReader<&mut std::process::ChildStdout> = BufReader::new(output);
+        let lines: std::io::Lines<BufReader<&mut std::process::ChildStdout>> = reader.lines();
+
+        let mut first_line_printed: bool = false;
+
+        for line in lines {
+            if !first_line_printed {
+                first_line_printed = true;
+                app.emit_all(
+                    "start_instance",
+                    StartInstanceEventPayload {
+                        base: BaseEventPayload {
+                            message: format!("Successfully launched {name}"),
+                            status: String::from("Success"),
+                        },
+                    },
+                )
+                .unwrap();
+            }
+            let line: String = line.unwrap();
+            println!("{line}");
+        }
+
+        let status: i32 = process.wait().unwrap().code().unwrap();
+        if !first_line_printed { should_retry = true };
+        println!("{status}");
+
+        version.starts_with("rd-") && retries <= 10 && should_retry
+    } {}
+}
+
+async fn launch(
+    instance_path: &str,
+    java_path: &str,
+    cp: &str,
+    instance_info: InstanceInfo,
+    args: &Vec<&str>,
+) -> Child {
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
     let working_dir: PathBuf = env::current_dir().unwrap();
     std::env::set_current_dir(&instance_path).unwrap();
 
-    let mut process: std::process::Child = Command::new(java_path)
+    let process: std::process::Child = Command::new(java_path)
         .arg("-cp")
         .arg(cp)
         .args(instance_info.jvm_args)
@@ -266,33 +320,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         .expect("failed to execute java process");
 
     std::env::set_current_dir(working_dir).unwrap();
-
-    let output: &mut std::process::ChildStdout = process.stdout.as_mut().unwrap();
-    let reader: BufReader<&mut std::process::ChildStdout> = BufReader::new(output);
-    let lines: std::io::Lines<BufReader<&mut std::process::ChildStdout>> = reader.lines();
-
-    let mut first_line_printed: bool = false;
-
-    for line in lines {
-        if !first_line_printed {
-            first_line_printed = true;
-            app.emit_all(
-                "start_instance",
-                StartInstanceEventPayload {
-                    base: BaseEventPayload {
-                        message: format!("Successfully launched {name}"),
-                        status: String::from("Success"),
-                    },
-                },
-            )
-            .unwrap();
-        }
-        let line: String = line.unwrap();
-        println!("{line}");
-    }
-
-    let status: i32 = process.wait().unwrap().code().unwrap();
-    println!("{status}");
+    process
 }
 
 pub async fn get_instances() -> Vec<InstanceInfo> {

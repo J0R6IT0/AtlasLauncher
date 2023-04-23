@@ -1,0 +1,40 @@
+.base-modal {
+    height: 0;
+    width: 15rem;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--background-transparent);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    border-radius: 0.7rem;
+    box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
+    color: var(--text-color-secondary);
+    transition: height 0.2s ease-in-out;
+    overflow: hidden;
+}
+
+.base-modal.visible {
+    height: 15rem;
+}
+
+.base-modal-title {
+    margin-top: 1.2rem;
+}
+
+.base-modal-title img {
+    vertical-align: middle;
+    margin-right: 0.5rem;
+    filter: var(--icons-filter-hover)
+}
+
+.base-modal-description {
+    margin: 1rem;
+}
+
+.base-modal .text-button {
+    margin: 0 1rem 1rem;
+}

@@ -147,7 +147,7 @@ function App(): JSX.Element {
         getInstances().catch(e => {});
 
         function contextMenuHandler(event: Event): void {
-            event.preventDefault();
+            // event.preventDefault();
         }
         document.addEventListener('contextmenu', contextMenuHandler);
         return () => {
