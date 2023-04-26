@@ -1,9 +1,6 @@
 use serde_json::Value;
 use std::{
-    env::{
-        self,
-        consts::{ARCH, OS},
-    },
+    env,
     fs::{self, DirEntry},
     io::{BufRead, BufReader},
     os::windows::process::CommandExt,
@@ -26,8 +23,6 @@ use crate::{
 };
 
 use tauri::Manager;
-
-use super::downloader::download_libraries;
 
 pub async fn create_instance(id: &str, name: &str, app: &tauri::AppHandle) {
     app.emit_all(
@@ -58,55 +53,12 @@ pub async fn create_instance(id: &str, name: &str, app: &tauri::AppHandle) {
     .unwrap();
 
     // create atlas_instance.json
-    downloader::download(id).await.unwrap();
+    let libraries_arg: String = downloader::download(id).await.unwrap();
 
-    let instance_info: InstanceInfo = InstanceInfo {
-        name: String::from(name),
-        version: String::from(id),
-        background: String::from(""),
-    };
+    let version_info: Value = file::read_as_value(format!("versions/{id}/{id}.json").as_str())
+        .await
+        .unwrap();
 
-    check_directory(format!("instances/{name}/resourcepacks").as_str()).await;
-
-    file::write_vec(
-        &serde_json::to_vec(&instance_info).unwrap(),
-        &format!("instances/{name}/atlas_instance.json"),
-    )
-    .unwrap();
-
-    app.emit_all(
-        "create_instance",
-        CreateInstanceEventPayload {
-            base: BaseEventPayload {
-                message: format!("Instance created successfully"),
-                status: String::from("Success"),
-            },
-            name: String::from(name),
-        },
-    )
-    .unwrap();
-}
-
-pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
-    // jsons info
-    let instance_info: InstanceInfo =
-        file::read_as_value(format!("instances/{name}/atlas_instance.json").as_str())
-            .await
-            .unwrap();
-    let version_info: Value = file::read_as_value(
-        format!(
-            "versions/{}/{}.json",
-            &instance_info.version, &instance_info.version
-        )
-        .as_str(),
-    )
-    .await
-    .unwrap();
-
-    // active user
-    let active_user: MinecraftAccount = get_active_account().unwrap();
-
-    // java
     let mut java_version: u64 = version_info["javaVersion"]["majorVersion"]
         .as_u64()
         .unwrap();
@@ -116,64 +68,6 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         17 => 17,
         _ => 8,
     };
-
-    let java_path: String = get_java_path(java_version.try_into().unwrap()).await;
-
-    // libraries
-    let libraries_path: String = String::from(check_directory("libraries").await.to_str().unwrap());
-    let libraries: String = download_libraries(
-        version_info["libraries"].as_array().unwrap(),
-        &instance_info.version,
-        true,
-    )
-    .await
-    .unwrap()
-    .replace("[libraries_path]", &libraries_path);
-
-    // classpath
-    let version_path: String = String::from(
-        check_directory(format!("versions\\{}", { &instance_info.version }).as_str())
-            .await
-            .join(format!("{}.jar", { &instance_info.version }))
-            .to_str()
-            .unwrap(),
-    );
-    let mut cp: String = format!("{version_path};{libraries}");
-
-    if OS == "windows" {
-        cp = cp.replace("/", "\\");
-    }
-
-    // game_args
-    let instance_path: String = String::from(
-        check_directory(format!("instances/{name}").as_str())
-            .await
-            .to_str()
-            .unwrap(),
-    );
-
-    let version_type: &str = version_info["type"].as_str().unwrap();
-
-    let asset_index: &str = match version_info["assetIndex"]["id"].as_str() {
-        Some(index) => index,
-        None => "",
-    };
-    let assets_path: String = String::from(
-        check_directory(
-            format!(
-                "{}",
-                if asset_index == "legacy" || asset_index == "pre-1.6" {
-                    "assets/virtual/legacy"
-                } else {
-                    "assets"
-                }
-            )
-            .as_str(),
-        )
-        .await
-        .to_str()
-        .unwrap(),
-    );
 
     let game_arguments: Option<&Vec<Value>> = version_info["arguments"]["game"].as_array();
     let mut parsed_game_arguments: Vec<String> = vec![];
@@ -199,30 +93,6 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         String::from("720"),
     ]);
 
-    for game_arg in parsed_game_arguments.iter_mut() {
-        *game_arg = game_arg
-            .replace("${auth_player_name}", &active_user.username)
-            .replace("${auth_session}", &active_user.access_token)
-            .replace("${game_directory}", format!("{}", &instance_path).as_str())
-            .replace("${game_assets}", &assets_path)
-            .replace("${version_name}", &instance_info.version)
-            .replace("${assets_root}", &assets_path)
-            .replace("${assets_index_name}", &asset_index)
-            .replace("${auth_uuid}", &active_user.uuid)
-            .replace("${auth_access_token}", &active_user.access_token)
-            .replace("${user_properties}", "{}")
-            .replace("${user_type}", "msa")
-            .replace("${profile_name}", "Minecraft")
-            .replace("${resolution_width}", "1280")
-            .replace("${resolution_height}", "720")
-            .replace("${version_type}", version_type);
-
-        if OS == "windows" {
-            *game_arg = game_arg.replace("/", "\\");
-        };
-    }
-
-    // jvm args
     let jvm_arguments: Option<&Vec<Value>> = version_info["arguments"]["jvm"].as_array();
     let mut parsed_jvm_arguments: Vec<String> = vec![];
 
@@ -230,48 +100,6 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         for argument in jvm_arguments.unwrap() {
             if argument.is_string() {
                 parsed_jvm_arguments.push(argument.as_str().unwrap().to_string())
-            } else if let Some(rules) = argument.get("rules") {
-                let formatted_os: &str = match OS {
-                    "macos" => "osx",
-                    _ => OS,
-                };
-                let formatted_arch: &str = match ARCH {
-                    "x86" => "x86",
-                    "x86_64" => "x64",
-                    _ => "x64",
-                };
-                let mut must_use: bool = true;
-                for rule in rules.as_array().unwrap().iter() {
-                    println!("{:?}", rule);
-                    if let Some(action) = rule.get("action").and_then(|a| a.as_str()) {
-                        println!("{action}");
-                        if action == "allow" {
-                            if let Some(os) = rule.get("os") {
-                                if let Some(name) = os.get("name") {
-                                    println!("{}", name.as_str().unwrap());
-                                    if name.as_str().unwrap() != formatted_os {
-                                        must_use = false;
-                                    }
-                                }
-                                if let Some(arch) = os.get("arch") {
-                                    if arch.as_str().unwrap() != formatted_arch {
-                                        must_use = false;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                if must_use {
-                    println!("{:?}", argument);
-                    if argument["value"].is_array() {
-                        for child in argument["value"].as_array().unwrap() {
-                            parsed_jvm_arguments.push(child.as_str().unwrap().to_string())
-                        }
-                    } else {
-                        parsed_jvm_arguments.push(argument["value"].as_str().unwrap().to_string())
-                    }
-                }
             }
         }
     } else {
@@ -282,62 +110,165 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         ]);
     }
 
-    if java_version == 17 {
-        parsed_jvm_arguments.append(&mut vec![
-            String::from("-Xmx2G"),
-            String::from("-Xms2G"),
-            String::from("-XX:+UnlockExperimentalVMOptions"),
-            String::from("-XX:+UnlockDiagnosticVMOptions"),
-            String::from("-XX:+AlwaysActAsServerClassMachine"),
-            String::from("-XX:+AlwaysPreTouch"),
-            String::from("-XX:+DisableExplicitGC"),
-            String::from("-XX:+UseNUMA"),
-            String::from("-XX:NmethodSweepActivity=1"),
-            String::from("-XX:ReservedCodeCacheSize=400M"),
-            String::from("-XX:NonNMethodCodeHeapSize=12M"),
-            String::from("-XX:ProfiledCodeHeapSize=194M"),
-            String::from("-XX:NonProfiledCodeHeapSize=194M"),
-            String::from("-XX:-DontCompileHugeMethods"),
-            String::from("-XX:MaxNodeLimit=240000"),
-            String::from("-XX:NodeLimitFudgeFactor=8000"),
-            String::from("-XX:+UseVectorCmov"),
-            String::from("-XX:+PerfDisableSharedMem"),
-            String::from("-XX:+UseFastUnorderedTimeStamps"),
-            String::from("-XX:+UseCriticalJavaThreadPriority"),
-            String::from("-XX:ThreadPriorityPolicy=1"),
-            String::from("-XX:AllocatePrefetchStyle=3"),
-            String::from("-XX:+UseG1GC"),
-            String::from("-XX:MaxGCPauseMillis=37"),
-            String::from("-XX:+PerfDisableSharedMem"),
-            String::from("-XX:G1HeapRegionSize=16M"),
-            String::from("-XX:G1NewSizePercent=23"),
-            String::from("-XX:G1ReservePercent=20"),
-            String::from("-XX:SurvivorRatio=32"),
-            String::from("-XX:G1MixedGCCountTarget=3"),
-            String::from("-XX:G1HeapWastePercent=20"),
-            String::from("-XX:InitiatingHeapOccupancyPercent=10"),
-            String::from("-XX:G1RSetUpdatingPauseTimePercent=0"),
-            String::from("-XX:MaxTenuringThreshold=1"),
-            String::from("-XX:G1SATBBufferEnqueueingThresholdPercent=30"),
-            String::from("-XX:G1ConcMarkStepDurationMillis=5.0"),
-            String::from("-XX:G1ConcRSHotCardLimit=16"),
-            String::from("-XX:G1ConcRefinementServiceIntervalMillis=150"),
-            String::from("-XX:GCTimeRatio=99"),
-        ]);
-    } else {
-        parsed_jvm_arguments.append(&mut vec![
-            String::from("-Xmx2G"),
-            String::from("-Xms2G"),
-            String::from("-XX:+UnlockExperimentalVMOptions"),
-            String::from("-XX:+UseG1GC"),
-            String::from("-XX:G1NewSizePercent=20"),
-            String::from("-XX:G1ReservePercent=20"),
-            String::from("-XX:MaxGCPauseMillis=50"),
-            String::from("-XX:G1HeapRegionSize=32M"),
-        ]);
+    let asset_index: &str = match version_info["assetIndex"]["id"].as_str() {
+        Some(index) => index,
+        None => "",
+    };
+    let version_type: &str = version_info["type"].as_str().unwrap();
+    let main_class: &str = version_info["mainClass"].as_str().unwrap();
+
+    let mut jvm_args: Vec<String> = vec![
+        String::from("-Xmx2G"),
+        String::from("-Xms2G"),
+        String::from("-XX:+UnlockExperimentalVMOptions"),
+        String::from("-XX:+UseG1GC"),
+        String::from("-XX:G1NewSizePercent=20"),
+        String::from("-XX:G1ReservePercent=20"),
+        String::from("-XX:MaxGCPauseMillis=50"),
+        String::from("-XX:G1HeapRegionSize=32M"),
+        String::from("-Dos.name=Windows 10"),
+        String::from("-Dos.version=10.0"),
+        String::from("-Dfml.ignorePatchDiscrepancies=true"),
+        String::from("-Dfml.ignoreInvalidMinecraftCertificates=true"),
+        String::from("-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump"),
+        String::from("-Dminecraft.launcher.brand=AtlasLauncher"),
+        String::from("-Dminecraft.launcher.version=1"),
+    ];
+
+    let logging_arg: String;
+    if let Some(logging) = version_info.get("logging") {
+        if let Some(client) = logging.get("client") {
+            let argument: String = String::from(client["argument"].as_str().unwrap());
+            if let Some(file) = client.get("file") {
+                let id: &str = file["id"].as_str().unwrap();
+                logging_arg = argument
+                    .to_owned()
+                    .replace("${path}", format!("[log_configs]\\{}", { id }).as_str());
+                jvm_args.push(logging_arg);
+            }
+        }
     }
 
-    for jvm_arg in parsed_jvm_arguments.iter_mut() {
+    parsed_jvm_arguments.append(&mut jvm_args);
+
+    let instance_info: InstanceInfo = InstanceInfo {
+        name: String::from(name),
+        version: String::from(id),
+        background: String::from(""),
+        libraries: String::from(libraries_arg),
+        java_version: java_version,
+        minecraft_args: parsed_game_arguments,
+        asset_index: String::from(asset_index),
+        version_type: String::from(version_type),
+        main_class: String::from(main_class),
+        jvm_args: parsed_jvm_arguments,
+    };
+
+    check_directory(format!("instances/{name}/resourcepacks").as_str()).await;
+
+    file::write_vec(
+        &serde_json::to_vec(&instance_info).unwrap(),
+        &format!("instances/{name}/atlas_instance.json"),
+    )
+    .unwrap();
+
+    app.emit_all(
+        "create_instance",
+        CreateInstanceEventPayload {
+            base: BaseEventPayload {
+                message: format!("Instance created successfully"),
+                status: String::from("Success"),
+            },
+            name: String::from(name),
+        },
+    )
+    .unwrap();
+}
+
+pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
+    // instance info
+    let mut instance_info: InstanceInfo =
+        file::read_as_value(format!("instances/{name}/atlas_instance.json").as_str())
+            .await
+            .unwrap();
+    let active_user: MinecraftAccount = get_active_account().unwrap();
+
+    // paths
+    let java_path: String = get_java_path(instance_info.java_version.try_into().unwrap()).await;
+    let version_path: String = String::from(
+        check_directory(format!("versions/{}", { &instance_info.version }).as_str())
+            .await
+            .join(format!("{}.jar", { &instance_info.version }))
+            .to_str()
+            .unwrap(),
+    );
+    let libraries_path: String = String::from(check_directory("libraries").await.to_str().unwrap());
+    let libraries: String = instance_info
+        .libraries
+        .replace("[libraries_path]", &libraries_path);
+
+    let instance_path: String = String::from(
+        check_directory(format!("instances/{name}").as_str())
+            .await
+            .to_str()
+            .unwrap(),
+    );
+    let assets_path: String = String::from(
+        check_directory(
+            format!(
+                "{}",
+                if &instance_info.asset_index == "legacy" || &instance_info.asset_index == "pre-1.6"
+                {
+                    "assets/virtual/legacy"
+                } else {
+                    "assets"
+                }
+            )
+            .as_str(),
+        )
+        .await
+        .to_str()
+        .unwrap(),
+    );
+
+    // args
+    let cp: String = format!("{version_path};{libraries}");
+
+    for arg in instance_info.jvm_args.iter_mut() {
+        if arg.contains("[log_configs]") {
+            *arg = arg
+                .replace(
+                    "[log_configs]",
+                    check_directory_sync("assets/log_configs").to_str().unwrap(),
+                )
+                .to_string();
+        }
+    }
+
+    let mut game_args = instance_info.minecraft_args.clone();
+
+    for game_arg in game_args.iter_mut() {
+        *game_arg = game_arg
+            .replace("${auth_player_name}", &active_user.username)
+            .replace("${auth_session}", &active_user.access_token)
+            .replace("${game_directory}", format!("{}", &instance_path).as_str())
+            .replace("${game_assets}", &assets_path)
+            .replace("${version_name}", &instance_info.version)
+            .replace("${assets_root}", &assets_path)
+            .replace("${assets_index_name}", &instance_info.asset_index)
+            .replace("${auth_uuid}", &active_user.uuid)
+            .replace("${auth_access_token}", &active_user.access_token)
+            .replace("${user_properties}", "{}")
+            .replace("${user_type}", "msa")
+            .replace("${profile_name}", "Minecraft")
+            .replace("${resolution_width}", "1280")
+            .replace("${resolution_height}", "720")
+            .replace("${version_type}", &instance_info.version_type)
+    }
+
+    let mut jvm_args = instance_info.jvm_args.clone();
+
+    for jvm_arg in jvm_args.iter_mut() {
         *jvm_arg = jvm_arg
             .replace(
                 "${natives_directory}",
@@ -352,40 +283,13 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
                 "${assets_root}",
                 check_directory("assets").await.to_str().unwrap(),
             )
-            .replace("${assets_index_name}", &asset_index)
+            .replace("${assets_index_name}", &instance_info.asset_index)
             .replace("${classpath}", &cp)
-            .replace("${game_directory}", format!("{}", &instance_path).as_str());
-
-        if OS == "windows" {
-            *jvm_arg = jvm_arg.replace("/", "\\");
-        };
-    }
-
-    // logging
-    if let Some(logging) = version_info.get("logging") {
-        if let Some(client) = logging.get("client") {
-            let mut id: &str = "";
-            if let Some(file) = client.get("file") {
-                id = file["id"].as_str().unwrap();
-            }
-            if let Some(argument) = client.get("argument") {
-                parsed_jvm_arguments.push(
-                    argument.as_str().unwrap().replace(
-                        "${path}",
-                        &(check_directory("assets\\log_configs")
-                            .await
-                            .to_str()
-                            .unwrap()
-                            .to_string()
-                            + "\\"
-                            + id),
-                    ),
-                );
-            }
-        }
+            .replace("${game_directory}", format!("{}", &instance_path).as_str())
     }
 
     let mut retries: u8 = 0;
+    let version: String = instance_info.version.to_owned();
 
     while {
         retries += 1;
@@ -394,9 +298,9 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         let mut process: Child = launch(
             &instance_path,
             &java_path,
-            &parsed_game_arguments,
-            &parsed_jvm_arguments,
-            &version_info["mainClass"].as_str().unwrap(),
+            &game_args,
+            &jvm_args,
+            &instance_info.main_class,
         )
         .await;
 
@@ -430,7 +334,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         };
         println!("{status}");
 
-        instance_info.version.starts_with("rd-") && retries <= 20 && should_retry
+        version.starts_with("rd-") && retries <= 20 && should_retry
     } {}
 }
 

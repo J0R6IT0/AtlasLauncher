@@ -13,23 +13,23 @@ pub async fn download_version_manifest() -> Result<(), Box<dyn std::error::Error
     )
     .await?;
 
-    let hidden_version_manifest: Value = file::download_as_json(
-        "https://github.com/J0R6IT0/AtlasLauncherResources/releases/download/Manifest/hidden_versions.json",
+    let better_jsons: Value = file::download_as_json(
+        "https://raw.githubusercontent.com/MCPHackers/BetterJSONs/main/version_manifest_v2.json",
         "",
         &file::ChecksumType::Sha1,
-        "launcher/version-info/hidden_version_manifest.json",
+        "launcher/version-info/betterjsons.json",
         false,
         true,
     )
     .await?;
 
     let mut versions: Vec<Value> = version_manifest["versions"].as_array().unwrap().to_owned();
-    let hidden_versions: Vec<Value> = hidden_version_manifest["versions"]
-        .as_array()
-        .unwrap()
-        .to_owned();
 
-    versions.extend(hidden_versions);
+    // the last 349 entries are already in better jsons
+    versions.truncate(versions.len() - 349);
+    let better_jsons_versions: Vec<Value> = better_jsons["versions"].as_array().unwrap().to_owned();
+
+    versions.extend(better_jsons_versions);
     versions.sort_by_key(|value| value["releaseTime"].as_str().unwrap_or("").to_lowercase());
     versions.reverse();
 

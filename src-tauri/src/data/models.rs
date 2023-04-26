@@ -13,14 +13,14 @@ pub struct MinecraftVersionData {
 pub struct InstanceInfo {
     pub name: String,
     pub version: String,
-    pub libraries: String,
     pub background: String,
+    /* pub libraries: String,
     pub java_version: u64,
-    pub minecraft_args: String,
+    pub minecraft_args: Vec<String>,
+    pub jvm_args: Vec<String>,
     pub asset_index: String,
     pub version_type: String,
-    pub main_class: String,
-    pub jvm_args: Vec<String>,
+    pub main_class: String, */
 }
 
 // Auth

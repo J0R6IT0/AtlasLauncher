@@ -141,13 +141,14 @@
     overflow: hidden;
     word-wrap: none;
     font-size: 0.8rem;
-    max-width: 35%;
+    max-width: 37%;
     white-space: nowrap;
 }
 
 .instance-version span {
     align-items: flex-start;
     word-break: none;
+    margin-right: 0.1rem;
 }
 
 .context-menu-wrapper {

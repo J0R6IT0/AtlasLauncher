@@ -109,7 +109,7 @@ pub async fn download_as_vec(
                 }
                 retry_count += 1;
                 sleep(Duration::from_secs((1 + retry_count).into())).await;
-                println!("retryting {}", retry_count);
+                println!("retrying {}", retry_count);
                 continue;
             }
         };
@@ -119,6 +119,7 @@ pub async fn download_as_vec(
             break;
         }
         retry_count += 1;
+        sleep(Duration::from_secs((1 + retry_count).into())).await;
     }
 
     if path != "" {

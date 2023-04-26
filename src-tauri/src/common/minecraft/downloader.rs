@@ -1,6 +1,7 @@
+use std::env::consts::{ARCH, OS};
+
 use futures::{future::join_all, stream, StreamExt};
 use serde::{Deserialize, Serialize};
-use std::env;
 use tauri::async_runtime;
 
 use crate::utils::file;
@@ -14,7 +15,7 @@ struct VersionInfo {
     url: String,
 }
 
-pub async fn download(id: &str, instance_name: &str) -> Result<String, Box<dyn std::error::Error>> {
+pub async fn download(id: &str) -> Result<String, Box<dyn std::error::Error>> {
     let version: crate::data::models::MinecraftVersionData = get_version(id).await?;
     let url: String = version.url;
 
@@ -56,16 +57,16 @@ pub async fn download(id: &str, instance_name: &str) -> Result<String, Box<dyn s
     download_tasks.push(download_task);
 
     // assets
-    let json_copy: Value = json.clone();
-    let instance_name_copy: String = instance_name.clone().to_owned();
-    let download_task: async_runtime::JoinHandle<()> = tauri::async_runtime::spawn(async move {
-        let assets_url: &str = json_copy["assetIndex"]["url"].as_str().unwrap_or_default();
-        let assets_index: &str = json_copy["assetIndex"]["id"].as_str().unwrap_or_default();
-        download_assets(assets_url, assets_index, &instance_name_copy)
-            .await
-            .unwrap();
-    });
-    download_tasks.push(download_task);
+    if json.get("assetIndex").is_some() {
+        let json_copy: Value = json.clone();
+        let download_task: async_runtime::JoinHandle<()> =
+            tauri::async_runtime::spawn(async move {
+                let assets_url: &str = json_copy["assetIndex"]["url"].as_str().unwrap_or_default();
+                let assets_index: &str = json_copy["assetIndex"]["id"].as_str().unwrap_or_default();
+                download_assets(assets_url, assets_index).await.unwrap();
+            });
+        download_tasks.push(download_task);
+    }
 
     // logging
     let json_copy: Value = json.clone();
@@ -95,17 +96,13 @@ pub async fn download(id: &str, instance_name: &str) -> Result<String, Box<dyn s
 
     // libraries
     let libraries: &Vec<serde_json::Value> = json["libraries"].as_array().unwrap();
-    let libraries_arg: String = download_libraries(&libraries, &id).await?;
+    let libraries_arg: String = download_libraries(&libraries, &id, false).await?;
 
     join_all(download_tasks).await;
     return Ok(libraries_arg);
 }
 
-async fn download_assets(
-    url: &str,
-    id: &str,
-    instance_name: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn download_assets(url: &str, id: &str) -> Result<(), Box<dyn std::error::Error>> {
     let json: Value = file::download_as_json(
         url,
         "",
@@ -120,24 +117,26 @@ async fn download_assets(
 
     let download_tasks = stream::iter(objects.into_iter().map(|object| async {
         let id_copy: String = id.clone().to_owned();
-        let instance_name_copy: String = instance_name.clone().to_owned();
         async_runtime::spawn(async move {
-            let mc_instance: String = String::from(instance_name_copy);
-            let assets_id: String = String::from(id_copy);
-
             let object_hash: &str = object.1.get("hash").unwrap().as_str().unwrap();
-            let object_url: String = format!(
-                "https://resources.download.minecraft.net/{}/{}",
-                &object_hash[0..2],
-                &object_hash
-            );
+            let custom_url: Option<&str> = object.1["custom_url"].as_str();
 
-            let path: String;
-            if assets_id == "legacy" || assets_id == "pre-1.6" {
-                path = format!("assets/virtual/legacy/{}", object.0);
+            let object_url: String;
+
+            if custom_url.is_some() {
+                object_url = custom_url.unwrap().to_string();
             } else {
-                path = format!("assets/objects/{}/{}", &object_hash[0..2], &object_hash);
+                object_url = format!(
+                    "https://resources.download.minecraft.net/{}/{}",
+                    &object_hash[0..2],
+                    &object_hash
+                );
             }
+
+            let is_legacy: bool = id_copy == "legacy";
+
+            let path: String = format!("assets/objects/{}/{}", &object_hash[0..2], &object_hash);
+
             let vec: Vec<u8> = file::download_as_vec(
                 &object_url,
                 object_hash,
@@ -149,12 +148,9 @@ async fn download_assets(
             .await
             .unwrap();
 
-            if assets_id == "pre-1.6" {
-                file::write_vec(
-                    &vec,
-                    format!("instances/{}/resources/{}", mc_instance, object.0).as_str(),
-                )
-                .unwrap();
+            if is_legacy {
+                file::write_vec(&vec, format!("assets/virtual/legacy/{}", object.0).as_str())
+                    .unwrap();
             }
         })
         .await
@@ -168,25 +164,29 @@ async fn download_assets(
     Ok(())
 }
 
-async fn download_libraries(
+pub async fn download_libraries(
     libraries: &Vec<serde_json::Value>,
     version: &str,
+    skip_download: bool,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut libraries_arg: String = String::from("");
 
-    let mut download_tasks = vec![];
+    let mut download_tasks: Vec<async_runtime::JoinHandle<()>> = vec![];
 
     for download in libraries.clone() {
         let mc_version: String = String::from(version);
         let mut must_download: bool = true;
-
+        let formatted_os: &str = match OS {
+            "macos" => "osx",
+            _ => OS,
+        };
         if let Some(rules) = download.get("rules") {
             for rule in rules.as_array().unwrap().iter() {
                 if let Some(action) = rule.get("action").and_then(|a| a.as_str()) {
                     if action == "allow" {
                         if let Some(os) = rule.get("os") {
                             if let Some(name) = os.get("name") {
-                                if name.as_str().unwrap() != "windows" {
+                                if name.as_str().unwrap() != formatted_os {
                                     must_download = false;
                                 }
                             }
@@ -194,7 +194,7 @@ async fn download_libraries(
                     } else if action == "disallow" {
                         if let Some(os) = rule.get("os") {
                             if let Some(name) = os.get("name") {
-                                if name.as_str().unwrap() == "windows" {
+                                if name.as_str().unwrap() == formatted_os {
                                     must_download = false;
                                 }
                             }
@@ -208,6 +208,9 @@ async fn download_libraries(
                 let artifact: Value = artifact.to_owned();
                 let library_path: &str = artifact["path"].as_str().unwrap_or_default();
                 libraries_arg = format!("{libraries_arg}[libraries_path]/{library_path};",);
+                if skip_download {
+                    continue;
+                }
                 let download_task: async_runtime::JoinHandle<()> =
                     tauri::async_runtime::spawn(async move {
                         let url: &str = artifact["url"].as_str().unwrap_or_default();
@@ -226,23 +229,28 @@ async fn download_libraries(
                     });
                 download_tasks.push(download_task);
             }
-            if let Some(natives) = download["downloads"].get("classifiers") {
-                let natives: Value = natives.to_owned();
-                let arch: &str = match env::consts::ARCH {
+            if let Some(natives_classifier) = download["natives"].get(formatted_os) {
+                if skip_download {
+                    continue;
+                }
+                let arch: &str = match ARCH {
                     "x86" => "32",
                     "x86_64" => "64",
-                    other => other,
+                    _ => "64",
                 };
-                if let Some(windows_natives) = natives
-                    .get("natives-windows")
-                    .or_else(|| natives.get("natives-windows-".to_string() + arch))
+                let natives_classifier: String = natives_classifier
+                    .as_str()
+                    .unwrap()
+                    .replace("${arch}", arch);
+
+                if let Some(natives) = download["downloads"]["classifiers"].get(natives_classifier)
                 {
-                    let windows_natives: Value = windows_natives.to_owned();
+                    let natives: Value = natives.to_owned();
 
                     let download_task: async_runtime::JoinHandle<()> =
                         tauri::async_runtime::spawn(async move {
-                            let url: &str = windows_natives["url"].as_str().unwrap_or_default();
-                            let hash: &str = windows_natives["sha1"].as_str().unwrap_or_default();
+                            let url: &str = natives["url"].as_str().unwrap_or_default();
+                            let hash: &str = natives["sha1"].as_str().unwrap_or_default();
 
                             file::download_as_vec(
                                 &url,
