@@ -4,7 +4,7 @@ use futures::{future::join_all, stream, StreamExt};
 use serde::{Deserialize, Serialize};
 use tauri::async_runtime;
 
-use crate::utils::file;
+use crate::{utils::file, common::utils::{log::write_line}};
 use serde_json::{self, Map, Value};
 
 use super::versions::get_version;
@@ -137,7 +137,7 @@ async fn download_assets(url: &str, id: &str) -> Result<(), Box<dyn std::error::
 
             let path: String = format!("assets/objects/{}/{}", &object_hash[0..2], &object_hash);
 
-            let vec: Vec<u8> = file::download_as_vec(
+            let vec: Vec<u8> = match file::download_as_vec(
                 &object_url,
                 object_hash,
                 &file::ChecksumType::Sha1,
@@ -146,7 +146,13 @@ async fn download_assets(url: &str, id: &str) -> Result<(), Box<dyn std::error::
                 false,
             )
             .await
-            .unwrap();
+            {
+                Ok(vec) => vec,
+                Err(e) => {
+                    write_line(&e.to_string());
+                    return;
+                }
+            };
 
             if is_legacy {
                 file::write_vec(&vec, format!("assets/virtual/legacy/{}", object.0).as_str())
@@ -160,7 +166,6 @@ async fn download_assets(url: &str, id: &str) -> Result<(), Box<dyn std::error::
     .collect::<Vec<_>>();
 
     download_tasks.await;
-
     Ok(())
 }
 
@@ -268,9 +273,7 @@ pub async fn download_libraries(
             }
         }
     }
+    join_all(download_tasks).await;
 
-    for download_task in download_tasks {
-        download_task.await?;
-    }
     Ok(libraries_arg)
 }

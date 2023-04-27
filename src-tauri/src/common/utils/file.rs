@@ -1,3 +1,4 @@
+use futures::StreamExt;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -13,7 +14,10 @@ use std::{
 use tokio::time::{sleep, Duration};
 use zip::{read::ZipFile, ZipArchive};
 
-use super::directory::{self, check_directory_sync};
+use super::{
+    directory::{self, check_directory_sync},
+    log::write_line,
+};
 
 pub enum ChecksumType {
     Sha1,
@@ -89,7 +93,7 @@ pub async fn download_as_vec(
             Err(_) => {}
         }
 
-        if !vec.is_none() {
+        if vec.is_some() {
             let vec: Vec<u8> = Some(vec).unwrap().unwrap();
             if verify_hash(checksum, checksum_type, &vec).await? {
                 return Ok(vec);
@@ -98,7 +102,7 @@ pub async fn download_as_vec(
     }
 
     let mut retry_count: u8 = 0;
-    let mut bytes;
+    let bytes: Vec<u8>;
 
     loop {
         let response: Response = match reqwest::get(url).await {
@@ -114,8 +118,29 @@ pub async fn download_as_vec(
             }
         };
 
-        bytes = response.bytes().await?;
-        if verify_hash(checksum, checksum_type, &bytes).await? {
+        let mut current_bytes: Vec<u8> = vec![];
+        let mut stream = response.bytes_stream();
+        let mut stream_retry_count: u8 = 0;
+        while let Some(chunk) = stream.next().await {
+            let chunk = match chunk {
+                Ok(chunk) => chunk,
+                Err(err) => {
+                    write_line(
+                        &(err.to_string() + " retrying: " + &stream_retry_count.to_string()),
+                    );
+                    if stream_retry_count > 10 {
+                        return Err(Box::new(err));
+                    }
+                    stream_retry_count += 1;
+                    sleep(Duration::from_secs((1 + stream_retry_count).into())).await;
+                    continue;
+                }
+            };
+            current_bytes.extend_from_slice(&chunk);
+        }
+
+        if verify_hash(checksum, checksum_type, &current_bytes).await? {
+            bytes = current_bytes;
             break;
         }
         retry_count += 1;

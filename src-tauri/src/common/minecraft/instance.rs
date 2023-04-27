@@ -14,7 +14,7 @@ use std::{
 
 use crate::{
     common::auth::login::get_active_account,
-    common::utils::directory::check_directory_sync,
+    common::utils::{directory::check_directory_sync},
     common::utils::file,
     data::models::{
         BaseEventPayload, CreateInstanceEventPayload, InstanceInfo, MinecraftAccount,
@@ -222,6 +222,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         };
     }
 
+
     // jvm args
     let jvm_arguments: Option<&Vec<Value>> = version_info["arguments"]["jvm"].as_array();
     let mut parsed_jvm_arguments: Vec<String> = vec![];
@@ -361,6 +362,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         };
     }
 
+
     // logging
     if let Some(logging) = version_info.get("logging") {
         if let Some(client) = logging.get("client") {
@@ -451,7 +453,7 @@ async fn launch(
         .args(jvm_args)
         .arg(main_class)
         .args(args)
-        // .creation_flags(CREATE_NO_WINDOW)
+        .creation_flags(CREATE_NO_WINDOW)
         .stdout(Stdio::piped())
         .spawn()
         .expect("failed to execute java process");

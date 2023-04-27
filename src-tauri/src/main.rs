@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use crate::utils::log::write_line;
 use std::env;
 use tauri::AppHandle;
 
@@ -43,11 +44,7 @@ async fn get_instances() -> Vec<InstanceInfo> {
 }
 
 #[tauri::command]
-async fn create_instance(
-    name: &str,
-    id: &str,
-    handle: tauri::AppHandle,
-) -> Result<(), ()> {
+async fn create_instance(name: &str, id: &str, handle: tauri::AppHandle) -> Result<(), ()> {
     minecraft::instance::create_instance(id, name, &handle).await;
     Ok(())
 }
@@ -86,7 +83,10 @@ async fn main() {
     // update the version manifest
     match minecraft::versions::download_version_manifest().await {
         Ok(_) => println!("Version manifest successfully updated"),
-        Err(err) => println!("Error updating manifest: {:?}", err),
+        Err(err) => {
+            println!("Error updating manifest: {:?}", err);
+            write_line(&err.to_string());
+        }
     }
 
     // build the tauri app
