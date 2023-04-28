@@ -71,8 +71,8 @@ async fn read_instance_data(name: &str) -> Result<InstanceInfo, ()> {
 }
 
 #[tauri::command]
-fn write_instance_data(name: &str, new_name: &str, version: &str, background: &str) {
-    minecraft::instance::write_instance(name, new_name, version, background);
+fn write_instance_data(name: &str, new_name: &str, version: &str, background: &str, icon: &str) {
+    minecraft::instance::write_instance(name, new_name, version, background, icon);
 }
 
 #[tokio::main]

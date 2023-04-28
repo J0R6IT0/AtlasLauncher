@@ -14,6 +14,7 @@ pub struct InstanceInfo {
     pub name: String,
     pub version: String,
     pub background: String,
+    pub icon: String,
     /* pub libraries: String,
     pub java_version: u64,
     pub minecraft_args: Vec<String>,

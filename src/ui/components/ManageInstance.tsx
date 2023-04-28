@@ -7,6 +7,7 @@ import { invoke } from '@tauri-apps/api';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { open } from '@tauri-apps/api/dialog';
 import InstanceBackground from '../../assets/images/instance-background.webp';
+import GrassBlock from '../../assets/images/grass-block.webp';
 
 interface ManageInstanceProps {
     onClose: () => void
@@ -19,6 +20,7 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
     const [titleInputValue, setTitleInputValue] = useState('');
     const [titleInputValid, setTitleInputValid] = useState(true);
     const [newBackground, setNewBackground] = useState('');
+    const [newIcon, setNewIcon] = useState('');
     const [instanceInfo, setInstanceInfo] = useState<InstanceInfo>();
 
     function handleTitleInputChange(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -30,12 +32,13 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
 
     const menuRef = useRef<HTMLDivElement>(null);
     const backgroundRef = useRef<HTMLImageElement>(null);
+    const iconRef = useRef<HTMLImageElement>(null);
 
     const closeMenu = (): void => {
         menuRef.current?.classList.remove('visible');
         setTimeout(() => {
             props.onClose();
-        }, 200);
+        }, 300);
     };
 
     const handleOutsideClick = (event: MouseEvent): void => {
@@ -69,10 +72,26 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
     }, []);
 
     return (
-        <div className='manage-instance-container'>
-            <div ref={menuRef} className='manage-instance'>
+        <div ref={menuRef} className='manage-instance-container'>
+            <div className='manage-instance'>
                 <div className='manage-instance-title'><span>{instanceName}</span></div>
                 <div className='manage-instance-side'>
+                    <div className='manage-instance-icon clickable' onClick={() => {
+                        open({
+                            multiple: false,
+                            filters: [{
+                                name: 'Instance Icon',
+                                extensions: ['png', 'jpeg', 'webp', 'gif']
+                            }]
+                        }).then((selected) => {
+                            if (selected !== null && !Array.isArray(selected)) {
+                                iconRef.current?.setAttribute('src', convertFileSrc(selected));
+                                setNewIcon(selected);
+                            }
+                        }).catch((e) => {});
+                    }}>
+                        <img ref={iconRef} src={instanceInfo?.icon !== undefined && instanceInfo?.icon.length > 0 ? convertFileSrc(instanceInfo.icon) : GrassBlock}/>
+                    </div>
                     <div className='manage-instance-background clickable' onClick={() => {
                         open({
                             multiple: false,
@@ -90,11 +109,11 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
                         <img ref={backgroundRef} src={instanceInfo?.background !== undefined && instanceInfo?.background.length > 0 ? convertFileSrc(instanceInfo.background) : InstanceBackground}/>
                     </div>
                     <TextButton text='Apply Changes' onClick={() => {
-                        invoke('write_instance_data', { name: instanceName, newName: titleInputValue, version: instanceInfo?.version, background: newBackground }).then(() => {
+                        invoke('write_instance_data', { name: instanceName, newName: titleInputValue, version: instanceInfo?.version, background: newBackground, icon: newIcon }).then(() => {
                             props.updateInstances();
                             closeMenu();
                         }).catch(e => {});
-                    }} clickable={titleInputValid && (titleInputValue !== instanceName || newBackground.length > 0)}/>
+                    }} clickable={titleInputValid && (titleInputValue !== instanceName || newBackground.length > 0 || newIcon.length > 0)}/>
                 </div>
                 <div className='manage-instance-fields'>
                     <TextInput value={titleInputValue} onChange={handleTitleInputChange} name='Instance name' inputValid={titleInputValid}/>

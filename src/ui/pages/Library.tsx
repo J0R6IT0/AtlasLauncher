@@ -30,8 +30,8 @@ function Library(props: LibraryProps): JSX.Element {
 
     return (
         <div className='library'>
-            <div className='library-info'>
-                <span className='library-title'>Library</span>
+            <div className='page-info'>
+                <span className='page-title'>Library</span>
                 <span>Your Minecraft worlds are awaiting</span>
             </div>
             <div className='instances'>
@@ -48,7 +48,7 @@ function Library(props: LibraryProps): JSX.Element {
                         <div className='instance-content'>
                             <img className='instance-background' src={element.background.length > 0 ? convertFileSrc(element.background) : InstanceBackground} />
                             <div className='instance-info'>
-                                <span><img src={GrassBlock} />{element.name}</span>
+                                <span><img src={element.icon.length > 0 ? convertFileSrc(element.icon) : GrassBlock} />{element.name}</span>
                                 <div className='instance-version'><span>{element.version}</span></div>
                                 <div className='instance-type'><img src={BoxIcon} /></div>
                             </div>

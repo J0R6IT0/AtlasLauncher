@@ -1,75 +1,127 @@
 .manage-instance-container {
-    position: absolute;
-    width: calc(100% + 1rem);
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
+  position: absolute;
+  width: calc(100% + 1rem);
+  height: 100%;
+  z-index: 2000;
+  transition: all 0.3s ease-in-out;
+}
+
+.manage-instance-container.visible {
+  background-color: rgb(0 0 0 / 35%);
 }
 
 .manage-instance {
-    width: 80%;
-    height: 0;
-    position: relative;
-    transition: height 0.2s ease-in-out;
-    background: var(--background-transparent);
-    box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
-    backdrop-filter: blur(10px);
-    border-radius: 0.5rem;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    overflow: hidden;
+  opacity: 0;
+  position: relative;
+  width: 80%;
+  height: 80%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin-bottom: -100%;
+  transition: all 0.3s ease-in-out;
+  background: var(--background-transparent);
+  box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
+  backdrop-filter: blur(10px);
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  overflow: hidden;
 }
 
-.manage-instance.visible {
-    height: 80%
+.manage-instance-container.visible .manage-instance {
+  opacity: 1;
+  animation: slide-up 0.3s ease;
+}
+
+.manage-instance-container:not(.visible) .manage-instance {
+  animation: slide-down 0.3s ease;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translate(-50%, 100%);
+  }
+
+  to {
+    transform: translate(-50%, -50%);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    transform: translate(-50%, -50%);
+  }
+
+  to {
+    transform: translate(-50%, 100%);
+  }
 }
 
 .manage-instance-title {
-    position: absolute;
-    width: 100%;
-    height: auto;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    font-size: 1.5rem;
-    top: 1.5rem;
-    color: var(--text-color-primary)
+  position: absolute;
+  width: 100%;
+  height: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 1.5rem;
+  top: 0;
+  color: var(--text-color-primary);
+  background-color: var(--side-bar-color);
+  box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
 }
 
 .manage-instance-side {
-    position: relative;
-    height: calc(100% - 4.5rem);
-    margin-right: 1.5rem;
-    margin-left: 1.5rem;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
+  position: relative;
+  height: calc(100% - 4.5rem);
+  margin-right: 1.5rem;
+  margin-left: 1.5rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  max-width: 12rem;
 }
 
-.manage-instance-background {
-    position: relative;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    margin-bottom: 1rem;
-    height: fit-content;
-    aspect-ratio: 1.4 / 1;
-    justify-content: center;
-    display: flex;
-    align-items: center;
+.manage-instance-background,
+.manage-instance-icon {
+  position: relative;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  height: fit-content;
+  aspect-ratio: 1.4 / 1;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  background-color: var(--side-bar-color);
+}
 
+.manage-instance-icon {
+  aspect-ratio: 1 / 1 !important;
+  width: 50%;
+  height: fit-content;
+}
+
+.manage-instance-icon img {
+  position: absolute;
+  height: 100%;
 }
 
 .manage-instance-background img {
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    object-fit: cover;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
 }
 
 .manage-instance-fields {
-    height: calc(100% - 4.5rem);
-    width: 180%;
+  height: calc(100% - 4.5rem);
+  width: 180%;
+}
+
+.manage-instance .text-button {
+  margin-bottom: 1.5rem;
 }

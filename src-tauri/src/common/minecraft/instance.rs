@@ -14,7 +14,7 @@ use std::{
 
 use crate::{
     common::auth::login::get_active_account,
-    common::utils::{directory::check_directory_sync},
+    common::utils::directory::check_directory_sync,
     common::utils::file,
     data::models::{
         BaseEventPayload, CreateInstanceEventPayload, InstanceInfo, MinecraftAccount,
@@ -64,6 +64,7 @@ pub async fn create_instance(id: &str, name: &str, app: &tauri::AppHandle) {
         name: String::from(name),
         version: String::from(id),
         background: String::from(""),
+        icon: String::from(""),
     };
 
     check_directory(format!("instances/{name}/resourcepacks").as_str()).await;
@@ -113,6 +114,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
 
     java_version = match java_version {
         8 => 8,
+        16 => 17,
         17 => 17,
         _ => 8,
     };
@@ -221,7 +223,6 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
             *game_arg = game_arg.replace("/", "\\");
         };
     }
-
 
     // jvm args
     let jvm_arguments: Option<&Vec<Value>> = version_info["arguments"]["jvm"].as_array();
@@ -362,7 +363,6 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         };
     }
 
-
     // logging
     if let Some(logging) = version_info.get("logging") {
         if let Some(client) = logging.get("client") {
@@ -443,8 +443,6 @@ async fn launch(
     jvm_args: &Vec<String>,
     main_class: &str,
 ) -> Child {
-    println!("{:?}", args);
-    println!("{:?}", jvm_args);
     const CREATE_NO_WINDOW: u32 = 0x08000000;
     let working_dir: PathBuf = env::current_dir().unwrap();
     std::env::set_current_dir(&instance_path).unwrap();
@@ -476,6 +474,9 @@ pub async fn get_instances() -> Vec<InstanceInfo> {
         if !instance.background.is_empty() {
             instance.background = path.join(instance.background).to_str().unwrap().to_string();
         }
+        if !instance.icon.is_empty() {
+            instance.icon = path.join(instance.icon).to_str().unwrap().to_string();
+        }
         instances.push(instance);
     }
 
@@ -506,10 +507,13 @@ pub async fn read_instance(name: &str) -> InstanceInfo {
     if !instance.background.is_empty() {
         instance.background = path.join(instance.background).to_str().unwrap().to_string();
     }
+    if !instance.icon.is_empty() {
+        instance.icon = path.join(instance.icon).to_str().unwrap().to_string();
+    }
     instance
 }
 
-pub fn write_instance(name: &str, new_name: &str, _version: &str, background: &str) {
+pub fn write_instance(name: &str, new_name: &str, _version: &str, background: &str, icon: &str) {
     let instances_path: PathBuf = check_directory_sync(format!("instances").as_str());
     let old_instance_path: PathBuf = instances_path.join(name);
     let new_instance_path: PathBuf = instances_path.join(new_name);
@@ -523,21 +527,36 @@ pub fn write_instance(name: &str, new_name: &str, _version: &str, background: &s
     let mut instance: InstanceInfo = serde_json::from_str(&contents).unwrap();
     instance.name = new_name.to_string();
 
+    let now: SystemTime = SystemTime::now();
+    let since_epoch: std::time::Duration = now.duration_since(UNIX_EPOCH).unwrap();
+    let timestamp: String = since_epoch.as_secs().to_string();
+
     if !background.is_empty() {
-        let now: SystemTime = SystemTime::now();
-        let since_epoch: std::time::Duration = now.duration_since(UNIX_EPOCH).unwrap();
-        let timestamp: String = since_epoch.as_secs().to_string();
         let extension: &str = Path::new(background)
             .extension()
             .unwrap_or_default()
             .to_str()
             .unwrap_or("");
-        let background_name: String = timestamp + "-background." + extension;
+        let background_name: String = timestamp.clone() + "-background." + extension;
         if !instance.background.is_empty() {
             fs::remove_file(new_instance_path.join(instance.background)).unwrap();
         }
         instance.background = background_name.clone();
         fs::copy(background, new_instance_path.join(background_name)).unwrap();
+    }
+
+    if !icon.is_empty() {
+        let extension: &str = Path::new(icon)
+            .extension()
+            .unwrap_or_default()
+            .to_str()
+            .unwrap_or("");
+        let icon_name: String = timestamp + "-icon." + extension;
+        if !instance.icon.is_empty() {
+            fs::remove_file(new_instance_path.join(instance.icon)).unwrap();
+        }
+        instance.icon = icon_name.clone();
+        fs::copy(icon, new_instance_path.join(icon_name)).unwrap();
     }
 
     file::write_value(

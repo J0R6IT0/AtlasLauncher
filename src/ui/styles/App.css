@@ -26,10 +26,10 @@
 
 .content {
   position: absolute;
-  top: 1.7rem;
-  left: 4rem;
+  left: 4.5rem;
+  top: 0;
   width: calc(100% - 5rem);
-  height: calc(100% - 1.7rem);
+  height: calc(100%);
   transition: all 0.3s ease;
   z-index: 4000;
 }
@@ -108,3 +108,21 @@
   height: 1.7rem;
 }
 
+.page-info {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  left: 1.5rem;
+  top: 2.2rem;
+  width: 100%;
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+}
+
+.page-title {
+  color: var(--text-color-primary);
+  font-size: 1.2rem;
+  margin-bottom: 0.6rem;
+  font-weight: bold;
+
+}

@@ -28,8 +28,8 @@ const NewInstance = React.memo((props: NewInstanceProps) => {
     const [selectedFlavour, setSelectedFlavour] = useState<number | null>(null);
     return (
         <div className='new-instance'>
-            <div className='new-instance-info'>
-                <span className='new-instance-title'>New Instance</span>
+            <div className='page-info'>
+                <span className='page-title'>New Instance</span>
                 <span>Add a new instance to your library</span>
             </div>
             <div className='flavour-container'>

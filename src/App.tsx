@@ -36,6 +36,7 @@ export interface InstanceInfo {
     name: string
     version: string
     background: string
+    icon: string
 }
 
 export interface AccountInfo {
