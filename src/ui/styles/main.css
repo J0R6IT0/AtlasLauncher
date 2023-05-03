@@ -12,11 +12,7 @@
   -webkit-touch-callout: none;
   user-select: none;
 
-  --background: linear-gradient(
-    180deg,
-    rgb(32 39 53) 0%,
-    rgb(28 33 45) 100%
-  );
+  --background: linear-gradient(180deg, rgb(32 39 53) 0%, rgb(28 33 45) 100%);
   --background-transparent: radial-gradient(
     circle,
     rgb(32 39 53 / 70%) 20%,
@@ -36,13 +32,13 @@
   --text-filter-secondary: invert(45%) sepia(7%) saturate(878%)
     hue-rotate(191deg) brightness(94%) contrast(88%);
   --scroll-bar-color: #6b6f80;
-
+  --instance-sidebar: #252b3b88;
 }
 
 ::-webkit-scrollbar {
   width: 0.4rem;
+  height: 0.4rem;
 }
-
 
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -77,5 +73,3 @@
 .clickable:active {
   transform: scale(0.9);
 }
-
-

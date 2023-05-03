@@ -25,11 +25,11 @@
 }
 
 .content {
-  position: absolute;
+  position: fixed;
   left: 4.5rem;
   top: 0;
   width: calc(100% - 5rem);
-  height: calc(100%);
+  height: calc(100% + 0.5rem);
   transition: all 0.3s ease;
   z-index: 4000;
 }

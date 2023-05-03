@@ -27,7 +27,7 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
     return (
         <div className='create-instance'>
             <TextInput value={titleInputValue} onChange={handleTitleInputChange} name='Instance name' inputValid={titleInputValid}/>
-            <VersionMenu selectedVersionType={selectedVersionType} selectedVersion={selectedVersion} setSelectedVersionType={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>
+            <VersionMenu autoScroll={false} selectedVersionType={selectedVersionType} selectedVersion={selectedVersion} setSelectedVersionType={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>
             <TextButton onClick={() => {
                 invoke('create_instance', { name: titleInputValue.trim(), id: selectedVersion }).catch(e => { console.log(e); });
                 props.goToLibrary();

@@ -37,6 +37,11 @@ export interface InstanceInfo {
     version: string
     background: string
     icon: string
+    version_type: string
+    height: string
+    width: string
+    fullscreen: boolean
+    [key: string]: any
 }
 
 export interface AccountInfo {

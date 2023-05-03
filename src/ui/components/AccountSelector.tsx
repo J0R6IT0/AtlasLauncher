@@ -17,9 +17,9 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
     const menuRef = useRef<HTMLDivElement>(null);
 
     const handleOutsideClick = (event: MouseEvent): void => {
-        const menu = document.querySelector('.account-selector') as HTMLElement;
-        if (!menu.contains(event.target as Node)) {
-            menuRef.current?.classList.remove('visible');
+        const menu = menuRef.current;
+        if (menu !== null && !menu.contains(event.target as Node)) {
+            menu.classList.remove('visible');
             setTimeout(() => {
                 props.onClose();
             }, 300);

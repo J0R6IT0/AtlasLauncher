@@ -60,7 +60,8 @@
 }
 
 .account-items span {
-   color: var(--text-color-secondary)
+   color: var(--text-color-secondary);
+   transition: all 0.2s ease;
 }
 
 .account-items.active span {
@@ -90,4 +91,8 @@
 
 #add-account:hover img {
     filter: var(--icons-filter-hover);
+}
+
+#add-account:hover span {
+    color: var(--text-color-primary);
 }

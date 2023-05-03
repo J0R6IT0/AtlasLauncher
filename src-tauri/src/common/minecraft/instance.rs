@@ -25,7 +25,7 @@ use crate::{
     utils::directory::check_directory,
 };
 
-use tauri::Manager;
+use tauri::{AppHandle, Manager};
 
 use super::downloader::download_libraries;
 
@@ -57,14 +57,22 @@ pub async fn create_instance(id: &str, name: &str, app: &tauri::AppHandle) {
     )
     .unwrap();
 
-    // create atlas_instance.json
     downloader::download(id).await.unwrap();
+
+    let version_info: Value =
+        file::read_as_value(format!("versions/{}/{}.json", &id, &id).as_str())
+            .await
+            .unwrap();
 
     let instance_info: InstanceInfo = InstanceInfo {
         name: String::from(name),
         version: String::from(id),
-        background: String::from(""),
-        icon: String::from(""),
+        background: String::from("default0"),
+        icon: String::from("default0"),
+        version_type: version_info["type"].as_str().unwrap().to_string(),
+        width: String::from("1920"),
+        height: String::from("1080"),
+        fullscreen: false,
     };
 
     check_directory(format!("instances/{name}/resourcepacks").as_str()).await;
@@ -196,9 +204,9 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
 
     parsed_game_arguments.append(&mut vec![
         String::from("--width"),
-        String::from("1280"),
+        String::from("${resolution_width}"),
         String::from("--height"),
-        String::from("720"),
+        String::from("${resolution_height}"),
     ]);
 
     for game_arg in parsed_game_arguments.iter_mut() {
@@ -215,13 +223,17 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
             .replace("${user_properties}", "{}")
             .replace("${user_type}", "msa")
             .replace("${profile_name}", "Minecraft")
-            .replace("${resolution_width}", "1280")
-            .replace("${resolution_height}", "720")
+            .replace("${resolution_width}", &instance_info.width)
+            .replace("${resolution_height}", &instance_info.height)
             .replace("${version_type}", version_type);
 
         if OS == "windows" {
             *game_arg = game_arg.replace("/", "\\");
         };
+    }
+
+    if instance_info.fullscreen {
+        parsed_game_arguments.push(String::from("--fullscreen"));
     }
 
     // jvm args
@@ -244,13 +256,10 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
                 };
                 let mut must_use: bool = true;
                 for rule in rules.as_array().unwrap().iter() {
-                    println!("{:?}", rule);
                     if let Some(action) = rule.get("action").and_then(|a| a.as_str()) {
-                        println!("{action}");
                         if action == "allow" {
                             if let Some(os) = rule.get("os") {
                                 if let Some(name) = os.get("name") {
-                                    println!("{}", name.as_str().unwrap());
                                     if name.as_str().unwrap() != formatted_os {
                                         must_use = false;
                                     }
@@ -265,7 +274,6 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
                     }
                 }
                 if must_use {
-                    println!("{:?}", argument);
                     if argument["value"].is_array() {
                         for child in argument["value"].as_array().unwrap() {
                             parsed_jvm_arguments.push(child.as_str().unwrap().to_string())
@@ -325,6 +333,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
             String::from("-XX:G1ConcRSHotCardLimit=16"),
             String::from("-XX:G1ConcRefinementServiceIntervalMillis=150"),
             String::from("-XX:GCTimeRatio=99"),
+            String::from("-Dorg.lwjgl.opengl.Window.undecorated=true"),
         ]);
     } else {
         parsed_jvm_arguments.append(&mut vec![
@@ -471,10 +480,10 @@ pub async fn get_instances() -> Vec<InstanceInfo> {
 
         let contents: String = fs::read_to_string(&path.join("atlas_instance.json")).unwrap();
         let mut instance: InstanceInfo = serde_json::from_str(&contents).unwrap();
-        if !instance.background.is_empty() {
+        if !instance.background.starts_with("default") {
             instance.background = path.join(instance.background).to_str().unwrap().to_string();
         }
-        if !instance.icon.is_empty() {
+        if !instance.icon.starts_with("default") {
             instance.icon = path.join(instance.icon).to_str().unwrap().to_string();
         }
         instances.push(instance);
@@ -504,64 +513,122 @@ pub async fn read_instance(name: &str) -> InstanceInfo {
             .unwrap();
     let path: PathBuf = check_directory_sync(format!("instances/{name}").as_str());
 
-    if !instance.background.is_empty() {
+    if !instance.background.starts_with("default") {
         instance.background = path.join(instance.background).to_str().unwrap().to_string();
     }
-    if !instance.icon.is_empty() {
+    if !instance.icon.starts_with("default") {
         instance.icon = path.join(instance.icon).to_str().unwrap().to_string();
     }
     instance
 }
 
-pub fn write_instance(name: &str, new_name: &str, _version: &str, background: &str, icon: &str) {
+pub async fn write_instance(name: &str, data: InstanceInfo, app: &AppHandle) {
     let instances_path: PathBuf = check_directory_sync(format!("instances").as_str());
     let old_instance_path: PathBuf = instances_path.join(name);
-    let new_instance_path: PathBuf = instances_path.join(new_name);
+    let new_instance_path: PathBuf = instances_path.join(&data.name);
 
-    if name != new_name {
+    if name != data.name {
         fs::rename(old_instance_path, &new_instance_path).unwrap();
     }
     let atlas_instance_path: PathBuf = new_instance_path.join("atlas_instance.json");
     let contents: String = fs::read_to_string(&atlas_instance_path).unwrap();
 
     let mut instance: InstanceInfo = serde_json::from_str(&contents).unwrap();
-    instance.name = new_name.to_string();
+    instance.name = data.name.to_string();
 
     let now: SystemTime = SystemTime::now();
     let since_epoch: std::time::Duration = now.duration_since(UNIX_EPOCH).unwrap();
     let timestamp: String = since_epoch.as_secs().to_string();
 
-    if !background.is_empty() {
-        let extension: &str = Path::new(background)
-            .extension()
+    if !data.background.starts_with("default") {
+        let background_path: &Path = Path::new(&data.background);
+        let bg_name: &str = background_path
+            .file_name()
             .unwrap_or_default()
             .to_str()
-            .unwrap_or("");
-        let background_name: String = timestamp.clone() + "-background." + extension;
-        if !instance.background.is_empty() {
+            .unwrap();
+
+        if bg_name != instance.background {
+            let extension: &str = &background_path
+                .extension()
+                .unwrap_or_default()
+                .to_str()
+                .unwrap_or("");
+            let background_name: String = timestamp.clone() + "-background." + extension;
+            if !instance.background.starts_with("default") {
+                fs::remove_file(new_instance_path.join(instance.background)).unwrap();
+            }
+            instance.background = background_name.clone();
+            fs::copy(data.background, new_instance_path.join(background_name)).unwrap();
+        }
+    } else {
+        if !instance.background.starts_with("default") {
             fs::remove_file(new_instance_path.join(instance.background)).unwrap();
         }
-        instance.background = background_name.clone();
-        fs::copy(background, new_instance_path.join(background_name)).unwrap();
+        instance.background = data.background.to_string();
     }
 
-    if !icon.is_empty() {
-        let extension: &str = Path::new(icon)
-            .extension()
-            .unwrap_or_default()
-            .to_str()
-            .unwrap_or("");
-        let icon_name: String = timestamp + "-icon." + extension;
-        if !instance.icon.is_empty() {
+    if !data.icon.starts_with("default") {
+        let icon_path: &Path = Path::new(&data.icon);
+        let ic_name: &str = icon_path.file_name().unwrap_or_default().to_str().unwrap();
+
+        if ic_name != instance.icon {
+            let extension: &str = &icon_path
+                .extension()
+                .unwrap_or_default()
+                .to_str()
+                .unwrap_or("");
+            let icon_name: String = timestamp.clone() + "-icon." + extension;
+            if !instance.icon.starts_with("default") {
+                fs::remove_file(new_instance_path.join(instance.icon)).unwrap();
+            }
+            instance.icon = icon_name.clone();
+            fs::copy(data.icon, new_instance_path.join(icon_name)).unwrap();
+        }
+    } else {
+        if !instance.icon.starts_with("default") {
             fs::remove_file(new_instance_path.join(instance.icon)).unwrap();
         }
-        instance.icon = icon_name.clone();
-        fs::copy(icon, new_instance_path.join(icon_name)).unwrap();
+        instance.icon = data.icon.to_string();
     }
+
+    if instance.version != data.version {
+        app.emit_all(
+            "create_instance",
+            CreateInstanceEventPayload {
+                base: BaseEventPayload {
+                    message: format!("Updating instance version"),
+                    status: String::from("Loading"),
+                },
+                name: String::from(name),
+            },
+        )
+        .unwrap();
+
+        downloader::download(&data.version).await.unwrap();
+        instance.version = data.version;
+        instance.version_type = data.version_type;
+
+        app.emit_all(
+            "create_instance",
+            CreateInstanceEventPayload {
+                base: BaseEventPayload {
+                    message: format!("Successfully updated instance"),
+                    status: String::from("Success"),
+                },
+                name: String::from(name),
+            },
+        )
+        .unwrap();
+    }
+
+    instance.height = data.height;
+    instance.width = data.width;
+    instance.fullscreen = data.fullscreen;
 
     file::write_value(
         &instance,
-        format!("instances/{new_name}/atlas_instance.json").as_str(),
+        format!("instances/{}/atlas_instance.json", data.name).as_str(),
     )
     .unwrap();
 }

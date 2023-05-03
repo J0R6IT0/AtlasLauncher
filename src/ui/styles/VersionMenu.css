@@ -63,8 +63,6 @@
     align-items: center;
     margin-left: 0.1rem;
     border-radius: 0.3rem;
-    cursor: pointer;
-
 }
 
 .version:nth-child(1) {
