@@ -4,6 +4,7 @@ import '../styles/CreateInstance.css';
 import TextInput from './TextInput';
 import VersionMenu from './VersionMenu';
 import TextButton from './TextButton';
+import ForgeVersionMenu from './ForgeVersionMenu';
 
 interface CreateInstanceProps {
     flavour: number | null
@@ -14,7 +15,7 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
     const [titleInputValue, setTitleInputValue] = useState('');
     const [titleInputValid, setTitleInputValid] = useState(false);
 
-    const [selectedVersionType, setSelectedVersionType] = useState('release');
+    const [selectedVersionType, setSelectedVersionType] = useState(props.flavour === 1 ? '1.6.4' : 'release');
     const [selectedVersion, setSelectedVersion] = useState('');
 
     function handleTitleInputChange(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -27,9 +28,14 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
     return (
         <div className='create-instance'>
             <TextInput value={titleInputValue} onChange={handleTitleInputChange} name='Instance name' inputValid={titleInputValid}/>
-            <VersionMenu autoScroll={false} selectedVersionType={selectedVersionType} selectedVersion={selectedVersion} setSelectedVersionType={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>
+            {props.flavour === 0 && <VersionMenu autoScroll={false} selectedVersionType={selectedVersionType} selectedVersion={selectedVersion} setSelectedVersionType={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>}
+            {props.flavour === 1 && <ForgeVersionMenu autoScroll={false} selectedMcVersion={selectedVersionType} selectedVersion={selectedVersion} setSelectedMcVersion={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>}
             <TextButton onClick={() => {
-                invoke('create_instance', { name: titleInputValue.trim(), id: selectedVersion }).catch(e => { console.log(e); });
+                if (props.flavour === 0) {
+                    invoke('create_instance', { name: titleInputValue.trim(), id: selectedVersion, modloader: '' }).catch(e => { console.log(e); });
+                } else {
+                    invoke('create_instance', { name: titleInputValue.trim(), id: selectedVersionType, modloader: 'forge-' + selectedVersion }).catch(e => { console.log(e); });
+                }
                 props.goToLibrary();
             }} text='Create' clickable={titleInputValid && selectedVersion.length > 0}/>
         </div>

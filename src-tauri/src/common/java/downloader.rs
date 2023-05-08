@@ -21,7 +21,7 @@ pub async fn download(version: u8) -> Result<(), Box<dyn std::error::Error>> {
     file::download_as_vec(
         link,
         checksum,
-        &file::ChecksumType::Sha256,
+        &file::ChecksumType::SHA256,
         path.to_str().unwrap(),
         true,
         false,
@@ -45,7 +45,7 @@ async fn get_version_info(version: u8) -> Result<Value, Box<dyn std::error::Erro
 
     let json: Value = file::download_as_json(&format!(
         "https://api.adoptium.net/v3/assets/feature_releases/{version}/ga?os={os}&architecture={arch}&image_type=jre"
-    ), "", &file::ChecksumType::Sha1, "", false, false).await?;
+    ), "", &file::ChecksumType::SHA1, "", false, false).await?;
 
     let binaries: &Vec<Value> = json.as_array().unwrap()[0]["binaries"].as_array().unwrap();
 

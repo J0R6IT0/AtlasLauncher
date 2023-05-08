@@ -8,13 +8,21 @@ use tauri::AppHandle;
 mod common;
 mod data;
 use common::{auth, java, minecraft, utils};
-use data::models::{self, InstanceInfo};
+use data::models::{self, ForgeVersionsData, InstanceInfo};
 
 #[tauri::command]
 async fn get_minecraft_versions() -> Result<Vec<models::MinecraftVersionData>, ()> {
     match minecraft::versions::get_versions().await {
         Ok(version_list) => Ok(version_list),
         Err(_) => Ok([].to_vec()),
+    }
+}
+
+#[tauri::command]
+async fn get_forge_versions() -> Result<Vec<ForgeVersionsData>, ()> {
+    match minecraft::versions::get_forge_versions().await {
+        Ok(version_list) => Ok(version_list),
+        Err(_) => Ok(serde_json::from_str("{}").unwrap()),
     }
 }
 
@@ -44,8 +52,13 @@ async fn get_instances() -> Vec<InstanceInfo> {
 }
 
 #[tauri::command]
-async fn create_instance(name: &str, id: &str, handle: tauri::AppHandle) -> Result<(), ()> {
-    minecraft::instance::create_instance(id, name, &handle).await;
+async fn create_instance(
+    name: &str,
+    id: &str,
+    modloader: &str,
+    handle: tauri::AppHandle,
+) -> Result<(), ()> {
+    minecraft::instance::create_instance(id, name, modloader, &handle).await;
     Ok(())
 }
 
@@ -71,7 +84,11 @@ async fn read_instance_data(name: &str) -> Result<InstanceInfo, ()> {
 }
 
 #[tauri::command]
-async fn write_instance_data(name: &str, data: InstanceInfo, handle: tauri::AppHandle) -> Result<(), ()> {
+async fn write_instance_data(
+    name: &str,
+    data: InstanceInfo,
+    handle: tauri::AppHandle,
+) -> Result<(), ()> {
     minecraft::instance::write_instance(name, data, &handle).await;
     Ok(())
 }
@@ -82,7 +99,7 @@ async fn main() {
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
     // update the version manifest
-    match minecraft::versions::download_version_manifest().await {
+    match minecraft::versions::download_version_manifests().await {
         Ok(_) => println!("Version manifest successfully updated"),
         Err(err) => {
             println!("Error updating manifest: {:?}", err);
@@ -105,6 +122,7 @@ async fn main() {
             open_instance_folder,
             read_instance_data,
             write_instance_data,
+            get_forge_versions,
         ])
         .setup(|app| {
             let handle: AppHandle = app.handle();

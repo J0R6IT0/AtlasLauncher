@@ -14,8 +14,8 @@ use std::{
 
 use crate::{
     common::auth::login::get_active_account,
-    common::utils::directory::check_directory_sync,
-    common::utils::file,
+    common::utils::file::{self, download_as_json, ChecksumType},
+    common::{forge, utils::directory::check_directory_sync},
     data::models::{
         BaseEventPayload, CreateInstanceEventPayload, InstanceInfo, MinecraftAccount,
         StartInstanceEventPayload,
@@ -27,9 +27,11 @@ use crate::{
 
 use tauri::{AppHandle, Manager};
 
-use super::downloader::download_libraries;
+use super::{downloader::download_libraries, versions::get_forge_version};
 
-pub async fn create_instance(id: &str, name: &str, app: &tauri::AppHandle) {
+pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri::AppHandle) {
+    let og_id: String = id.to_string();
+    let mut id: String = id.to_string();
     app.emit_all(
         "create_instance",
         CreateInstanceEventPayload {
@@ -57,21 +59,54 @@ pub async fn create_instance(id: &str, name: &str, app: &tauri::AppHandle) {
     )
     .unwrap();
 
-    downloader::download(id).await.unwrap();
-
-    let version_info: Value =
-        file::read_as_value(format!("versions/{}/{}.json", &id, &id).as_str())
+    if modloader.starts_with("forge-") {
+        let forge_manifest: Value = forge::downloader::download_manifest(&id, modloader)
             .await
             .unwrap();
 
+        if forge_manifest["extends"].is_string() {
+            id = forge_manifest["extends"].as_str().unwrap().to_string();
+        } else {
+            id = forge_manifest["install"]["minecraft"]
+                .as_str()
+                .unwrap()
+                .to_string();
+        }
+    }
+
+    downloader::download(&id).await.unwrap();
+
+    let version_info: Value =
+        file::read_as_value(format!("launcher/meta/net.minecraft/{}.json", &id).as_str())
+            .await
+            .unwrap();
+
+    if modloader.starts_with("forge") {
+        app.emit_all(
+            "create_instance",
+            CreateInstanceEventPayload {
+                base: BaseEventPayload {
+                    message: format!("Installing Forge"),
+                    status: String::from("Loading"),
+                },
+                name: String::from(name),
+            },
+        )
+        .unwrap();
+        forge::downloader::download_forge(&id, &modloader.replace("forge-", ""), name)
+            .await
+            .unwrap();
+    }
+
     let instance_info: InstanceInfo = InstanceInfo {
         name: String::from(name),
-        version: String::from(id),
+        version: og_id,
         background: String::from("default0"),
         icon: String::from("default0"),
         version_type: version_info["type"].as_str().unwrap().to_string(),
         width: String::from("1920"),
         height: String::from("1080"),
+        modloader: String::from(modloader),
         fullscreen: false,
     };
 
@@ -102,10 +137,21 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         file::read_as_value(format!("instances/{name}/atlas_instance.json").as_str())
             .await
             .unwrap();
+
     let version_info: Value = file::read_as_value(
         format!(
-            "versions/{}/{}.json",
-            &instance_info.version, &instance_info.version
+            "launcher/meta/net.minecraft/{}.json",
+            if instance_info.modloader.starts_with("forge-") {
+                let forge_manifest: Value = file::read_as_value(&format!(
+                    "launcher/meta/net.minecraftforge/{}.json",
+                    instance_info.modloader.replace("forge-", "")
+                ))
+                .await
+                .unwrap();
+                forge_manifest["extends"].as_str().unwrap().to_string()
+            } else {
+                instance_info.version.to_string()
+            },
         )
         .as_str(),
     )
@@ -118,7 +164,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
     // java
     let mut java_version: u64 = version_info["javaVersion"]["majorVersion"]
         .as_u64()
-        .unwrap();
+        .unwrap_or(8);
 
     java_version = match java_version {
         8 => 8,
@@ -137,24 +183,29 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         true,
     )
     .await
-    .unwrap()
-    .replace("[libraries_path]", &libraries_path);
+    .unwrap();
 
     // classpath
-    let version_path: String = String::from(
-        check_directory(format!("versions\\{}", { &instance_info.version }).as_str())
-            .await
-            .join(format!("{}.jar", { &instance_info.version }))
-            .to_str()
-            .unwrap(),
-    );
-    let mut cp: String = format!("{version_path};{libraries}");
+    let version_path: String = if instance_info.modloader.is_empty() {
+        String::from(
+            check_directory(format!("versions").as_str())
+                .await
+                .join(format!("{}.jar", { &instance_info.version }))
+                .to_str()
+                .unwrap(),
+        )
+    } else {
+        String::from(
+            check_directory(format!("versions").as_str())
+                .await
+                .join(format!("{}.jar", { &instance_info.modloader }))
+                .to_str()
+                .unwrap(),
+        )
+    };
+    let mut cp: String = format!("{version_path};{libraries}",);
 
-    if OS == "windows" {
-        cp = cp.replace("/", "\\");
-    }
-
-    // game_args
+    // args
     let instance_path: String = String::from(
         check_directory(format!("instances/{name}").as_str())
             .await
@@ -172,10 +223,12 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         check_directory(
             format!(
                 "{}",
-                if asset_index == "legacy" || asset_index == "pre-1.6" {
-                    "assets/virtual/legacy"
+                if asset_index == "pre-1.6" {
+                    format!("instances/{name}/resources")
+                } else if asset_index == "legacy" {
+                    format!("assets/virtual/legacy")
                 } else {
-                    "assets"
+                    "assets".to_string()
                 }
             )
             .as_str(),
@@ -209,34 +262,6 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         String::from("${resolution_height}"),
     ]);
 
-    for game_arg in parsed_game_arguments.iter_mut() {
-        *game_arg = game_arg
-            .replace("${auth_player_name}", &active_user.username)
-            .replace("${auth_session}", &active_user.access_token)
-            .replace("${game_directory}", format!("{}", &instance_path).as_str())
-            .replace("${game_assets}", &assets_path)
-            .replace("${version_name}", &instance_info.version)
-            .replace("${assets_root}", &assets_path)
-            .replace("${assets_index_name}", &asset_index)
-            .replace("${auth_uuid}", &active_user.uuid)
-            .replace("${auth_access_token}", &active_user.access_token)
-            .replace("${user_properties}", "{}")
-            .replace("${user_type}", "msa")
-            .replace("${profile_name}", "Minecraft")
-            .replace("${resolution_width}", &instance_info.width)
-            .replace("${resolution_height}", &instance_info.height)
-            .replace("${version_type}", version_type);
-
-        if OS == "windows" {
-            *game_arg = game_arg.replace("/", "\\");
-        };
-    }
-
-    if instance_info.fullscreen {
-        parsed_game_arguments.push(String::from("--fullscreen"));
-    }
-
-    // jvm args
     let jvm_arguments: Option<&Vec<Value>> = version_info["arguments"]["jvm"].as_array();
     let mut parsed_jvm_arguments: Vec<String> = vec![];
 
@@ -292,11 +317,19 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         ]);
     }
 
+    parsed_jvm_arguments.append(&mut vec![
+        String::from("-Dfml.ignoreInvalidMinecraftCertificates=true"),
+        String::from("-Dfml.ignorePatchDiscrepancies=true"),
+        String::from("-Dminecraft.applet.TargetDirectory=${game_directory}"),
+        String::from("-Xmx2G"),
+        String::from("-Xms2G"),
+        String::from("-XX:+UnlockExperimentalVMOptions"),
+        String::from("-XX:+UseG1GC"),
+        String::from("-XX:G1ReservePercent=20"),
+    ]);
+
     if java_version == 17 {
         parsed_jvm_arguments.append(&mut vec![
-            String::from("-Xmx2G"),
-            String::from("-Xms2G"),
-            String::from("-XX:+UnlockExperimentalVMOptions"),
             String::from("-XX:+UnlockDiagnosticVMOptions"),
             String::from("-XX:+AlwaysActAsServerClassMachine"),
             String::from("-XX:+AlwaysPreTouch"),
@@ -316,12 +349,10 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
             String::from("-XX:+UseCriticalJavaThreadPriority"),
             String::from("-XX:ThreadPriorityPolicy=1"),
             String::from("-XX:AllocatePrefetchStyle=3"),
-            String::from("-XX:+UseG1GC"),
             String::from("-XX:MaxGCPauseMillis=37"),
             String::from("-XX:+PerfDisableSharedMem"),
             String::from("-XX:G1HeapRegionSize=16M"),
             String::from("-XX:G1NewSizePercent=23"),
-            String::from("-XX:G1ReservePercent=20"),
             String::from("-XX:SurvivorRatio=32"),
             String::from("-XX:G1MixedGCCountTarget=3"),
             String::from("-XX:G1HeapWastePercent=20"),
@@ -333,19 +364,82 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
             String::from("-XX:G1ConcRSHotCardLimit=16"),
             String::from("-XX:G1ConcRefinementServiceIntervalMillis=150"),
             String::from("-XX:GCTimeRatio=99"),
-            String::from("-Dorg.lwjgl.opengl.Window.undecorated=true"),
         ]);
     } else {
         parsed_jvm_arguments.append(&mut vec![
-            String::from("-Xmx2G"),
-            String::from("-Xms2G"),
-            String::from("-XX:+UnlockExperimentalVMOptions"),
-            String::from("-XX:+UseG1GC"),
             String::from("-XX:G1NewSizePercent=20"),
-            String::from("-XX:G1ReservePercent=20"),
             String::from("-XX:MaxGCPauseMillis=50"),
             String::from("-XX:G1HeapRegionSize=32M"),
         ]);
+    }
+
+    let mut main_class: String = version_info["mainClass"].as_str().unwrap().to_string();
+
+    if instance_info.modloader.starts_with("forge-") {
+        let modloader_manifest: Value = file::read_as_value(
+            format!(
+                "launcher/meta/net.minecraftforge/{}.json",
+                &instance_info.modloader.replace("forge-", ""),
+            )
+            .as_str(),
+        )
+        .await
+        .unwrap();
+
+        if let Some(forge_arguments) = modloader_manifest["arguments"]["game"].as_array() {
+            for argument in forge_arguments {
+                parsed_game_arguments.push(argument.as_str().unwrap().to_string());
+            }
+        }
+        if let Some(forge_jvm_argument) = modloader_manifest["arguments"]["jvm"].as_array() {
+            for argument in forge_jvm_argument {
+                parsed_jvm_arguments.push(argument.as_str().unwrap().to_string());
+            }
+        }
+        if let Some(cp_argument) = modloader_manifest["arguments"]["cp"].as_str() {
+            cp = format!("{cp}{}", cp_argument);
+        }
+        if let Some(cp_ignore) = modloader_manifest["arguments"]["cp_ignore"].as_array() {
+            for ignore in cp_ignore {
+                cp = cp.replace(ignore.as_str().unwrap(), "");
+            }
+        }
+        if let Some(mc) = modloader_manifest["arguments"]["mainClass"].as_str() {
+            main_class = mc.to_string();
+        }
+    }
+
+    if OS == "windows" {
+        cp = cp.replace("/", "\\");
+    }
+
+    cp = cp.replace("${libraries_path}", &libraries_path);
+
+    for game_arg in parsed_game_arguments.iter_mut() {
+        *game_arg = game_arg
+            .replace("${auth_player_name}", &active_user.username)
+            .replace("${auth_session}", &active_user.access_token)
+            .replace("${game_directory}", format!("{}", &instance_path).as_str())
+            .replace("${game_assets}", &assets_path)
+            .replace("${version_name}", &instance_info.version)
+            .replace("${assets_root}", &assets_path)
+            .replace("${assets_index_name}", &asset_index)
+            .replace("${auth_uuid}", &active_user.uuid)
+            .replace("${auth_access_token}", &active_user.access_token)
+            .replace("${user_properties}", "{}")
+            .replace("${user_type}", "msa")
+            .replace("${profile_name}", "Minecraft")
+            .replace("${resolution_width}", &instance_info.width)
+            .replace("${resolution_height}", &instance_info.height)
+            .replace("${version_type}", version_type);
+
+        if OS == "windows" {
+            *game_arg = game_arg.replace("/", "\\");
+        };
+    }
+
+    if instance_info.fullscreen {
+        parsed_game_arguments.push(String::from("--fullscreen"));
     }
 
     for jvm_arg in parsed_jvm_arguments.iter_mut() {
@@ -365,6 +459,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
             )
             .replace("${assets_index_name}", &asset_index)
             .replace("${classpath}", &cp)
+            .replace("${libraries_path}", &libraries_path)
             .replace("${game_directory}", format!("{}", &instance_path).as_str());
 
         if OS == "windows" {
@@ -407,7 +502,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
             &java_path,
             &parsed_game_arguments,
             &parsed_jvm_arguments,
-            &version_info["mainClass"].as_str().unwrap(),
+            &main_class,
         )
         .await;
 
@@ -452,6 +547,9 @@ async fn launch(
     jvm_args: &Vec<String>,
     main_class: &str,
 ) -> Child {
+    println!("{:?}", jvm_args);
+    println!("{main_class}");
+    println!("{:?}", args);
     const CREATE_NO_WINDOW: u32 = 0x08000000;
     let working_dir: PathBuf = env::current_dir().unwrap();
     std::env::set_current_dir(&instance_path).unwrap();
@@ -460,7 +558,7 @@ async fn launch(
         .args(jvm_args)
         .arg(main_class)
         .args(args)
-        .creation_flags(CREATE_NO_WINDOW)
+        // .creation_flags(CREATE_NO_WINDOW)
         .stdout(Stdio::piped())
         .spawn()
         .expect("failed to execute java process");

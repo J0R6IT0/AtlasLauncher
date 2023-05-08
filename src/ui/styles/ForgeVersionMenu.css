@@ -1,0 +1,24 @@
+.forge-version-menu-container {
+    width: calc(100% - 2.3rem) !important;
+    height: 100%;
+    display: flex;
+    gap: 0.2rem;
+}
+
+.forge-container {
+    height: 100%;
+    width: 100%;
+    background-color: var(--side-bar-color);
+    border-radius: 0.5rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-size: 0.9rem;
+}
+
+.forge-container.minecraft-versions {
+    width: 70%;
+}
+
+.input-image.forge {
+    margin-top: 0;
+}

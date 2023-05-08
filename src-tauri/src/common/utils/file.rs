@@ -7,12 +7,12 @@ use sha2::{Digest, Sha256};
 use std::{
     env,
     fs::{self, File},
-    io::{self, Cursor, Write},
+    io::{self, Cursor, Read, Write},
     path::Path,
     path::PathBuf,
 };
 use tokio::time::{sleep, Duration};
-use zip::{read::ZipFile, ZipArchive};
+use zip::{read::ZipFile, write::FileOptions, ZipArchive, ZipWriter};
 
 use super::{
     directory::{self, check_directory_sync},
@@ -20,8 +20,8 @@ use super::{
 };
 
 pub enum ChecksumType {
-    Sha1,
-    Sha256,
+    SHA1,
+    SHA256,
 }
 
 // Read
@@ -189,12 +189,12 @@ pub async fn verify_hash(
     let mut bytes: &[u8] = data;
 
     match checksum_type {
-        ChecksumType::Sha1 => {
+        ChecksumType::SHA1 => {
             let mut hasher = Sha1::new();
             io::copy(&mut bytes, &mut hasher)?;
             actual_checksum = format!("{:x}", hasher.finalize());
         }
-        ChecksumType::Sha256 => {
+        ChecksumType::SHA256 => {
             let mut hasher = Sha256::new();
             io::copy(&mut bytes, &mut hasher)?;
             actual_checksum = format!("{:x}", hasher.finalize());
@@ -240,6 +240,24 @@ pub async fn extract_zip(
     Ok(())
 }
 
+pub async fn extract_json(
+    source: &mut Cursor<Vec<u8>>,
+    filename: &str,
+) -> Result<Option<Value>, Box<dyn std::error::Error>> {
+    let mut archive: ZipArchive<&mut Cursor<Vec<u8>>> = ZipArchive::new(source).unwrap();
+    for i in 0..archive.len() {
+        let mut file: ZipFile = archive.by_index(i)?;
+
+        if (&*file.name()).contains(filename) {
+            let mut json_content = String::new();
+            file.read_to_string(&mut json_content)?;
+            let json_value: Value = serde_json::from_str(&json_content)?;
+            return Ok(Some(json_value));
+        }
+    }
+    Ok(None)
+}
+
 // Delete
 
 pub fn delete(path: &str) {
@@ -250,4 +268,42 @@ pub fn delete(path: &str) {
     }
 
     fs::remove_file(path).unwrap();
+}
+
+// Merge Zips/Jars
+
+pub async fn merge_zips(
+    target_zip: &mut Vec<u8>,
+    source_zip: &Vec<u8>,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let mut merged_zip: ZipWriter<Cursor<Vec<u8>>> = ZipWriter::new(Cursor::new(Vec::new()));
+
+    let mut source_zip: ZipArchive<Cursor<&Vec<u8>>> = ZipArchive::new(Cursor::new(source_zip))?;
+
+    for i in 0..source_zip.len() {
+        let mut file: ZipFile = source_zip.by_index(i)?;
+        let options: FileOptions =
+            FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+
+        merged_zip.start_file(file.name(), options)?;
+        io::copy(&mut file, &mut merged_zip)?;
+    }
+
+    let mut target_zip: ZipArchive<Cursor<&mut Vec<u8>>> =
+        ZipArchive::new(Cursor::new(target_zip))?;
+
+    for i in 0..target_zip.len() {
+        let mut file: ZipFile = target_zip.by_index(i)?;
+        let options: FileOptions =
+            FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+        let name: String = file.name().to_owned();
+        if let Ok(_) = source_zip.by_name(&name) {
+            continue;
+        }
+        merged_zip.start_file(file.name(), options)?;
+        io::copy(&mut file, &mut merged_zip)?;
+    }
+
+    let result: Cursor<Vec<u8>> = merged_zip.finish()?;
+    Ok(result.into_inner().to_vec())
 }

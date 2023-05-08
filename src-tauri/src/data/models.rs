@@ -9,6 +9,20 @@ pub struct MinecraftVersionData {
     pub r#type: String,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct ForgeVersionsData {
+    pub versions: Vec<ForgeVersionData>,
+    pub mc_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct ForgeVersionData {
+    pub id: String,
+    pub url: String,
+    pub sha1: String,
+    pub size: String,
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct InstanceInfo {
     pub name: String,
@@ -19,13 +33,7 @@ pub struct InstanceInfo {
     pub height: String,
     pub width: String,
     pub fullscreen: bool,
-    /* pub libraries: String,
-    pub java_version: u64,
-    pub minecraft_args: Vec<String>,
-    pub jvm_args: Vec<String>,
-    pub asset_index: String,
-    pub version_type: String,
-    pub main_class: String, */
+    pub modloader: String,
 }
 
 // Auth

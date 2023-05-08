@@ -4,7 +4,10 @@ use futures::{future::join_all, stream, StreamExt};
 use serde::{Deserialize, Serialize};
 use tauri::async_runtime;
 
-use crate::{utils::file, common::utils::{log::write_line}};
+use crate::{
+    common::utils::{file::write_vec, log::write_line},
+    utils::file,
+};
 use serde_json::{self, Map, Value};
 
 use super::versions::get_version;
@@ -22,8 +25,8 @@ pub async fn download(id: &str) -> Result<String, Box<dyn std::error::Error>> {
     let json: Value = file::download_as_json(
         &url,
         "",
-        &file::ChecksumType::Sha1,
-        format!("versions/{id}/{id}.json").as_str(),
+        &file::ChecksumType::SHA1,
+        format!("launcher/meta/net.minecraft/{id}.json").as_str(),
         false,
         false,
     )
@@ -46,8 +49,16 @@ pub async fn download(id: &str) -> Result<String, Box<dyn std::error::Error>> {
         file::download_as_vec(
             client_url,
             client_checksum,
-            &file::ChecksumType::Sha1,
-            format!("versions/{version_copy}/{version_copy}.jar").as_str(),
+            &file::ChecksumType::SHA1,
+            format!(
+                "versions/{}.jar",
+                if version_copy.starts_with("_") {
+                    version_copy[1..].to_string()
+                } else {
+                    version_copy
+                }
+            )
+            .as_str(),
             false,
             false,
         )
@@ -81,7 +92,7 @@ pub async fn download(id: &str) -> Result<String, Box<dyn std::error::Error>> {
                     file::download_as_vec(
                         url,
                         sha1,
-                        &file::ChecksumType::Sha1,
+                        &file::ChecksumType::SHA1,
                         format!("assets/log_configs/{id}").as_str(),
                         false,
                         false,
@@ -106,7 +117,7 @@ async fn download_assets(url: &str, id: &str) -> Result<(), Box<dyn std::error::
     let json: Value = file::download_as_json(
         url,
         "",
-        &file::ChecksumType::Sha1,
+        &file::ChecksumType::SHA1,
         format!("assets/indexes/{id}.json").as_str(),
         false,
         false,
@@ -116,7 +127,7 @@ async fn download_assets(url: &str, id: &str) -> Result<(), Box<dyn std::error::
     let objects: Map<String, Value> = json.get("objects").unwrap().as_object().unwrap().to_owned();
 
     let download_tasks = stream::iter(objects.into_iter().map(|object| async {
-        let id_copy: String = id.clone().to_owned();
+        let id_copy: String = id.to_string();
         async_runtime::spawn(async move {
             let object_hash: &str = object.1.get("hash").unwrap().as_str().unwrap();
             let custom_url: Option<&str> = object.1["custom_url"].as_str();
@@ -133,14 +144,12 @@ async fn download_assets(url: &str, id: &str) -> Result<(), Box<dyn std::error::
                 );
             }
 
-            let is_legacy: bool = id_copy == "legacy";
-
             let path: String = format!("assets/objects/{}/{}", &object_hash[0..2], &object_hash);
 
-            let vec: Vec<u8> = match file::download_as_vec(
+            let bytes = match file::download_as_vec(
                 &object_url,
                 object_hash,
-                &file::ChecksumType::Sha1,
+                &file::ChecksumType::SHA1,
                 &path,
                 false,
                 false,
@@ -154,9 +163,8 @@ async fn download_assets(url: &str, id: &str) -> Result<(), Box<dyn std::error::
                 }
             };
 
-            if is_legacy {
-                file::write_vec(&vec, format!("assets/virtual/legacy/{}", object.0).as_str())
-                    .unwrap();
+            if id_copy == "legacy" {
+                write_vec(&bytes, &format!("assets/virtual/legacy/{}", object.0)).unwrap();
             }
         })
         .await
@@ -179,7 +187,11 @@ pub async fn download_libraries(
     let mut download_tasks: Vec<async_runtime::JoinHandle<()>> = vec![];
 
     for download in libraries.clone() {
-        let mc_version: String = String::from(version);
+        let mc_version: String = if version.starts_with("_") {
+            version[1..].to_string()
+        } else {
+            String::from(version)
+        };
         let mut must_download: bool = true;
         let formatted_os: &str = match OS {
             "macos" => "osx",
@@ -212,7 +224,7 @@ pub async fn download_libraries(
             if let Some(artifact) = download["downloads"].get("artifact") {
                 let artifact: Value = artifact.to_owned();
                 let library_path: &str = artifact["path"].as_str().unwrap_or_default();
-                libraries_arg = format!("{libraries_arg}[libraries_path]/{library_path};",);
+                libraries_arg = format!("{libraries_arg}${{libraries_path}}/{library_path};",);
                 if skip_download {
                     continue;
                 }
@@ -224,7 +236,7 @@ pub async fn download_libraries(
                         file::download_as_vec(
                             &url,
                             &hash,
-                            &file::ChecksumType::Sha1,
+                            &file::ChecksumType::SHA1,
                             format!("libraries/{}", &library_path).as_str(),
                             false,
                             false,
@@ -260,7 +272,7 @@ pub async fn download_libraries(
                             file::download_as_vec(
                                 &url,
                                 hash,
-                                &file::ChecksumType::Sha1,
+                                &file::ChecksumType::SHA1,
                                 format!("natives/{mc_version}").as_str(),
                                 true,
                                 false,
