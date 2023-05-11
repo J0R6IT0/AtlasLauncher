@@ -1,4 +1,5 @@
 use futures::StreamExt;
+use md5;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -22,6 +23,7 @@ use super::{
 pub enum ChecksumType {
     SHA1,
     SHA256,
+    MD5,
 }
 
 // Read
@@ -113,7 +115,7 @@ pub async fn download_as_vec(
                 }
                 retry_count += 1;
                 sleep(Duration::from_secs((1 + retry_count).into())).await;
-                println!("retrying {}", retry_count);
+                println!("retrying {} {url}", retry_count);
                 continue;
             }
         };
@@ -126,7 +128,7 @@ pub async fn download_as_vec(
                 Ok(chunk) => chunk,
                 Err(err) => {
                     write_line(
-                        &(err.to_string() + " retrying: " + &stream_retry_count.to_string()),
+                        &(err.to_string() + " retrying: " + &stream_retry_count.to_string() + " " + url),
                     );
                     if stream_retry_count > 10 {
                         return Err(Box::new(err));
@@ -173,6 +175,19 @@ pub async fn download_as_json(
     Ok(json)
 }
 
+pub async fn download_as_string(
+    url: &str,
+    checksum: &str,
+    checksum_type: &ChecksumType,
+    path: &str,
+    extract: bool,
+    force: bool,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let vec: Vec<u8> = download_as_vec(url, checksum, checksum_type, path, extract, force).await?;
+    let string: String = String::from_utf8(vec)?;
+    Ok(string)
+}
+
 // Verify
 
 pub async fn verify_hash(
@@ -198,6 +213,10 @@ pub async fn verify_hash(
             let mut hasher = Sha256::new();
             io::copy(&mut bytes, &mut hasher)?;
             actual_checksum = format!("{:x}", hasher.finalize());
+        }
+        ChecksumType::MD5 => {
+            let digest: md5::Digest = md5::compute(&mut bytes);
+            actual_checksum = format!("{:x}", digest);
         }
     }
 
@@ -240,22 +259,25 @@ pub async fn extract_zip(
     Ok(())
 }
 
-pub async fn extract_json(
+pub async fn extract_file(
     source: &mut Cursor<Vec<u8>>,
     filename: &str,
-) -> Result<Option<Value>, Box<dyn std::error::Error>> {
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let mut archive: ZipArchive<&mut Cursor<Vec<u8>>> = ZipArchive::new(source).unwrap();
     for i in 0..archive.len() {
         let mut file: ZipFile = archive.by_index(i)?;
 
         if (&*file.name()).contains(filename) {
-            let mut json_content = String::new();
-            file.read_to_string(&mut json_content)?;
-            let json_value: Value = serde_json::from_str(&json_content)?;
-            return Ok(Some(json_value));
+            let mut json_content = Vec::new();
+            file.read_to_end(&mut json_content)?;
+            return Ok(json_content);
         }
     }
-    Ok(None)
+
+    return Err(Box::new(std::io::Error::new(
+        std::io::ErrorKind::Other,
+        "The file to extract was not found.",
+    )));
 }
 
 // Delete
@@ -275,6 +297,7 @@ pub fn delete(path: &str) {
 pub async fn merge_zips(
     target_zip: &mut Vec<u8>,
     source_zip: &Vec<u8>,
+    exclude_meta_inf: bool,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let mut merged_zip: ZipWriter<Cursor<Vec<u8>>> = ZipWriter::new(Cursor::new(Vec::new()));
 
@@ -282,6 +305,11 @@ pub async fn merge_zips(
 
     for i in 0..source_zip.len() {
         let mut file: ZipFile = source_zip.by_index(i)?;
+
+        if exclude_meta_inf && (&*file.name()).starts_with("META-INF/") {
+            // Skip extracting the file if it's inside META-INF/
+            continue;
+        }
         let options: FileOptions =
             FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
@@ -294,6 +322,11 @@ pub async fn merge_zips(
 
     for i in 0..target_zip.len() {
         let mut file: ZipFile = target_zip.by_index(i)?;
+
+        if exclude_meta_inf && (&*file.name()).starts_with("META-INF/") {
+            // Skip extracting the file if it's inside META-INF/
+            continue;
+        }
         let options: FileOptions =
             FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
         let name: String = file.name().to_owned();
@@ -306,4 +339,39 @@ pub async fn merge_zips(
 
     let result: Cursor<Vec<u8>> = merged_zip.finish()?;
     Ok(result.into_inner().to_vec())
+}
+
+pub fn library_name_to_path(name: &str) -> String {
+    let libraries_path: String = check_directory_sync("libraries")
+        .to_str()
+        .unwrap()
+        .to_string();
+    let mut final_string: String = libraries_path.clone() + "\\";
+
+    let extension_split: Vec<&str> = name.split("@").collect();
+
+    let tokens: Vec<&str> = extension_split[0].split(":").collect();
+    let mut extension: String = ".jar".to_string();
+
+    if 1 < extension_split.len() {
+        extension = ".".to_string() + extension_split[1];
+    }
+
+    final_string += &tokens[0].replace(".", "\\");
+    final_string += "\\";
+    final_string += tokens[1];
+    final_string += "\\";
+    final_string += tokens[2];
+    final_string += "\\";
+    final_string += tokens[1];
+    final_string += "-";
+    final_string += tokens[2];
+
+    if 3 < tokens.len() {
+        final_string += "-";
+        final_string += tokens[3];
+    }
+
+    final_string += &extension;
+    final_string
 }

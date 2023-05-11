@@ -163,7 +163,7 @@ async fn download_assets(url: &str, id: &str) -> Result<(), Box<dyn std::error::
                 }
             };
 
-            if id_copy == "legacy" {
+            if id_copy == "legacy" || id_copy == "1.7.10" {
                 write_vec(&bytes, &format!("assets/virtual/legacy/{}", object.0)).unwrap();
             }
         })
@@ -230,9 +230,23 @@ pub async fn download_libraries(
                 }
                 let download_task: async_runtime::JoinHandle<()> =
                     tauri::async_runtime::spawn(async move {
-                        let url: &str = artifact["url"].as_str().unwrap_or_default();
+                        let mut url: String =
+                            artifact["url"].as_str().unwrap_or_default().to_string();
                         let hash: &str = artifact["sha1"].as_str().unwrap_or_default();
                         let library_path: &str = artifact["path"].as_str().unwrap_or_default();
+                        if url.is_empty() {
+                            if library_path.starts_with("net/minecraftforge/forge") {
+                                if library_path.contains("universal") {
+                                    url =
+                                        format!("https://maven.minecraftforge.net/{library_path}");
+                                } else {
+                                    url = format!(
+                                        "https://maven.minecraftforge.net/{}-launcher.jar",
+                                        library_path.replace(".jar", "")
+                                    );
+                                }
+                            }
+                        }
                         file::download_as_vec(
                             &url,
                             &hash,

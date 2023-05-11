@@ -14,7 +14,7 @@ use std::{
 
 use crate::{
     common::auth::login::get_active_account,
-    common::utils::file::{self, download_as_json, ChecksumType},
+    common::utils::file::{self},
     common::{forge, utils::directory::check_directory_sync},
     data::models::{
         BaseEventPayload, CreateInstanceEventPayload, InstanceInfo, MinecraftAccount,
@@ -27,7 +27,7 @@ use crate::{
 
 use tauri::{AppHandle, Manager};
 
-use super::{downloader::download_libraries, versions::get_forge_version};
+use super::downloader::download_libraries;
 
 pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri::AppHandle) {
     let og_id: String = id.to_string();
@@ -60,18 +60,10 @@ pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri:
     .unwrap();
 
     if modloader.starts_with("forge-") {
-        let forge_manifest: Value = forge::downloader::download_manifest(&id, modloader)
+        let forge_manifest: Value = forge::downloader::download_manifest(modloader)
             .await
             .unwrap();
-
-        if forge_manifest["extends"].is_string() {
-            id = forge_manifest["extends"].as_str().unwrap().to_string();
-        } else {
-            id = forge_manifest["install"]["minecraft"]
-                .as_str()
-                .unwrap()
-                .to_string();
-        }
+        id = forge_manifest["inheritsFrom"].as_str().unwrap().to_string();
     }
 
     downloader::download(&id).await.unwrap();
@@ -148,7 +140,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
                 ))
                 .await
                 .unwrap();
-                forge_manifest["extends"].as_str().unwrap().to_string()
+                forge_manifest["inheritsFrom"].as_str().unwrap().to_string()
             } else {
                 instance_info.version.to_string()
             },
@@ -185,8 +177,12 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
     .await
     .unwrap();
 
+    let forge_jar = check_directory(format!("versions").as_str())
+        .await
+        .join(format!("{}.jar", { &instance_info.modloader }));
+
     // classpath
-    let version_path: String = if instance_info.modloader.is_empty() {
+    let version_path: String = if instance_info.modloader.is_empty() || !forge_jar.exists() {
         String::from(
             check_directory(format!("versions").as_str())
                 .await
@@ -396,16 +392,21 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
                 parsed_jvm_arguments.push(argument.as_str().unwrap().to_string());
             }
         }
-        if let Some(cp_argument) = modloader_manifest["arguments"]["cp"].as_str() {
-            cp = format!("{cp}{}", cp_argument);
+        if let Some(libraries) = modloader_manifest["libraries"].as_array() {
+            let forge_libraries: String =
+                download_libraries(libraries, &instance_info.version, true)
+                    .await
+                    .unwrap();
+            cp = format!("{cp};{forge_libraries}");
+        }
+
+        if let Some(mc) = modloader_manifest["mainClass"].as_str() {
+            main_class = mc.to_string();
         }
         if let Some(cp_ignore) = modloader_manifest["arguments"]["cp_ignore"].as_array() {
             for ignore in cp_ignore {
                 cp = cp.replace(ignore.as_str().unwrap(), "");
             }
-        }
-        if let Some(mc) = modloader_manifest["arguments"]["mainClass"].as_str() {
-            main_class = mc.to_string();
         }
     }
 
@@ -413,7 +414,9 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         cp = cp.replace("/", "\\");
     }
 
-    cp = cp.replace("${libraries_path}", &libraries_path);
+    cp = cp
+        .replace("${libraries_path}", &libraries_path)
+        .replace(";;", ";");
 
     for game_arg in parsed_game_arguments.iter_mut() {
         *game_arg = game_arg
@@ -457,12 +460,15 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
                 "${assets_root}",
                 check_directory("assets").await.to_str().unwrap(),
             )
+            .replace("${version_name}", &instance_info.version)
             .replace("${assets_index_name}", &asset_index)
             .replace("${classpath}", &cp)
             .replace("${libraries_path}", &libraries_path)
+            .replace("${library_directory}", &libraries_path)
+            .replace("${classpath_separator}", ";")
             .replace("${game_directory}", format!("{}", &instance_path).as_str());
 
-        if OS == "windows" {
+        if OS == "windows" && jvm_arg.matches('/').count() > 1 {
             *jvm_arg = jvm_arg.replace("/", "\\");
         };
     }

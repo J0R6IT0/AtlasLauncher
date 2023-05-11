@@ -4,30 +4,21 @@ import CheckIcon from '../../assets/icons/check.svg';
 import AlertIcon from '../../assets/icons/alert-triangle.svg';
 import '../styles/ForgeVersionMenu.css';
 
-interface ForgeVersionsData {
-    mc_id: string
-    versions: ForgeVersionData[]
-}
+type ForgeVersionData = Record<string, string[]>;
 
-interface ForgeVersionData {
-    id: string
-    url?: string
-    installer?: string
-    sha1?: string
-    size?: string
-}
-
-let versions: ForgeVersionsData[];
+let versions: ForgeVersionData[];
 const keys: string[] = [];
 await invoke('get_forge_versions').then((obj) => {
-    versions = obj as ForgeVersionsData[];
+    versions = obj as ForgeVersionData[];
+    versions.reverse();
     versions.forEach(version => {
-        version.versions.reverse();
-        keys.push(version.mc_id);
+        const key = Object.keys(version)[0];
+        version[key].reverse();
+        keys.push(key);
     });
 });
 
-keys.reverse();
+console.log(keys);
 
 interface ForgeVersionMenuProps {
     autoScroll: boolean
@@ -45,17 +36,20 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                     {keys.map((mcId, key) => (
                         <div key={key} className={`version clickable ${props.selectedMcVersion === mcId ? 'selected' : ''}`} onClick={() => {
                             props.setSelectedMcVersion(mcId);
+                            if (props.selectedMcVersion !== mcId) {
+                                props.setSelectedVersion('');
+                            }
                         }}>
                             <span>{props.selectedMcVersion === mcId && <div className='dot'></div>}{mcId}</span>
                         </div>
                     ))}
                 </div>
                 <div className='forge-container forge-versions'>
-                    {versions.filter(version => version.mc_id === props.selectedMcVersion)[0].versions.map((element, key) => (
-                        <div key={key} className={`version clickable ${props.selectedVersion === element.id ? 'selected' : ''}`} onClick={() => {
-                            props.setSelectedVersion(element.id);
+                    {versions[keys.indexOf(props.selectedMcVersion)][props.selectedMcVersion].map((element, key) => (
+                        <div key={key} className={`version clickable ${props.selectedVersion === element ? 'selected' : ''}`} onClick={() => {
+                            props.setSelectedVersion(element);
                         }}>
-                            <span>{props.selectedVersion === element.id && <div className='dot'></div>}{element.id}</span>
+                            <span>{props.selectedVersion === element && <div className='dot'></div>}{element.split('-')[1] !== undefined ? element.split('-')[1] : element.split('-')[0] }</span>
                         </div>
                     ))}
                 </div>

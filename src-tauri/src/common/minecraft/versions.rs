@@ -1,6 +1,14 @@
-use crate::common::utils::file;
-use crate::data::models::{ForgeVersionData, ForgeVersionsData, MinecraftVersionData};
-use serde_json::Value;
+use crate::common::utils::file::{self, write_value};
+use crate::data::models::MinecraftVersionData;
+use serde_json::{Value};
+use serde::{Serialize, Deserialize};
+use std::collections::HashMap;
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ForgeVersions {
+    #[serde(flatten)]
+    data: HashMap<String, Vec<String>>,
+}
 
 pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Error>> {
     // vanilla + betterjsons
@@ -58,16 +66,61 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
 
     // forge
 
-    file::download_as_json(
-        "https://github.com/J0R6IT0/AtlasLauncherResources/raw/main/meta/net.minecraftforge/version_manifest.json",
+    let mut forge_manifest: String = file::download_as_string(
+        "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json",
         "",
         &file::ChecksumType::SHA1,
-        "launcher/meta/net.minecraftforge/version_manifest.json",
+        "",
         false,
         true,
     )
-    .await
-    .unwrap();
+    .await?;
+
+    forge_manifest = forge_manifest
+        .replace("{", "[{")
+        .replace("}", "}]")
+        .replace("],", "]},{")
+        .replace("1.4.0", "1.4")
+        .replace("1.7.10_pre4", "1.7.10-pre4");
+
+    let mut final_forge_manifest: Vec<ForgeVersions> = serde_json::from_str(&forge_manifest)?;
+
+    let extra_forge_versions = file::download_as_json(
+        "https://raw.githubusercontent.com/J0R6IT0/AtlasLauncherResources/main/meta/net.minecraftforge/version_manifest.json", 
+        "", 
+        &file::ChecksumType::SHA1, 
+        "", 
+        false, 
+        false
+    )
+    .await?;
+
+    let mut extra_forge_versions: Vec<Value> = extra_forge_versions.as_array().unwrap().to_owned();
+    extra_forge_versions.reverse();
+
+    'extra: for extra_forge_version in extra_forge_versions {
+        let mc_id: &str = extra_forge_version["mc_id"].as_str().unwrap();
+        let versions: Vec<String> = extra_forge_version["versions"].as_array().unwrap().into_iter().map(|version| version["id"].as_str().unwrap().to_string()).collect();
+
+        for final_forge_version in final_forge_manifest.iter_mut() {
+            let key: String = final_forge_version.data.keys().next().unwrap().replace("\"", "");
+            let og_versions: &mut Vec<String> = final_forge_version.data.values_mut().next().unwrap();
+            if mc_id == key {
+                *og_versions = versions.clone();
+                continue 'extra;
+            }
+        }
+        let mut data: HashMap<String, Vec<String>> = HashMap::new();
+        data.insert(String::from(mc_id), versions);
+
+        final_forge_manifest.insert(0, ForgeVersions { data });
+
+    }
+
+    write_value(
+        &final_forge_manifest,
+        "launcher/meta/net.minecraftforge/version_manifest.json",
+    )?;
 
     Ok(())
 }
@@ -116,32 +169,17 @@ pub async fn get_version(id: &str) -> Result<MinecraftVersionData, Box<dyn std::
     Ok(minecraft_version.unwrap())
 }
 
-pub async fn get_forge_versions() -> Result<Vec<ForgeVersionsData>, Box<dyn std::error::Error>> {
+pub async fn get_forge_versions() -> Result<Value, Box<dyn std::error::Error>> {
     let data: serde_json::Value = file::read_as_value(
         format!("launcher/meta/net.minecraftforge/version_manifest.json").as_str(),
     )
     .await
     .unwrap();
 
-    let versions: &Vec<serde_json::Value> = data.as_array().ok_or("Invalid manifest JSON")?;
-
-    let forge_versions: Vec<ForgeVersionsData> = versions
-        .iter()
-        .map(|version| ForgeVersionsData {
-            mc_id: version["mc_id"].as_str().unwrap_or("").to_owned(),
-            versions: version["versions"]
-                .as_array()
-                .unwrap_or(&vec![])
-                .iter()
-                .filter_map(|v| serde_json::from_value::<ForgeVersionData>(v.to_owned()).ok())
-                .collect(),
-        })
-        .collect();
-
-    Ok(forge_versions)
+    Ok(data)
 }
 
-pub async fn get_forge_version(
+/* pub async fn get_forge_version(
     id: &str,
     forge: &str,
 ) -> Result<ForgeVersionData, Box<dyn std::error::Error>> {
@@ -179,4 +217,4 @@ pub async fn get_forge_version(
     });
 
     Ok(forge_version.unwrap())
-}
+} */

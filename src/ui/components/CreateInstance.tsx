@@ -15,7 +15,7 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
     const [titleInputValue, setTitleInputValue] = useState('');
     const [titleInputValid, setTitleInputValid] = useState(false);
 
-    const [selectedVersionType, setSelectedVersionType] = useState(props.flavour === 1 ? '1.6.4' : 'release');
+    const [selectedVersionType, setSelectedVersionType] = useState(props.flavour === 1 ? '1.19.4' : 'release');
     const [selectedVersion, setSelectedVersion] = useState('');
 
     function handleTitleInputChange(event: React.ChangeEvent<HTMLInputElement>): void {

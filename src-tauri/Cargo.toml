@@ -26,6 +26,7 @@ sha1 = "0.10.5"
 rayon = "1.7.0"
 futures = "0.3.28"
 regex = "1.7.3"
+md5 = "0.7.0"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

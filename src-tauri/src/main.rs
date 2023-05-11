@@ -3,12 +3,13 @@
 
 use crate::utils::log::write_line;
 use std::env;
+use serde_json::Value;
 use tauri::AppHandle;
 
 mod common;
 mod data;
 use common::{auth, java, minecraft, utils};
-use data::models::{self, ForgeVersionsData, InstanceInfo};
+use data::models::{self, InstanceInfo};
 
 #[tauri::command]
 async fn get_minecraft_versions() -> Result<Vec<models::MinecraftVersionData>, ()> {
@@ -19,7 +20,7 @@ async fn get_minecraft_versions() -> Result<Vec<models::MinecraftVersionData>, (
 }
 
 #[tauri::command]
-async fn get_forge_versions() -> Result<Vec<ForgeVersionsData>, ()> {
+async fn get_forge_versions() -> Result<Value, ()> {
     match minecraft::versions::get_forge_versions().await {
         Ok(version_list) => Ok(version_list),
         Err(_) => Ok(serde_json::from_str("{}").unwrap()),

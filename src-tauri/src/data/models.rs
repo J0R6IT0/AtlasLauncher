@@ -9,20 +9,6 @@ pub struct MinecraftVersionData {
     pub r#type: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct ForgeVersionsData {
-    pub versions: Vec<ForgeVersionData>,
-    pub mc_id: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct ForgeVersionData {
-    pub id: String,
-    pub url: String,
-    pub sha1: String,
-    pub size: String,
-}
-
 #[derive(Clone, Serialize, Deserialize)]
 pub struct InstanceInfo {
     pub name: String,
