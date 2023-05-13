@@ -9,7 +9,7 @@ pub async fn get_java_path(version: u8) -> String {
 
     for entry in fs::read_dir(path).unwrap() {
         let entry: DirEntry = entry.unwrap();
-        let path: PathBuf = entry.path().join("bin/java.exe");
+        let path: PathBuf = entry.path().join("bin/javaw.exe");
 
         return String::from(path.to_str().unwrap());
     }

@@ -6,7 +6,6 @@ use std::{
     },
     fs::{self, DirEntry},
     io::{BufRead, BufReader},
-    os::windows::process::CommandExt,
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
     time::{SystemTime, UNIX_EPOCH},
@@ -556,7 +555,6 @@ async fn launch(
     println!("{:?}", jvm_args);
     println!("{main_class}");
     println!("{:?}", args);
-    const CREATE_NO_WINDOW: u32 = 0x08000000;
     let working_dir: PathBuf = env::current_dir().unwrap();
     std::env::set_current_dir(&instance_path).unwrap();
 
@@ -564,7 +562,6 @@ async fn launch(
         .args(jvm_args)
         .arg(main_class)
         .args(args)
-        // .creation_flags(CREATE_NO_WINDOW)
         .stdout(Stdio::piped())
         .spawn()
         .expect("failed to execute java process");
