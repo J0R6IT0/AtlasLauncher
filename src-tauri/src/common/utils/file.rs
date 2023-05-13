@@ -128,7 +128,11 @@ pub async fn download_as_vec(
                 Ok(chunk) => chunk,
                 Err(err) => {
                     write_line(
-                        &(err.to_string() + " retrying: " + &stream_retry_count.to_string() + " " + url),
+                        &(err.to_string()
+                            + " retrying: "
+                            + &stream_retry_count.to_string()
+                            + " "
+                            + url),
                     );
                     if stream_retry_count > 10 {
                         return Err(Box::new(err));
@@ -341,13 +345,8 @@ pub async fn merge_zips(
     Ok(result.into_inner().to_vec())
 }
 
-pub fn library_name_to_path(name: &str) -> String {
-    let libraries_path: String = check_directory_sync("libraries")
-        .to_str()
-        .unwrap()
-        .to_string();
-    let mut final_string: String = libraries_path.clone() + "\\";
-
+pub fn library_name_to_raw_path(name: &str) -> String {
+    let mut final_string = String::from("");
     let extension_split: Vec<&str> = name.split("@").collect();
 
     let tokens: Vec<&str> = extension_split[0].split(":").collect();
@@ -357,12 +356,12 @@ pub fn library_name_to_path(name: &str) -> String {
         extension = ".".to_string() + extension_split[1];
     }
 
-    final_string += &tokens[0].replace(".", "\\");
-    final_string += "\\";
+    final_string += &tokens[0].replace(".", "/");
+    final_string += "/";
     final_string += tokens[1];
-    final_string += "\\";
+    final_string += "/";
     final_string += tokens[2];
-    final_string += "\\";
+    final_string += "/";
     final_string += tokens[1];
     final_string += "-";
     final_string += tokens[2];
@@ -374,4 +373,12 @@ pub fn library_name_to_path(name: &str) -> String {
 
     final_string += &extension;
     final_string
+}
+
+pub fn library_name_to_path(name: &str) -> String {
+    let libraries_path: String = check_directory_sync("libraries")
+        .to_str()
+        .unwrap()
+        .to_string();
+    libraries_path.clone() + "\\" + &library_name_to_raw_path(name).replace("/", "\\")
 }

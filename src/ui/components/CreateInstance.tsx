@@ -5,6 +5,7 @@ import TextInput from './TextInput';
 import VersionMenu from './VersionMenu';
 import TextButton from './TextButton';
 import ForgeVersionMenu from './ForgeVersionMenu';
+import FabricVersionMenu from './FabricVersionMenu';
 
 interface CreateInstanceProps {
     flavour: number | null
@@ -15,7 +16,7 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
     const [titleInputValue, setTitleInputValue] = useState('');
     const [titleInputValid, setTitleInputValid] = useState(false);
 
-    const [selectedVersionType, setSelectedVersionType] = useState(props.flavour === 1 ? '1.19.4' : 'release');
+    const [selectedVersionType, setSelectedVersionType] = useState(props.flavour === 0 ? 'release' : '');
     const [selectedVersion, setSelectedVersion] = useState('');
 
     function handleTitleInputChange(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -30,11 +31,14 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
             <TextInput value={titleInputValue} onChange={handleTitleInputChange} name='Instance name' inputValid={titleInputValid}/>
             {props.flavour === 0 && <VersionMenu autoScroll={false} selectedVersionType={selectedVersionType} selectedVersion={selectedVersion} setSelectedVersionType={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>}
             {props.flavour === 1 && <ForgeVersionMenu autoScroll={false} selectedMcVersion={selectedVersionType} selectedVersion={selectedVersion} setSelectedMcVersion={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>}
+            {props.flavour === 2 && <FabricVersionMenu autoScroll={false} selectedMcVersion={selectedVersionType} selectedVersion={selectedVersion} setSelectedMcVersion={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>}
             <TextButton onClick={() => {
                 if (props.flavour === 0) {
                     invoke('create_instance', { name: titleInputValue.trim(), id: selectedVersion, modloader: '' }).catch(e => { console.log(e); });
-                } else {
+                } else if (props.flavour === 1) {
                     invoke('create_instance', { name: titleInputValue.trim(), id: selectedVersionType, modloader: 'forge-' + selectedVersion }).catch(e => { console.log(e); });
+                } else if (props.flavour === 2) {
+                    invoke('create_instance', { name: titleInputValue.trim(), id: selectedVersionType, modloader: 'fabric-' + selectedVersion }).catch(e => { console.log(e); });
                 }
                 props.goToLibrary();
             }} text='Create' clickable={titleInputValid && selectedVersion.length > 0}/>

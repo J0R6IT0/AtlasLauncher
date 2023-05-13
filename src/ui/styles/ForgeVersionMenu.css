@@ -15,7 +15,11 @@
 }
 
 .forge-container.minecraft-versions {
-    width: 70%;
+    width: 90%;
+}
+
+.forge-container.minecraft-versions.fabric {
+    width: 200%;
 }
 
 .input-image.forge {

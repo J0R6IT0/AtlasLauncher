@@ -5,7 +5,10 @@ use serde::{Deserialize, Serialize};
 use tauri::async_runtime;
 
 use crate::{
-    common::utils::{file::write_vec, log::write_line},
+    common::utils::{
+        file::{library_name_to_raw_path, write_vec},
+        log::write_line,
+    },
     utils::file,
 };
 use serde_json::{self, Map, Value};
@@ -296,6 +299,29 @@ pub async fn download_libraries(
                         });
                     download_tasks.push(download_task);
                 }
+            }
+            if let Some(url) = download["url"].as_str() {
+                let name = library_name_to_raw_path(download["name"].as_str().unwrap());
+                let final_url = format!("{url}{name}");
+                println!("{final_url}");
+                libraries_arg = format!("{libraries_arg}${{libraries_path}}/{name};",);
+                if skip_download {
+                    continue;
+                }
+                let download_task: async_runtime::JoinHandle<()> =
+                    tauri::async_runtime::spawn(async move {
+                        file::download_as_vec(
+                            &final_url,
+                            "",
+                            &file::ChecksumType::SHA1,
+                            format!("libraries/{}", &name).as_str(),
+                            false,
+                            false,
+                        )
+                        .await
+                        .unwrap();
+                    });
+                download_tasks.push(download_task);
             }
         }
     }

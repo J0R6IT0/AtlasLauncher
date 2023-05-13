@@ -9,13 +9,17 @@ pub static MINECRAFT_VERSION_MANIFEST: &str =
     "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 pub static BETTER_JSONS_VERSION_MANIFEST: &str =
     "https://raw.githubusercontent.com/MCPHackers/BetterJSONs/main/version_manifest_v2.json";
+
 pub static FORGE_VERSION_MANFIEST: &str =
     "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json";
 pub static EXTRA_FORGE_VERSION_MANIFEST: &str =
     "https://raw.githubusercontent.com/J0R6IT0/AtlasLauncherResources/main/meta/net.minecraftforge/version_manifest.json";
+
+pub static FABRIC_VERSION_MANIFEST: &str = "https://meta.fabricmc.net/v1/versions";
 
 // local
 pub static NET_MINECRAFT_VERSION_MANIFEST: &str =
     "launcher/meta/net.minecraft/version_manifest.json";
 pub static NET_MINECRAFTFORGE_VERSION_MANIFEST: &str =
     "launcher/meta/net.minecraftforge/version_manifest.json";
+pub static NET_FABRICMC_VERSION_MANIFEST: &str = "launcher/meta/net.fabricmc/version_manifest.json";

@@ -2,13 +2,20 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use crate::utils::log::write_line;
-use std::env;
 use serde_json::Value;
+use std::env;
 use tauri::AppHandle;
 
 mod common;
 mod data;
-use common::{auth, java, minecraft, utils};
+use common::{
+    auth, java,
+    minecraft::{
+        self,
+        versions::{get_fabric_loader_versions, get_fabric_mc_versions},
+    },
+    utils,
+};
 use data::models::{self, InstanceInfo};
 
 #[tauri::command]
@@ -94,6 +101,22 @@ async fn write_instance_data(
     Ok(())
 }
 
+#[tauri::command]
+async fn get_fabric_minecraft_versions() -> Vec<Value> {
+    match get_fabric_mc_versions().await {
+        Ok(versions) => versions,
+        Err(_) => [].to_vec(),
+    }
+}
+
+#[tauri::command]
+async fn get_fabric_versions() -> Vec<Value> {
+    match get_fabric_loader_versions().await {
+        Ok(versions) => versions,
+        Err(_) => [].to_vec(),
+    }
+}
+
 #[tokio::main]
 async fn main() {
     // to avoid problems due to having multiple async runtimes running
@@ -124,6 +147,8 @@ async fn main() {
             read_instance_data,
             write_instance_data,
             get_forge_versions,
+            get_fabric_minecraft_versions,
+            get_fabric_versions
         ])
         .setup(|app| {
             let handle: AppHandle = app.handle();

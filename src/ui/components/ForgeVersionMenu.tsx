@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri';
-import React from 'react';
+import React, { useEffect } from 'react';
 import CheckIcon from '../../assets/icons/check.svg';
 import AlertIcon from '../../assets/icons/alert-triangle.svg';
 import '../styles/ForgeVersionMenu.css';
@@ -18,8 +18,6 @@ await invoke('get_forge_versions').then((obj) => {
     });
 });
 
-console.log(keys);
-
 interface ForgeVersionMenuProps {
     autoScroll: boolean
     selectedMcVersion: string
@@ -28,6 +26,10 @@ interface ForgeVersionMenuProps {
     setSelectedVersion: (version: string) => void
 }
 function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
+    useEffect(() => {
+        props.setSelectedMcVersion(keys[0]);
+    }, []);
+
     return (
         <div className='version-menu'>
             <img className="input-image forge" src={props.selectedVersion.length > 0 ? CheckIcon : AlertIcon} alt="" />
@@ -45,7 +47,7 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                     ))}
                 </div>
                 <div className='forge-container forge-versions'>
-                    {versions[keys.indexOf(props.selectedMcVersion)][props.selectedMcVersion].map((element, key) => (
+                    {versions[keys.indexOf(props.selectedMcVersion)] !== undefined && versions[keys.indexOf(props.selectedMcVersion)][props.selectedMcVersion].map((element, key) => (
                         <div key={key} className={`version clickable ${props.selectedVersion === element ? 'selected' : ''}`} onClick={() => {
                             props.setSelectedVersion(element);
                         }}>

@@ -1,8 +1,8 @@
-use crate::common::utils::file::{self, write_value};
+use crate::common::utils::file::{self, read_as_value, write_value};
 use crate::data::constants::{
-    BETTER_JSONS_VERSION_MANIFEST, EXTRA_FORGE_VERSION_MANIFEST, FORGE_VERSION_MANFIEST,
-    MINECRAFT_VERSION_MANIFEST, NET_MINECRAFTFORGE_VERSION_MANIFEST,
-    NET_MINECRAFT_VERSION_MANIFEST,
+    BETTER_JSONS_VERSION_MANIFEST, EXTRA_FORGE_VERSION_MANIFEST, FABRIC_VERSION_MANIFEST,
+    FORGE_VERSION_MANFIEST, MINECRAFT_VERSION_MANIFEST, NET_FABRICMC_VERSION_MANIFEST,
+    NET_MINECRAFTFORGE_VERSION_MANIFEST, NET_MINECRAFT_VERSION_MANIFEST,
 };
 use crate::data::models::MinecraftVersionData;
 use serde::{Deserialize, Serialize};
@@ -131,6 +131,18 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
 
     write_value(&final_forge_manifest, NET_MINECRAFTFORGE_VERSION_MANIFEST)?;
 
+    // fabric
+
+    file::download_as_json(
+        FABRIC_VERSION_MANIFEST,
+        "",
+        &file::ChecksumType::SHA1,
+        NET_FABRICMC_VERSION_MANIFEST,
+        false,
+        true,
+    )
+    .await?;
+
     Ok(())
 }
 
@@ -182,4 +194,22 @@ pub async fn get_forge_versions() -> Result<Value, Box<dyn std::error::Error>> {
         .unwrap();
 
     Ok(data)
+}
+
+pub async fn get_fabric_mc_versions() -> Result<Vec<Value>, Box<dyn std::error::Error>> {
+    let manifest: Value = read_as_value(NET_FABRICMC_VERSION_MANIFEST).await?;
+    if manifest["game"].is_array() {
+        return Ok(manifest["game"].as_array().unwrap().to_owned());
+    } else {
+        return Ok([].to_vec());
+    }
+}
+
+pub async fn get_fabric_loader_versions() -> Result<Vec<Value>, Box<dyn std::error::Error>> {
+    let manifest: Value = read_as_value(NET_FABRICMC_VERSION_MANIFEST).await?;
+    if manifest["loader"].is_array() {
+        return Ok(manifest["loader"].as_array().unwrap().to_owned());
+    } else {
+        return Ok([].to_vec());
+    }
 }

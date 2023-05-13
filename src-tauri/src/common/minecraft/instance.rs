@@ -14,7 +14,7 @@ use std::{
 use crate::{
     common::auth::login::get_active_account,
     common::utils::file::{self},
-    common::{forge, utils::directory::check_directory_sync},
+    common::{modloader, utils::directory::check_directory_sync},
     data::models::{
         BaseEventPayload, CreateInstanceEventPayload, InstanceInfo, MinecraftAccount,
         StartInstanceEventPayload,
@@ -59,10 +59,18 @@ pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri:
     .unwrap();
 
     if modloader.starts_with("forge-") {
-        let forge_manifest: Value = forge::downloader::download_manifest(modloader)
+        let forge_manifest: Value = modloader::forge::download_manifest(modloader)
             .await
             .unwrap();
         id = forge_manifest["inheritsFrom"].as_str().unwrap().to_string();
+    } else if modloader.starts_with("fabric-") {
+        let fabric_manifest: Value = modloader::fabric::download_manifest(&id, modloader)
+            .await
+            .unwrap();
+        id = fabric_manifest["inheritsFrom"]
+            .as_str()
+            .unwrap()
+            .to_string();
     }
 
     downloader::download(&id).await.unwrap();
@@ -84,7 +92,22 @@ pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri:
             },
         )
         .unwrap();
-        forge::downloader::download_forge(&id, &modloader.replace("forge-", ""), name)
+        modloader::forge::download_forge(&id, &modloader.replace("forge-", ""), name)
+            .await
+            .unwrap();
+    } else if modloader.starts_with("fabric") {
+        app.emit_all(
+            "create_instance",
+            CreateInstanceEventPayload {
+                base: BaseEventPayload {
+                    message: format!("Installing Fabric"),
+                    status: String::from("Loading"),
+                },
+                name: String::from(name),
+            },
+        )
+        .unwrap();
+        modloader::fabric::download_fabric(&id, &modloader.replace("fabric-", ""))
             .await
             .unwrap();
     }
@@ -140,6 +163,17 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
                 .await
                 .unwrap();
                 forge_manifest["inheritsFrom"].as_str().unwrap().to_string()
+            } else if instance_info.modloader.starts_with("fabric-") {
+                let fabric_manifest: Value = file::read_as_value(&format!(
+                    "launcher/meta/net.fabricmc/{}.json",
+                    instance_info.modloader.replace("fabric-", "")
+                ))
+                .await
+                .unwrap();
+                fabric_manifest["inheritsFrom"]
+                    .as_str()
+                    .unwrap()
+                    .to_string()
             } else {
                 instance_info.version.to_string()
             },
@@ -370,16 +404,30 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
 
     let mut main_class: String = version_info["mainClass"].as_str().unwrap().to_string();
 
-    if instance_info.modloader.starts_with("forge-") {
-        let modloader_manifest: Value = file::read_as_value(
-            format!(
-                "launcher/meta/net.minecraftforge/{}.json",
-                &instance_info.modloader.replace("forge-", ""),
+    if instance_info.modloader.starts_with("forge-")
+        || instance_info.modloader.starts_with("fabric-")
+    {
+        let modloader_manifest: Value = if instance_info.modloader.starts_with("forge-") {
+            file::read_as_value(
+                format!(
+                    "launcher/meta/net.minecraftforge/{}.json",
+                    &instance_info.modloader.replace("forge-", ""),
+                )
+                .as_str(),
             )
-            .as_str(),
-        )
-        .await
-        .unwrap();
+            .await
+            .unwrap()
+        } else {
+            file::read_as_value(
+                format!(
+                    "launcher/meta/net.fabricmc/{}.json",
+                    &instance_info.modloader.replace("fabric-", ""),
+                )
+                .as_str(),
+            )
+            .await
+            .unwrap()
+        };
 
         if let Some(forge_arguments) = modloader_manifest["arguments"]["game"].as_array() {
             for argument in forge_arguments {
