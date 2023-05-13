@@ -1,7 +1,12 @@
 use crate::common::utils::file::{self, write_value};
+use crate::data::constants::{
+    BETTER_JSONS_VERSION_MANIFEST, EXTRA_FORGE_VERSION_MANIFEST, FORGE_VERSION_MANFIEST,
+    MINECRAFT_VERSION_MANIFEST, NET_MINECRAFTFORGE_VERSION_MANIFEST,
+    NET_MINECRAFT_VERSION_MANIFEST,
+};
 use crate::data::models::MinecraftVersionData;
-use serde_json::{Value};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -13,7 +18,7 @@ struct ForgeVersions {
 pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Error>> {
     // vanilla + betterjsons
     let version_manifest: Value = file::download_as_json(
-        "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json",
+        MINECRAFT_VERSION_MANIFEST,
         "",
         &file::ChecksumType::SHA1,
         "",
@@ -23,7 +28,7 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
     .await?;
 
     let better_jsons: Value = file::download_as_json(
-        "https://raw.githubusercontent.com/MCPHackers/BetterJSONs/main/version_manifest_v2.json",
+        BETTER_JSONS_VERSION_MANIFEST,
         "",
         &file::ChecksumType::SHA1,
         "",
@@ -59,15 +64,12 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
 
     ]);
 
-    file::write_value(
-        &versions,
-        "launcher/meta/net.minecraft/version_manifest.json",
-    )?;
+    file::write_value(&versions, NET_MINECRAFT_VERSION_MANIFEST)?;
 
     // forge
 
     let mut forge_manifest: String = file::download_as_string(
-        "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json",
+        FORGE_VERSION_MANFIEST,
         "",
         &file::ChecksumType::SHA1,
         "",
@@ -86,12 +88,12 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
     let mut final_forge_manifest: Vec<ForgeVersions> = serde_json::from_str(&forge_manifest)?;
 
     let extra_forge_versions = file::download_as_json(
-        "https://raw.githubusercontent.com/J0R6IT0/AtlasLauncherResources/main/meta/net.minecraftforge/version_manifest.json", 
-        "", 
-        &file::ChecksumType::SHA1, 
-        "", 
-        false, 
-        false
+        EXTRA_FORGE_VERSION_MANIFEST,
+        "",
+        &file::ChecksumType::SHA1,
+        "",
+        false,
+        false,
     )
     .await?;
 
@@ -100,11 +102,22 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
 
     'extra: for extra_forge_version in extra_forge_versions {
         let mc_id: &str = extra_forge_version["mc_id"].as_str().unwrap();
-        let versions: Vec<String> = extra_forge_version["versions"].as_array().unwrap().into_iter().map(|version| version["id"].as_str().unwrap().to_string()).collect();
+        let versions: Vec<String> = extra_forge_version["versions"]
+            .as_array()
+            .unwrap()
+            .into_iter()
+            .map(|version| version["id"].as_str().unwrap().to_string())
+            .collect();
 
         for final_forge_version in final_forge_manifest.iter_mut() {
-            let key: String = final_forge_version.data.keys().next().unwrap().replace("\"", "");
-            let og_versions: &mut Vec<String> = final_forge_version.data.values_mut().next().unwrap();
+            let key: String = final_forge_version
+                .data
+                .keys()
+                .next()
+                .unwrap()
+                .replace("\"", "");
+            let og_versions: &mut Vec<String> =
+                final_forge_version.data.values_mut().next().unwrap();
             if mc_id == key {
                 *og_versions = versions.clone();
                 continue 'extra;
@@ -114,22 +127,17 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
         data.insert(String::from(mc_id), versions);
 
         final_forge_manifest.insert(0, ForgeVersions { data });
-
     }
 
-    write_value(
-        &final_forge_manifest,
-        "launcher/meta/net.minecraftforge/version_manifest.json",
-    )?;
+    write_value(&final_forge_manifest, NET_MINECRAFTFORGE_VERSION_MANIFEST)?;
 
     Ok(())
 }
 
 pub async fn get_versions() -> Result<Vec<MinecraftVersionData>, Box<dyn std::error::Error>> {
-    let data: serde_json::Value =
-        file::read_as_value(format!("launcher/meta/net.minecraft/version_manifest.json").as_str())
-            .await
-            .unwrap();
+    let data: serde_json::Value = file::read_as_value(NET_MINECRAFT_VERSION_MANIFEST)
+        .await
+        .unwrap();
 
     let versions: &Vec<serde_json::Value> = data.as_array().ok_or("Invalid manifest JSON")?;
 
@@ -146,10 +154,9 @@ pub async fn get_versions() -> Result<Vec<MinecraftVersionData>, Box<dyn std::er
 }
 
 pub async fn get_version(id: &str) -> Result<MinecraftVersionData, Box<dyn std::error::Error>> {
-    let data: serde_json::Value =
-        file::read_as_value(format!("launcher/meta/net.minecraft/version_manifest.json").as_str())
-            .await
-            .unwrap();
+    let data: serde_json::Value = file::read_as_value(NET_MINECRAFT_VERSION_MANIFEST)
+        .await
+        .unwrap();
 
     let versions: &Vec<serde_json::Value> = data.as_array().ok_or("Invalid manifest JSON")?;
 
@@ -170,51 +177,9 @@ pub async fn get_version(id: &str) -> Result<MinecraftVersionData, Box<dyn std::
 }
 
 pub async fn get_forge_versions() -> Result<Value, Box<dyn std::error::Error>> {
-    let data: serde_json::Value = file::read_as_value(
-        format!("launcher/meta/net.minecraftforge/version_manifest.json").as_str(),
-    )
-    .await
-    .unwrap();
+    let data: serde_json::Value = file::read_as_value(NET_MINECRAFTFORGE_VERSION_MANIFEST)
+        .await
+        .unwrap();
 
     Ok(data)
 }
-
-/* pub async fn get_forge_version(
-    id: &str,
-    forge: &str,
-) -> Result<ForgeVersionData, Box<dyn std::error::Error>> {
-    let data: serde_json::Value = file::read_as_value(
-        format!("launcher/meta/net.minecraftforge/version_manifest.json").as_str(),
-    )
-    .await
-    .unwrap();
-
-    let versions: &Vec<serde_json::Value> = data.as_array().ok_or("Invalid manifest JSON")?;
-
-    let forge_version: Option<ForgeVersionData> = versions.iter().find_map(|version| {
-        let version_id: &str = version["mc_id"].as_str()?;
-        if version_id == id {
-            let releases: &Vec<Value> = version["versions"]
-                .as_array()
-                .ok_or("Invalid manifest JSON")
-                .unwrap();
-            releases.iter().find_map(|release| {
-                let release_id: &str = release["id"].as_str()?;
-                if release_id == forge {
-                    Some(ForgeVersionData {
-                        id: release_id.to_owned(),
-                        url: release["url"].as_str().unwrap_or("").to_owned(),
-                        sha1: release["sha1"].as_str().unwrap_or("").to_owned(),
-                        size: release["size"].as_str().unwrap_or("").to_owned(),
-                    })
-                } else {
-                    None
-                }
-            })
-        } else {
-            None
-        }
-    });
-
-    Ok(forge_version.unwrap())
-} */
