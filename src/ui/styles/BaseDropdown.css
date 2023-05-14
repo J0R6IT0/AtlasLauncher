@@ -17,7 +17,7 @@
 }
 
 .base-dropdown.active {
-    max-height: 10rem;
+    max-height: 15rem;
 }
 
 .dropdown-label {
@@ -67,7 +67,7 @@
     position: relative;
     margin-top: 2.6rem;
     color: var(--text-color-secondary);
-    height: 10rem;
+    height: 11.7rem;
     overflow: auto;
 }
 

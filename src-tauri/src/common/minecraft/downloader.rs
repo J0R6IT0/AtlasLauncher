@@ -183,7 +183,7 @@ async fn download_assets(url: &str, id: &str) -> Result<(), Box<dyn std::error::
 pub async fn download_libraries(
     libraries: &Vec<serde_json::Value>,
     version: &str,
-    skip_download: bool,
+    skip_natives: bool,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut libraries_arg: String = String::from("");
 
@@ -228,9 +228,6 @@ pub async fn download_libraries(
                 let artifact: Value = artifact.to_owned();
                 let library_path: &str = artifact["path"].as_str().unwrap_or_default();
                 libraries_arg = format!("{libraries_arg}${{libraries_path}}/{library_path};",);
-                if skip_download {
-                    continue;
-                }
                 let download_task: async_runtime::JoinHandle<()> =
                     tauri::async_runtime::spawn(async move {
                         let mut url: String =
@@ -264,7 +261,7 @@ pub async fn download_libraries(
                 download_tasks.push(download_task);
             }
             if let Some(natives_classifier) = download["natives"].get(formatted_os) {
-                if skip_download {
+                if skip_natives {
                     continue;
                 }
                 let arch: &str = match ARCH {
@@ -305,9 +302,6 @@ pub async fn download_libraries(
                 let final_url = format!("{url}{name}");
                 println!("{final_url}");
                 libraries_arg = format!("{libraries_arg}${{libraries_path}}/{name};",);
-                if skip_download {
-                    continue;
-                }
                 let download_task: async_runtime::JoinHandle<()> =
                     tauri::async_runtime::spawn(async move {
                         file::download_as_vec(

@@ -34,6 +34,7 @@ interface StartInstanceEventPayload {
 
 export interface InstanceInfo {
     name: string
+    modloader: string
     version: string
     background: string
     icon: string

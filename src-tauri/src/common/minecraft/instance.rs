@@ -429,22 +429,22 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
             .unwrap()
         };
 
-        if let Some(forge_arguments) = modloader_manifest["arguments"]["game"].as_array() {
-            for argument in forge_arguments {
+        if let Some(modloader_arguments) = modloader_manifest["arguments"]["game"].as_array() {
+            for argument in modloader_arguments {
                 parsed_game_arguments.push(argument.as_str().unwrap().to_string());
             }
         }
-        if let Some(forge_jvm_argument) = modloader_manifest["arguments"]["jvm"].as_array() {
-            for argument in forge_jvm_argument {
+        if let Some(modloader_jvm_argument) = modloader_manifest["arguments"]["jvm"].as_array() {
+            for argument in modloader_jvm_argument {
                 parsed_jvm_arguments.push(argument.as_str().unwrap().to_string());
             }
         }
         if let Some(libraries) = modloader_manifest["libraries"].as_array() {
-            let forge_libraries: String =
+            let modloader_libraries: String =
                 download_libraries(libraries, &instance_info.version, true)
                     .await
                     .unwrap();
-            cp = format!("{cp};{forge_libraries}");
+            cp = format!("{cp};{modloader_libraries}");
         }
 
         if let Some(mc) = modloader_manifest["mainClass"].as_str() {
@@ -490,6 +490,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
 
     if instance_info.fullscreen {
         parsed_game_arguments.push(String::from("--fullscreen"));
+        parsed_game_arguments.push(String::from("true"));
     }
 
     for jvm_arg in parsed_jvm_arguments.iter_mut() {

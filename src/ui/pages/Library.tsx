@@ -11,6 +11,8 @@ import DefaultIcon4 from '../../assets/images/default-icon-2.webp';
 import DefaultIcon5 from '../../assets/images/default-icon-3.webp';
 import DefaultIcon6 from '../../assets/images/default-icon-6.webp';
 import BoxIcon from '../../assets/icons/box.svg';
+import FabricIcon from '../../assets/icons/fabric.svg';
+import ForgeIcon from '../../assets/icons/forge.svg';
 import { toast } from 'react-hot-toast';
 import ContextMenu from '../components/ContextMenu';
 import ManageInstance from '../components/ManageInstance';
@@ -80,14 +82,14 @@ export default Library;
 
 function Instance(props: InstanceProps): JSX.Element {
     return (
-        <div className='instance' onClick={props.onClick}
+        <div className='instance clickable' onClick={props.onClick}
             onContextMenu={props.handleContextMenu}>
             <div className='instance-content'>
                 <img className='instance-background' src={!props.element.background.startsWith('default') ? convertFileSrc(props.element.background) : defaultBackgrounds[parseInt(props.element.background.replace('default', ''))]} />
                 <div className='instance-info'>
                     <span><img src={!props.element.icon.startsWith('default') ? convertFileSrc(props.element.icon) : defaultIcons[parseInt(props.element.icon.replace('default', ''))]} />{props.element.name}</span>
                     <div className='instance-version'><span>{props.element.version}</span></div>
-                    <div className='instance-type'><img src={BoxIcon} /></div>
+                    <div className='instance-type fabric'><img className={props.element.modloader.startsWith('fabric') ? 'fabric-icon' : ''} src={props.element.modloader.startsWith('forge') ? ForgeIcon : props.element.modloader.startsWith('fabric') ? FabricIcon : BoxIcon} /></div>
                 </div>
             </div>
         </div>

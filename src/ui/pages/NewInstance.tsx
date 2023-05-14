@@ -5,8 +5,8 @@ import MinecraftFabric from '../../assets/images/minecraft-fabric.webp';
 import MinecraftCover from '../../assets/images/minecraft-cover.webp';
 import CreateInstance from '../components/CreateInstance';
 import BoxIcon from '../../assets/icons/box-thin.svg';
-import ForgeIcon from '../../assets/icons/forge.svg';
-import FabricIcon from '../../assets/icons/fabric.svg';
+import ForgeIcon from '../../assets/icons/forge-thin.svg';
+import FabricIcon from '../../assets/icons/fabric-thin.svg';
 
 enum Flavours {
     Vanilla,
