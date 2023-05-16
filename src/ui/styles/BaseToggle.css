@@ -23,13 +23,15 @@
 .slider::before {
   position: absolute;
   content: "";
-  height: 0.8rem;
-  width: 0.8rem;
-  left: 0.25rem;
-  bottom: 0.25rem;
+  height: 1rem;
+  width: 1rem;
+  left: 0.15rem;
+  bottom: 0.15rem;
   background-color: var(--text-color-primary);
   transition: 0.3s;
   border-radius: 50%;
+  box-shadow: 0 0 0.4rem rgb(0 0 0 / 30%);
+
 }
 
 input:checked + .slider {
