@@ -1,13 +1,16 @@
 use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
-use crate::{common::{
-    minecraft::downloader::download_libraries,
-    utils::{
-        directory::check_directory,
-        file::{download_as_json, read_as_value, ChecksumType},
+use crate::{
+    common::{
+        minecraft::downloader::download_libraries,
+        utils::{
+            directory::check_directory,
+            file::{download_as_json, read_as_value, ChecksumType},
+        },
     },
-}, data::models::{DownloadInstanceEventPayload, BaseEventPayload}};
+    data::models::{BaseEventPayload, DownloadInstanceEventPayload},
+};
 
 pub async fn download_manifest(
     id: &str,
@@ -17,10 +20,10 @@ pub async fn download_manifest(
 
     let exists: std::path::PathBuf = check_directory("launcher/meta/net.fabricmc")
         .await
-        .join(format!("{fabric}.json"));
+        .join(format!("{fabric}-{id}.json"));
 
     if exists.exists() {
-        return read_as_value(&format!("launcher/meta/net.fabricmc/{fabric}.json")).await;
+        return read_as_value(&format!("launcher/meta/net.fabricmc/{fabric}-{id}.json")).await;
     }
 
     let manifest = download_as_json(
@@ -44,7 +47,7 @@ pub async fn download_fabric(
     instance_name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let fabric_version_manifest: Value =
-        read_as_value(&format!("launcher/meta/net.fabricmc/{fabric}.json")).await?;
+        read_as_value(&format!("launcher/meta/net.fabricmc/{fabric}-{id}.json")).await?;
 
     app.emit_all(
         "download",

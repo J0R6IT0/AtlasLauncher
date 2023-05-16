@@ -26,6 +26,8 @@
     height: 5.5rem;
     border-radius: 0.5rem;
     margin-bottom: 0.7rem;
+    overflow: hidden;
+
 }
 
 .download-item-info {
@@ -61,6 +63,8 @@
     bottom: 0.7rem;
     margin-left: 0.4rem;
     white-space: nowrap;
+    overflow: hidden;
+
 }
 
 .progress-bar .bar {
@@ -70,7 +74,8 @@
     margin-right: 0.5rem;
     height: 0.2rem;
     border-radius: 0.1rem;
-
+    overflow: hidden;
+    position: relative;
 }
 
 .bar .progress {
@@ -78,3 +83,30 @@
     background-color: var(--icons-color-hover);
     height: 100%;
 }
+
+.bar .progress.infinite {
+    width: 3rem !important;
+    animation: slide 3s linear infinite;
+    position: absolute;
+}
+
+.no-active-dls {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inset: 0;
+}
+
+@keyframes slide {
+    0% {
+      left: -50px; /* Start position */
+    }
+
+    100% {
+      left: calc(100% + 3rem); /* End position */
+    }
+  }

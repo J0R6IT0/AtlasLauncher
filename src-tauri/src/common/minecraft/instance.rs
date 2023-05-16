@@ -32,6 +32,20 @@ pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri:
     let og_id: String = id.to_string();
     let mut id: String = id.to_string();
 
+    app.emit_all(
+        "download",
+        DownloadInstanceEventPayload {
+            base: BaseEventPayload {
+                message: String::from("Preparing instance creation"),
+                status: String::from("Loading"),
+            },
+            total: 0,
+            downloaded: 0,
+            name: name.to_string(),
+        },
+    )
+    .unwrap();
+
     javaDownloader::download(8, app, name).await.unwrap();
     javaDownloader::download(17, app, name).await.unwrap();
 
@@ -62,19 +76,6 @@ pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri:
             .await
             .unwrap();
     } else if modloader.starts_with("fabric") {
-        app.emit_all(
-            "download",
-            DownloadInstanceEventPayload {
-                base: BaseEventPayload {
-                    message: String::from("Downloading Fabric"),
-                    status: String::from("Loading"),
-                },
-                total: 0,
-                downloaded: 0,
-                name: name.to_string(),
-            },
-        )
-        .unwrap();
         modloader::fabric::download_fabric(&id, &modloader.replace("fabric-", ""), app, &name)
             .await
             .unwrap();
@@ -135,8 +136,9 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
                 forge_manifest["inheritsFrom"].as_str().unwrap().to_string()
             } else if instance_info.modloader.starts_with("fabric-") {
                 let fabric_manifest: Value = file::read_as_value(&format!(
-                    "launcher/meta/net.fabricmc/{}.json",
-                    instance_info.modloader.replace("fabric-", "")
+                    "launcher/meta/net.fabricmc/{}-{}.json",
+                    instance_info.modloader.replace("fabric-", ""),
+                    instance_info.version
                 ))
                 .await
                 .unwrap();
@@ -392,8 +394,9 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         } else {
             file::read_as_value(
                 format!(
-                    "launcher/meta/net.fabricmc/{}.json",
+                    "launcher/meta/net.fabricmc/{}-{}.json",
                     &instance_info.modloader.replace("fabric-", ""),
+                    instance_info.version
                 )
                 .as_str(),
             )

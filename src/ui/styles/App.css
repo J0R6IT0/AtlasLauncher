@@ -126,3 +126,15 @@
   font-weight: bold;
 
 }
+
+.active-downloads-notification {
+  height: 0.6rem;
+  width: 0.6rem;
+  background: var(--icons-color-hover);
+  position: absolute;
+  bottom: 0;
+  border-radius: 100%;
+  border-style: solid;
+  border-color: var(--side-bar-color);
+  margin-left: 0.8rem
+}

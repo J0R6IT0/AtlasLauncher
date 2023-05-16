@@ -152,6 +152,7 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
                 if (!downloadsActive) setDownloadsActive(true);
             }}>
                 <img src={DownloadIcon} />
+                {downloads.length > 0 && <div className='active-downloads-notification' />}
             </div>
             <div className='secondary-button clickable' onClick={() => {
                 if (!accountSelectorActive) setAccountSelectorActive(true);
