@@ -24,6 +24,7 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
         "",
         false,
         true,
+        None,
     )
     .await?;
 
@@ -34,6 +35,7 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
         "",
         false,
         true,
+        None,
     )
     .await?;
 
@@ -75,6 +77,7 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
         "",
         false,
         true,
+        None,
     )
     .await?;
 
@@ -94,6 +97,7 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
         "",
         false,
         false,
+        None,
     )
     .await?;
 
@@ -140,6 +144,7 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
         NET_FABRICMC_VERSION_MANIFEST,
         false,
         true,
+        None,
     )
     .await?;
 

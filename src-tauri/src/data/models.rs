@@ -84,12 +84,14 @@ pub struct LoginEventPayload {
 }
 
 #[derive(Clone, Serialize)]
-pub struct CreateInstanceEventPayload {
-    pub name: String,
+pub struct StartInstanceEventPayload {
     pub base: BaseEventPayload,
 }
 
 #[derive(Clone, Serialize)]
-pub struct StartInstanceEventPayload {
+pub struct DownloadInstanceEventPayload {
     pub base: BaseEventPayload,
+    pub total: u64,
+    pub downloaded: u64,
+    pub name: String,
 }

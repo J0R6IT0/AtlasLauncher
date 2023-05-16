@@ -4,6 +4,7 @@ use std::process::{Command, Stdio};
 
 use serde_json::Value;
 use regex::Regex;
+use tauri::{AppHandle, Manager};
 
 use crate::common::java::get_java_path::get_java_path;
 use crate::common::minecraft::downloader::download_libraries;
@@ -12,11 +13,13 @@ use crate::common::utils::file::{self, download_as_vec, extract_file, read_as_va
 use crate::common::utils::file::{
     download_as_json, merge_zips, read_as_vec, write_vec, ChecksumType,
 };
+use crate::data::models::{DownloadInstanceEventPayload, BaseEventPayload};
 
 pub async fn download_forge(
     id: &str,
     forge: &str,
     instance_name: &str,
+    app: &AppHandle
 ) -> Result<(), Box<dyn std::error::Error>> {
     let id: String = if id.starts_with("_") {
         id.replace("_", "")
@@ -26,14 +29,31 @@ pub async fn download_forge(
     };
     let forge: String = forge.replace("forge-", "");
     let forge_version_manifest: Value = read_as_value(&format!("launcher/meta/net.minecraftforge/{forge}.json")).await?;
+    app.emit_all(
+        "download",
+        DownloadInstanceEventPayload {
+            base: BaseEventPayload {
+                message: String::from("Downloading Forge libraries"),
+                status: String::from("Loading"),
+            },
+            total: 0,
+            downloaded: 0,
+            name: instance_name.to_string(),
+        },
+    )
+    .unwrap();
     if let Some(libraries) = forge_version_manifest["libraries"].as_array() {
         let id_copy: String = id.to_string();
         let libraries_copy: Vec<Value> = libraries.clone();
+        let handle_copy = app.clone();
+        let instance_name_copy: String = instance_name.to_string();
         tauri::async_runtime::spawn(async move {
             match download_libraries(
                 &libraries_copy,
                 &id_copy,
-                false
+                false,
+                &handle_copy,
+                &instance_name_copy
             )
             .await
             {
@@ -47,13 +67,26 @@ pub async fn download_forge(
             }
         }).await?.unwrap();
     }
+    app.emit_all(
+        "download",
+        DownloadInstanceEventPayload {
+            base: BaseEventPayload {
+                message: String::from("Downloading Forge patches"),
+                status: String::from("Loading"),
+            },
+            total: 0,
+            downloaded: 0,
+            name: instance_name.to_string(),
+        },
+    )
+    .unwrap();
     if let Some(patches) = forge_version_manifest["patches"].as_array() {
         let mut patched_jar_bytes: Vec<u8> = read_as_vec(&format!("versions\\{id}.jar")).await?;
         for patch in patches {
             let url: &str = patch["downloads"]["artifact"]["url"].as_str().unwrap();
             let sha1: &str = patch["downloads"]["artifact"]["sha1"].as_str().unwrap();
             let patch_bytes: Vec<u8> =
-                download_as_vec(url, sha1, &file::ChecksumType::SHA1, "", false, false).await?;
+                download_as_vec(url, sha1, &file::ChecksumType::SHA1, "", false, false, None).await?;
 
             patched_jar_bytes =
                 merge_zips(&mut patched_jar_bytes, &patch_bytes, true).await?;
@@ -62,14 +95,13 @@ pub async fn download_forge(
         write_vec(&patched_jar_bytes, &format!("versions\\forge-{forge}.jar"))?;
 
     }
-
     if let Some(extras) = forge_version_manifest["extra"].as_array() {
         for extra in extras {
             let url: &str = extra["downloads"]["artifact"]["url"].as_str().unwrap();
             let sha1: &str = extra["downloads"]["artifact"]["sha1"].as_str().unwrap();
             let path: String = extra["downloads"]["artifact"]["path"].as_str().unwrap().replace("${game_directory}", check_directory(&format!("instances/{instance_name}")).await.to_str().unwrap());
 
-            download_as_vec(url, sha1, &ChecksumType::SHA1, &path, false, false).await?;
+            download_as_vec(url, sha1, &ChecksumType::SHA1, &path, false, false, None).await?;
         }
     }
 
@@ -92,15 +124,32 @@ pub async fn download_forge(
 
     if forge_install_manifest.is_ok() {
         let forge_install_manifest: Value = forge_install_manifest.unwrap();
+        let instance_name_copy: String = instance_name.to_string();
+        app.emit_all(
+            "download",
+            DownloadInstanceEventPayload {
+                base: BaseEventPayload {
+                    message: String::from("Downloading Forge libraries"),
+                    status: String::from("Loading"),
+                },
+                total: 0,
+                downloaded: 0,
+                name: instance_name.to_string(),
+            },
+        )
+        .unwrap();
         if let Some(libraries) = forge_install_manifest["libraries"].as_array() {
 
             let id_copy: String = id.to_string();
             let libraries_copy: Vec<Value> = libraries.clone();
+            let handle_copy = app.clone();
             tauri::async_runtime::spawn(async move {
                 match download_libraries(
                     &libraries_copy,
                     &id_copy,
-                    false
+                    false,
+                    &handle_copy,
+                    &instance_name_copy
                 )
                 .await
                 {
@@ -114,6 +163,19 @@ pub async fn download_forge(
                 }
             }).await?.unwrap();
         }
+        app.emit_all(
+            "download",
+            DownloadInstanceEventPayload {
+                base: BaseEventPayload {
+                    message: String::from("Patching game files"),
+                    status: String::from("Loading"),
+                },
+                total: 0,
+                downloaded: 0,
+                name: instance_name.to_string(),
+            },
+        )
+        .unwrap();
         if let Some(processors) = forge_install_manifest["processors"].as_array() {
             for processor in processors {
                 let mut must_process: bool = false;
@@ -137,16 +199,8 @@ pub async fn download_forge(
     Ok(())
 }
 
-pub async fn download_manifest(forge: &str) -> Result<Value, Box<dyn std::error::Error>> {
+pub async fn download_manifest(forge: &str, app: &AppHandle, instance_name: &str) -> Result<Value, Box<dyn std::error::Error>> {
     let forge: String = forge.replace("forge-", "");
-
-    let exists: std::path::PathBuf = check_directory("launcher/meta/net.minecraftforge")
-        .await
-        .join(format!("{forge}.json"));
-
-    if exists.exists() {
-        return read_as_value(&format!("launcher/meta/net.minecraftforge/{forge}.json")).await;
-    }
 
     let forge_copy: String = forge.clone();
     let forge_manifest: Result<Value, Box<dyn Error + Send + Sync>> = tauri::async_runtime::spawn(async move {
@@ -156,7 +210,8 @@ pub async fn download_manifest(forge: &str) -> Result<Value, Box<dyn std::error:
             &ChecksumType::SHA1, 
             "", 
             false, 
-            false
+            false,
+            None
         )
         .await
         {
@@ -171,7 +226,7 @@ pub async fn download_manifest(forge: &str) -> Result<Value, Box<dyn std::error:
     }).await?;
 
     if forge_manifest.is_ok() {
-        let forge_manifest = forge_manifest.unwrap();
+        let forge_manifest: Value = forge_manifest.unwrap();
         write_value(&forge_manifest, &format!("launcher/meta/net.minecraftforge/{forge}.json"))?;
         return Ok(forge_manifest);
     }
@@ -182,7 +237,8 @@ pub async fn download_manifest(forge: &str) -> Result<Value, Box<dyn std::error:
             &format!("https://files.minecraftforge.net/net/minecraftforge/forge/{forge_copy}/meta.json"), 
             "", &ChecksumType::SHA1, &format!("launcher/meta/net.minecraftforge/{forge_copy}-hashes.json"), 
             false, 
-            false
+            false,
+            None
         )
         .await 
         {
@@ -197,7 +253,22 @@ pub async fn download_manifest(forge: &str) -> Result<Value, Box<dyn std::error:
         
     }).await?;
 
+    app.emit_all(
+        "download",
+        DownloadInstanceEventPayload {
+            base: BaseEventPayload {
+                message: String::from("Downloading Forge installer"),
+                status: String::from("Loading"),
+            },
+            total: 0,
+            downloaded: 0,
+            name: instance_name.to_string(),
+        },
+    )
+    .unwrap();
     let forge_copy: String = forge.clone();
+    let handle_copy: AppHandle = app.clone();
+    let instance_name_copy: String = instance_name.to_string();
     let installer_bytes: Result<Vec<u8>, Box<dyn Error + Send + Sync>> = tauri::async_runtime::spawn(async move {
         match download_as_vec(
             &format!("https://maven.minecraftforge.net/net/minecraftforge/forge/{forge_copy}/forge-{forge_copy}-installer.jar"),
@@ -205,7 +276,8 @@ pub async fn download_manifest(forge: &str) -> Result<Value, Box<dyn std::error:
             &ChecksumType::MD5,
             "",
             false,
-            false
+            false,
+            Some((&handle_copy, &instance_name_copy))
         ).await
         {
             Ok(bytes) => Ok(bytes),
@@ -218,6 +290,19 @@ pub async fn download_manifest(forge: &str) -> Result<Value, Box<dyn std::error:
         }
     }).await?;
 
+    app.emit_all(
+        "download",
+        DownloadInstanceEventPayload {
+            base: BaseEventPayload {
+                message: String::from("Extracting Forge installer"),
+                status: String::from("Loading"),
+            },
+            total: 0,
+            downloaded: 0,
+            name: instance_name.to_string(),
+        },
+    )
+    .unwrap();
     if installer_bytes.is_ok() {
         let installer_bytes: Vec<u8> = installer_bytes.unwrap();
         let installer_bytes_copy: Vec<u8> = installer_bytes.clone();

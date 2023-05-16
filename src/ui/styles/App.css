@@ -38,7 +38,6 @@
   position: fixed;
   top: 2rem;
   right: 1.5rem;
-  width: 5rem;
   height: auto;
   z-index: 7000;
   display: flex;
@@ -62,6 +61,7 @@
 .active-user {
   border-radius: 10%;
   overflow: hidden;
+  margin-left: 0.6rem;
 }
 
 .active-user img {

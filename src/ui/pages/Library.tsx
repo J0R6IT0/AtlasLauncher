@@ -82,7 +82,7 @@ export default Library;
 
 function Instance(props: InstanceProps): JSX.Element {
     return (
-        <div className='instance clickable' onClick={props.onClick}
+        <div className='instance' onClick={props.onClick}
             onContextMenu={props.handleContextMenu}>
             <div className='instance-content'>
                 <img className='instance-background' src={!props.element.background.startsWith('default') ? convertFileSrc(props.element.background) : defaultBackgrounds[parseInt(props.element.background.replace('default', ''))]} />

@@ -16,7 +16,7 @@ use crate::{
     common::utils::file::{self},
     common::{modloader, utils::directory::check_directory_sync},
     data::models::{
-        BaseEventPayload, CreateInstanceEventPayload, InstanceInfo, MinecraftAccount,
+        BaseEventPayload, DownloadInstanceEventPayload, InstanceInfo, MinecraftAccount,
         StartInstanceEventPayload,
     },
     java::{downloader as javaDownloader, get_java_path::get_java_path},
@@ -31,35 +31,12 @@ use super::downloader::download_libraries;
 pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri::AppHandle) {
     let og_id: String = id.to_string();
     let mut id: String = id.to_string();
-    app.emit_all(
-        "create_instance",
-        CreateInstanceEventPayload {
-            base: BaseEventPayload {
-                message: format!("Downloading Java"),
-                status: String::from("Loading"),
-            },
-            name: String::from(name),
-        },
-    )
-    .unwrap();
 
-    javaDownloader::download(8).await.unwrap();
-    javaDownloader::download(17).await.unwrap();
-
-    app.emit_all(
-        "create_instance",
-        CreateInstanceEventPayload {
-            base: BaseEventPayload {
-                message: format!("Downloading game files"),
-                status: String::from("Loading"),
-            },
-            name: String::from(name),
-        },
-    )
-    .unwrap();
+    javaDownloader::download(8, app, name).await.unwrap();
+    javaDownloader::download(17, app, name).await.unwrap();
 
     if modloader.starts_with("forge-") {
-        let forge_manifest: Value = modloader::forge::download_manifest(modloader)
+        let forge_manifest: Value = modloader::forge::download_manifest(modloader, app, name)
             .await
             .unwrap();
         id = forge_manifest["inheritsFrom"].as_str().unwrap().to_string();
@@ -73,7 +50,7 @@ pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri:
             .to_string();
     }
 
-    downloader::download(&id).await.unwrap();
+    downloader::download(&id, app, name).await.unwrap();
 
     let version_info: Value =
         file::read_as_value(format!("launcher/meta/net.minecraft/{}.json", &id).as_str())
@@ -81,33 +58,24 @@ pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri:
             .unwrap();
 
     if modloader.starts_with("forge") {
-        app.emit_all(
-            "create_instance",
-            CreateInstanceEventPayload {
-                base: BaseEventPayload {
-                    message: format!("Installing Forge"),
-                    status: String::from("Loading"),
-                },
-                name: String::from(name),
-            },
-        )
-        .unwrap();
-        modloader::forge::download_forge(&id, &modloader.replace("forge-", ""), name)
+        modloader::forge::download_forge(&id, &modloader.replace("forge-", ""), name, app)
             .await
             .unwrap();
     } else if modloader.starts_with("fabric") {
         app.emit_all(
-            "create_instance",
-            CreateInstanceEventPayload {
+            "download",
+            DownloadInstanceEventPayload {
                 base: BaseEventPayload {
-                    message: format!("Installing Fabric"),
+                    message: String::from("Downloading Fabric"),
                     status: String::from("Loading"),
                 },
-                name: String::from(name),
+                total: 0,
+                downloaded: 0,
+                name: name.to_string(),
             },
         )
         .unwrap();
-        modloader::fabric::download_fabric(&id, &modloader.replace("fabric-", ""))
+        modloader::fabric::download_fabric(&id, &modloader.replace("fabric-", ""), app, &name)
             .await
             .unwrap();
     }
@@ -133,13 +101,15 @@ pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri:
     .unwrap();
 
     app.emit_all(
-        "create_instance",
-        CreateInstanceEventPayload {
+        "download",
+        DownloadInstanceEventPayload {
             base: BaseEventPayload {
-                message: format!("Instance created successfully"),
+                message: String::from(""),
                 status: String::from("Success"),
             },
-            name: String::from(name),
+            total: 0,
+            downloaded: 0,
+            name: name.to_string(),
         },
     )
     .unwrap();
@@ -206,6 +176,8 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         version_info["libraries"].as_array().unwrap(),
         &instance_info.version,
         true,
+        app,
+        &instance_info.name,
     )
     .await
     .unwrap();
@@ -440,10 +412,15 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
             }
         }
         if let Some(libraries) = modloader_manifest["libraries"].as_array() {
-            let modloader_libraries: String =
-                download_libraries(libraries, &instance_info.version, true)
-                    .await
-                    .unwrap();
+            let modloader_libraries: String = download_libraries(
+                libraries,
+                &instance_info.version,
+                true,
+                app,
+                &instance_info.name,
+            )
+            .await
+            .unwrap();
             cp = format!("{cp};{modloader_libraries}");
         }
 
@@ -743,33 +720,11 @@ pub async fn write_instance(name: &str, data: InstanceInfo, app: &AppHandle) {
     }
 
     if instance.version != data.version {
-        app.emit_all(
-            "create_instance",
-            CreateInstanceEventPayload {
-                base: BaseEventPayload {
-                    message: format!("Updating instance version"),
-                    status: String::from("Loading"),
-                },
-                name: String::from(name),
-            },
-        )
-        .unwrap();
-
-        downloader::download(&data.version).await.unwrap();
+        downloader::download(&data.version, app, &instance.name)
+            .await
+            .unwrap();
         instance.version = data.version;
         instance.version_type = data.version_type;
-
-        app.emit_all(
-            "create_instance",
-            CreateInstanceEventPayload {
-                base: BaseEventPayload {
-                    message: format!("Successfully updated instance"),
-                    status: String::from("Success"),
-                },
-                name: String::from(name),
-            },
-        )
-        .unwrap();
     }
 
     instance.height = data.height;

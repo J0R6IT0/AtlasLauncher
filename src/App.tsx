@@ -12,17 +12,10 @@ import toast, { Toaster } from 'react-hot-toast';
 import BackgroundImage from './assets/images/minecraft-background.webp';
 import UserIcon from './assets/icons/user.svg';
 import BellIcon from './assets/icons/bell.svg';
+import DownloadIcon from './assets/icons/download.svg';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
-
-interface CreateInstanceEvent {
-    payload: CreateInstanceEventPayload
-}
-
-interface CreateInstanceEventPayload {
-    base: BaseEventPayload
-    name: string
-}
+import DownloadsBar, { type DownloadItemProps } from './ui/components/DownloadsBar';
 
 interface StartInstanceEvent {
     payload: StartInstanceEventPayload
@@ -30,6 +23,17 @@ interface StartInstanceEvent {
 
 interface StartInstanceEventPayload {
     base: BaseEventPayload
+}
+
+interface DownloadEvent {
+    payload: DownloadEventPayload
+}
+
+interface DownloadEventPayload {
+    base: BaseEventPayload
+    total: number
+    downloaded: number
+    name: string
 }
 
 export interface InstanceInfo {
@@ -64,8 +68,14 @@ interface BaseEventPayload {
     message: string
 }
 
-function SecondaryButtons(): JSX.Element {
+interface SecondaryButtonsProps {
+    refreshInstances: () => void
+}
+
+function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
     const [accountSelectorActive, setAccountSelectorActive] = useState(false);
+    const [downloadsActive, setDownloadsActive] = useState(false);
+    const [downloads, setDownloads] = useState<DownloadItemProps[]>([]);
     const [accounts, setAccounts] = useState<AccountInfo[]>([]);
 
     async function getAccounts(): Promise<void> {
@@ -99,7 +109,37 @@ function SecondaryButtons(): JSX.Element {
                 toast.dismiss('currentLoginNotification');
             }
         }).catch(e => {});
-
+        listen('download', (event: DownloadEvent) => {
+            if (event.payload.base.status === 'Success') {
+                setDownloads((prevDownloads) => [
+                    ...prevDownloads.filter(download => download.name !== event.payload.name)
+                ]);
+                props.refreshInstances();
+            } else if (event.payload.base.status === 'Loading') {
+                setDownloads((prevDownloads) => [
+                    ...prevDownloads.filter(download => download.name !== event.payload.name),
+                    {
+                        name: event.payload.name,
+                        downloaded: event.payload.downloaded,
+                        total: event.payload.total,
+                        step: event.payload.base.message
+                    }
+                ]);
+            } else if (event.payload.base.status === 'Update') {
+                console.log(event.payload);
+                setDownloads((prevDownloads) => {
+                    return prevDownloads.map((download) => {
+                        if (download.name === event.payload.name) {
+                            return {
+                                ...download,
+                                downloaded: download.downloaded + event.payload.downloaded
+                            };
+                        }
+                        return download;
+                    });
+                });
+            }
+        }).catch(e => {});
         getAccounts().catch(e => {});
     }, []);
 
@@ -109,6 +149,11 @@ function SecondaryButtons(): JSX.Element {
                 <img src={BellIcon} />
             </div>
             <div className='secondary-button clickable' onClick={() => {
+                if (!downloadsActive) setDownloadsActive(true);
+            }}>
+                <img src={DownloadIcon} />
+            </div>
+            <div className='secondary-button clickable' onClick={() => {
                 if (!accountSelectorActive) setAccountSelectorActive(true);
             }} ref={accountButtonRef}>
                 <img src={UserIcon} />
@@ -116,6 +161,7 @@ function SecondaryButtons(): JSX.Element {
             {accountSelectorActive && <AccountSelector onClose={() => { setAccountSelectorActive(false); }} accounts={accounts} updateAccounts={() => {
                 getAccounts().catch(e => {});
             }}/>}
+            {downloadsActive && <DownloadsBar onClose={() => { setDownloadsActive(false); }} items={downloads}/>}
         </div>
     );
 }
@@ -130,18 +176,6 @@ function App(): JSX.Element {
     }
 
     useEffect(() => {
-        listen('create_instance', (event: CreateInstanceEvent) => {
-            if (event.payload.base.status === 'Success') {
-                getInstances().catch(e => {});
-                toast.success(event.payload.base.message, { id: event.payload.name });
-            } else if (event.payload.base.status === 'Error') {
-                toast.error(event.payload.base.message, { id: event.payload.name });
-            } else if (event.payload.base.status === 'Loading') {
-                toast.loading(event.payload.base.message, { id: event.payload.name });
-            } else {
-                toast.dismiss(event.payload.name);
-            }
-        }).catch(e => {});
         listen('start_instance', (event: StartInstanceEvent) => {
             if (event.payload.base.status === 'Success') {
                 toast.success(event.payload.base.message, { id: 'startInstance' });
@@ -188,7 +222,7 @@ function App(): JSX.Element {
                     getInstances().catch(e => {});
                 }}/>}
             </div>
-            <SecondaryButtons />
+            <SecondaryButtons refreshInstances={() => { getInstances().catch(e => {}); }}/>
             <Toaster
                 position='bottom-center'
                 toastOptions={{

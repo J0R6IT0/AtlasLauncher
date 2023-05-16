@@ -27,6 +27,7 @@
 }
 
 .instance {
+    cursor: pointer;
     position: relative;
     aspect-ratio: 1.4 / 1;
     transition: all 0.15s ease-in-out;

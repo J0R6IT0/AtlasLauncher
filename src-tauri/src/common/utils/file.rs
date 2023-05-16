@@ -1,6 +1,6 @@
 use futures::StreamExt;
 use md5;
-use reqwest::Response;
+use reqwest::{header::CONTENT_LENGTH, Response};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha1::Sha1;
@@ -12,8 +12,11 @@ use std::{
     path::Path,
     path::PathBuf,
 };
+use tauri::{AppHandle, Manager};
 use tokio::time::{sleep, Duration};
 use zip::{read::ZipFile, write::FileOptions, ZipArchive, ZipWriter};
+
+use crate::data::models::{BaseEventPayload, DownloadInstanceEventPayload};
 
 use super::{
     directory::{self, check_directory_sync},
@@ -86,6 +89,7 @@ pub async fn download_as_vec(
     path: &str,
     extract: bool,
     force: bool,
+    instance: Option<(&AppHandle, &str)>,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     if !force {
         let mut vec: Option<Vec<u8>> = None;
@@ -98,6 +102,20 @@ pub async fn download_as_vec(
         if vec.is_some() {
             let vec: Vec<u8> = Some(vec).unwrap().unwrap();
             if verify_hash(checksum, checksum_type, &vec).await? {
+                if let Some(instance) = instance {
+                    instance.0.emit_all(
+                        "download",
+                        DownloadInstanceEventPayload {
+                            base: BaseEventPayload {
+                                message: String::from(""),
+                                status: String::from("Update"),
+                            },
+                            total: 0,
+                            downloaded: vec.len() as u64,
+                            name: instance.1.to_string(),
+                        },
+                    )?;
+                }
                 return Ok(vec);
             }
         }
@@ -105,6 +123,15 @@ pub async fn download_as_vec(
 
     let mut retry_count: u8 = 0;
     let bytes: Vec<u8>;
+
+    let url_split: Vec<&str> = url.split('/').collect();
+    let mut item_name: &str = url_split[url_split.len() - 1];
+
+    if item_name.starts_with("OpenJDK8U") {
+        item_name = "Java 8";
+    } else if item_name.starts_with("OpenJDK17U") {
+        item_name = "Java 17";
+    }
 
     loop {
         let response: Response = match reqwest::get(url).await {
@@ -120,9 +147,19 @@ pub async fn download_as_vec(
             }
         };
 
+        let content_length: Option<u64> = response
+            .headers()
+            .get(CONTENT_LENGTH)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.parse::<u64>().ok());
+
         let mut current_bytes: Vec<u8> = vec![];
+
         let mut stream = response.bytes_stream();
+        let mut downloaded_size: u64 = 0;
+
         let mut stream_retry_count: u8 = 0;
+
         while let Some(chunk) = stream.next().await {
             let chunk = match chunk {
                 Ok(chunk) => chunk,
@@ -143,6 +180,31 @@ pub async fn download_as_vec(
                 }
             };
             current_bytes.extend_from_slice(&chunk);
+            downloaded_size += chunk.len() as u64;
+
+            if let Some(total_size) = content_length {
+                let downloaded_mb: f64 = downloaded_size as f64 / 1_000_000.0;
+                let total_mb: f64 = total_size as f64 / 1_000_000.0;
+                let progress: f64 = (downloaded_size as f64 / total_size as f64) * 100.0;
+                println!(
+                    "Downloading {item_name}: {:.2} MB / {:.2} MB ({:.2}%)",
+                    downloaded_mb, total_mb, progress
+                );
+                if let Some(instance) = instance {
+                    instance.0.emit_all(
+                        "download",
+                        DownloadInstanceEventPayload {
+                            base: BaseEventPayload {
+                                message: String::from(""),
+                                status: String::from("Update"),
+                            },
+                            total: 0,
+                            downloaded: chunk.len() as u64,
+                            name: instance.1.to_string(),
+                        },
+                    )?;
+                }
+            }
         }
 
         if verify_hash(checksum, checksum_type, &current_bytes).await? {
@@ -173,8 +235,10 @@ pub async fn download_as_json(
     path: &str,
     extract: bool,
     force: bool,
+    instance: Option<(&AppHandle, &str)>,
 ) -> Result<Value, Box<dyn std::error::Error>> {
-    let vec: Vec<u8> = download_as_vec(url, checksum, checksum_type, path, extract, force).await?;
+    let vec: Vec<u8> =
+        download_as_vec(url, checksum, checksum_type, path, extract, force, instance).await?;
     let json: Value = serde_json::from_slice(&vec)?;
     Ok(json)
 }
@@ -186,8 +250,10 @@ pub async fn download_as_string(
     path: &str,
     extract: bool,
     force: bool,
+    instance: Option<(&AppHandle, &str)>,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let vec: Vec<u8> = download_as_vec(url, checksum, checksum_type, path, extract, force).await?;
+    let vec: Vec<u8> =
+        download_as_vec(url, checksum, checksum_type, path, extract, force, instance).await?;
     let string: String = String::from_utf8(vec)?;
     Ok(string)
 }
