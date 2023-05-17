@@ -1,8 +1,9 @@
 use crate::common::utils::file::{self, read_as_value, write_value};
 use crate::data::constants::{
-    BETTER_JSONS_VERSION_MANIFEST, EXTRA_FORGE_VERSION_MANIFEST, FABRIC_VERSION_MANIFEST,
-    FORGE_VERSION_MANFIEST, MINECRAFT_VERSION_MANIFEST, NET_FABRICMC_VERSION_MANIFEST,
-    NET_MINECRAFTFORGE_VERSION_MANIFEST, NET_MINECRAFT_VERSION_MANIFEST,
+    BETTER_JSONS_VERSION_MANIFEST, EXTRA_FORGE_VERSION_MANIFEST, EXTRA_VERSION_MANIFEST,
+    FABRIC_VERSION_MANIFEST, FORGE_VERSION_MANFIEST, MINECRAFT_VERSION_MANIFEST,
+    NET_FABRICMC_VERSION_MANIFEST, NET_MINECRAFTFORGE_VERSION_MANIFEST,
+    NET_MINECRAFT_VERSION_MANIFEST,
 };
 use crate::data::models::MinecraftVersionData;
 use serde::{Deserialize, Serialize};
@@ -16,7 +17,7 @@ struct ForgeVersions {
 }
 
 pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Error>> {
-    // vanilla + betterjsons
+    // vanilla + betterjsons + extra
     let version_manifest: Value = file::download_as_json(
         MINECRAFT_VERSION_MANIFEST,
         "",
@@ -39,13 +40,29 @@ pub async fn download_version_manifests() -> Result<(), Box<dyn std::error::Erro
     )
     .await?;
 
+    let extra_version_manifest: Value = file::download_as_json(
+        EXTRA_VERSION_MANIFEST,
+        "",
+        &file::ChecksumType::SHA1,
+        "",
+        false,
+        true,
+        None,
+    )
+    .await?;
+
     let mut versions: Vec<Value> = version_manifest["versions"].as_array().unwrap().to_owned();
 
     // the last 349 entries are already in betterjsons
     versions.truncate(versions.len() - 349);
     let better_jsons_versions: Vec<Value> = better_jsons["versions"].as_array().unwrap().to_owned();
+    let extra_versions: Vec<Value> = extra_version_manifest["versions"]
+        .as_array()
+        .unwrap()
+        .to_owned();
 
     versions.extend(better_jsons_versions);
+    versions.extend(extra_versions);
     versions.sort_by_key(|value| value["releaseTime"].as_str().unwrap_or("").to_lowercase());
     versions.reverse();
 

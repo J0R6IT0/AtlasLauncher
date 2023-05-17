@@ -39,7 +39,7 @@ function DownloadsBar(props: DownloadBarProps): JSX.Element {
 
     return (
         <div ref={menuRef} className='downloads-bar'>
-            {props.items.length <= 0 && <span className='no-active-dls'>No active downloads.</span>}
+            {props.items.length <= 0 && <span className='no-active-dls'>No active downloads</span>}
             {props.items.map((element, key) => <DownloadItem key={key} name={element.name} downloaded={element.downloaded / 2} total={element.total} step={element.step}/>)}
         </div>
     );

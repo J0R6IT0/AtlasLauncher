@@ -9,6 +9,8 @@ pub static MINECRAFT_VERSION_MANIFEST: &str =
     "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 pub static BETTER_JSONS_VERSION_MANIFEST: &str =
     "https://raw.githubusercontent.com/MCPHackers/BetterJSONs/main/version_manifest_v2.json";
+pub static EXTRA_VERSION_MANIFEST: &str =
+    "https://raw.githubusercontent.com/J0R6IT0/AtlasLauncherResources/main/meta/net.minecraft/version_manifest_extra.json";
 
 pub static FORGE_VERSION_MANFIEST: &str =
     "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json";

@@ -103,10 +103,10 @@
 
 @keyframes slide {
     0% {
-      left: -50px; /* Start position */
+      left: -3rem;
     }
 
     100% {
-      left: calc(100% + 3rem); /* End position */
+      left: calc(100% + 3rem);
     }
   }
