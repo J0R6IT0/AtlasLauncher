@@ -174,15 +174,18 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
 
     // libraries
     let libraries_path: String = String::from(check_directory("libraries").await.to_str().unwrap());
-    let libraries: String = download_libraries(
-        version_info["libraries"].as_array().unwrap(),
-        &instance_info.version,
-        true,
-        app,
-        &instance_info.name,
-    )
-    .await
-    .unwrap();
+    let libraries: String = match version_info["libraries"].as_array() {
+        Some(libraries) => download_libraries(
+            libraries,
+            &instance_info.version,
+            true,
+            app,
+            &instance_info.name,
+        )
+        .await
+        .unwrap(),
+        None => String::from(""),
+    };
 
     let forge_jar = check_directory(format!("versions").as_str())
         .await
@@ -247,12 +250,10 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
         for argument in game_arguments.unwrap() {
             if argument.is_string() {
                 parsed_game_arguments.push(argument.as_str().unwrap().to_string())
-            }
+            };
         }
-    } else {
-        parsed_game_arguments = version_info["minecraftArguments"]
-            .as_str()
-            .unwrap()
+    } else if let Some(minecraft_arguments) = version_info["minecraftArguments"].as_str() {
+        parsed_game_arguments = minecraft_arguments
             .split_whitespace()
             .map(|x| x.to_string())
             .collect();

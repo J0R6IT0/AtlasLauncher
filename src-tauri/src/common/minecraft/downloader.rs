@@ -140,11 +140,11 @@ pub async fn download(
         }
     });
     download_tasks.push(download_task);
-
+    let mut libraries_arg: String = String::from("");
     // libraries
-    let libraries: &Vec<serde_json::Value> = json["libraries"].as_array().unwrap();
-    let libraries_arg: String =
-        download_libraries(&libraries, &id, false, app, &instance_name).await?;
+    if let Some(libraries) = json["libraries"].as_array() {
+        libraries_arg = download_libraries(&libraries, &id, false, app, &instance_name).await?;
+    }
 
     join_all(download_tasks).await;
     return Ok(libraries_arg);
@@ -162,53 +162,56 @@ fn compute_total_size(version_info: &Value) -> u64 {
         .as_u64()
         .unwrap_or(0);
 
-    for download in version_info["libraries"].as_array().unwrap().clone() {
-        let mut must_download: bool = true;
-        let formatted_os: &str = match OS {
-            "macos" => "osx",
-            _ => OS,
-        };
-        if let Some(rules) = download.get("rules") {
-            for rule in rules.as_array().unwrap().iter() {
-                if let Some(action) = rule.get("action").and_then(|a| a.as_str()) {
-                    if action == "allow" {
-                        if let Some(os) = rule.get("os") {
-                            if let Some(name) = os.get("name") {
-                                if name.as_str().unwrap() != formatted_os {
-                                    must_download = false;
+    if version_info["libraries"].is_array() {
+        for download in version_info["libraries"].as_array().unwrap().clone() {
+            let mut must_download: bool = true;
+            let formatted_os: &str = match OS {
+                "macos" => "osx",
+                _ => OS,
+            };
+            if let Some(rules) = download.get("rules") {
+                for rule in rules.as_array().unwrap().iter() {
+                    if let Some(action) = rule.get("action").and_then(|a| a.as_str()) {
+                        if action == "allow" {
+                            if let Some(os) = rule.get("os") {
+                                if let Some(name) = os.get("name") {
+                                    if name.as_str().unwrap() != formatted_os {
+                                        must_download = false;
+                                    }
                                 }
                             }
-                        }
-                    } else if action == "disallow" {
-                        if let Some(os) = rule.get("os") {
-                            if let Some(name) = os.get("name") {
-                                if name.as_str().unwrap() == formatted_os {
-                                    must_download = false;
+                        } else if action == "disallow" {
+                            if let Some(os) = rule.get("os") {
+                                if let Some(name) = os.get("name") {
+                                    if name.as_str().unwrap() == formatted_os {
+                                        must_download = false;
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
-        if must_download {
-            if let Some(artifact) = download["downloads"].get("artifact") {
-                total_size += artifact["size"].as_u64().unwrap_or(0);
-            }
-            if let Some(natives_classifier) = download["natives"].get(formatted_os) {
-                let arch: &str = match ARCH {
-                    "x86" => "32",
-                    "x86_64" => "64",
-                    _ => "64",
-                };
-                let natives_classifier: String = natives_classifier
-                    .as_str()
-                    .unwrap()
-                    .replace("${arch}", arch);
+            if must_download {
+                if let Some(artifact) = download["downloads"].get("artifact") {
+                    total_size += artifact["size"].as_u64().unwrap_or(0);
+                }
+                if let Some(natives_classifier) = download["natives"].get(formatted_os) {
+                    let arch: &str = match ARCH {
+                        "x86" => "32",
+                        "x86_64" => "64",
+                        _ => "64",
+                    };
+                    let natives_classifier: String = natives_classifier
+                        .as_str()
+                        .unwrap()
+                        .replace("${arch}", arch);
 
-                if let Some(natives) = download["downloads"]["classifiers"].get(natives_classifier)
-                {
-                    total_size += natives["size"].as_u64().unwrap_or(0);
+                    if let Some(natives) =
+                        download["downloads"]["classifiers"].get(natives_classifier)
+                    {
+                        total_size += natives["size"].as_u64().unwrap_or(0);
+                    }
                 }
             }
         }
