@@ -16,6 +16,7 @@ import DownloadIcon from './assets/icons/download.svg';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
 import DownloadsBar, { type DownloadItemProps } from './ui/components/DownloadsBar';
+import Modpacks from './ui/pages/Modpacks';
 
 interface StartInstanceEvent {
     payload: StartInstanceEventPayload
@@ -222,6 +223,7 @@ function App(): JSX.Element {
                 {activePage === 2 && <Library instances={instances} updateInstances={() => {
                     getInstances().catch(e => {});
                 }}/>}
+                {activePage === 3 && <Modpacks/>}
             </div>
             <SecondaryButtons refreshInstances={() => { getInstances().catch(e => {}); }}/>
             <Toaster

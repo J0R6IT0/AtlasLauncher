@@ -3,3 +3,4 @@ pub mod auth;
 pub mod utils;
 pub mod java;
 pub mod modloader;
+pub mod modpacks;

@@ -26,7 +26,8 @@ function SideBar({ setActivePage, activePage }: SideBarProps): JSX.Element {
                 <div className='side-bar-selector' />
                 <img src={PlusIcon}/>
             </div>
-            <div className='side-bar-items clickable'>
+            <div className={`side-bar-items clickable ${activePage === 3 ? 'selected' : ''}`} onClick={() => { setActivePage(3); }}>
+                <div className='side-bar-selector' />
                 <img src={PackageIcon}/>
             </div>
             <div className='side-bar-items clickable'>

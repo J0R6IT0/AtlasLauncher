@@ -14,6 +14,7 @@ use common::{
         self,
         versions::{get_fabric_loader_versions, get_fabric_mc_versions},
     },
+    modpacks::modrinth::fetch_modpacks,
     utils,
 };
 use data::models::{self, InstanceInfo};
@@ -117,6 +118,14 @@ async fn get_fabric_versions() -> Vec<Value> {
     }
 }
 
+#[tauri::command]
+async fn get_modrinth_modpacks() -> Value {
+    match fetch_modpacks().await {
+        Ok(value) => value,
+        Err(_) => serde_json::from_str("[\"hits\": []]").unwrap(),
+    }
+}
+
 #[tokio::main]
 async fn main() {
     // to avoid problems due to having multiple async runtimes running
@@ -148,7 +157,8 @@ async fn main() {
             write_instance_data,
             get_forge_versions,
             get_fabric_minecraft_versions,
-            get_fabric_versions
+            get_fabric_versions,
+            get_modrinth_modpacks
         ])
         .setup(|app| {
             let handle: AppHandle = app.handle();

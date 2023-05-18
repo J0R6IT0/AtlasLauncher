@@ -1,0 +1,49 @@
+.modpacks {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.modpacks-container {
+    height: calc(100% - 8.5rem);
+    width: calc(100% - 2.5rem);
+    position: absolute;
+    bottom: 2rem;
+    left: 1.5rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.modpack-item {
+    background: var(--background-transparent);
+    box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
+    backdrop-filter: blur(10px);
+    width: 100%;
+    height: 6rem;
+    margin-bottom: 0.7rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modpack-item-bg {
+    position: relative;
+    width: 100%;
+    object-fit: cover;
+}
+
+.modpack-item-bg-gradient {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(99deg, rgb(32 39 53 / 90%) 47%, rgb(0 0 0 / 0%) 93%);
+    display: flex;
+    align-items: center;
+}
+
+.modpack-item-icon {
+    height: 4.5rem;
+    margin-left: 0.8rem;
+}

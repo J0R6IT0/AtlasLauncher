@@ -4,7 +4,7 @@ pub static OAUTH_REDIRECT_URI: &str = "https://login.live.com/oauth20_desktop.sr
 pub static OAUTH_ENCODED_REDIRECT_URI: &str = "https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf";
 pub static OAUTH_SCOPE: &str = "XboxLive.signin%20offline_access";
 
-// apis
+// api
 pub static MINECRAFT_VERSION_MANIFEST: &str =
     "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 pub static BETTER_JSONS_VERSION_MANIFEST: &str =
@@ -25,3 +25,7 @@ pub static NET_MINECRAFT_VERSION_MANIFEST: &str =
 pub static NET_MINECRAFTFORGE_VERSION_MANIFEST: &str =
     "launcher/meta/net.minecraftforge/version_manifest.json";
 pub static NET_FABRICMC_VERSION_MANIFEST: &str = "launcher/meta/net.fabricmc/version_manifest.json";
+
+// modplatform
+pub static MODRINTH_BASE: &str = "https://api.modrinth.com/v2";
+pub static USER_AGENT: &str = "J0R6IT0/AtlasLauncher/1.0 (jorgeparpar@gmail.com)";
