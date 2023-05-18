@@ -13,26 +13,26 @@ interface FabricVersion {
     version: string
 }
 
-let mcVersions: FabricMinecraftVersion[];
-let fabricVersions: FabricVersion[];
-await invoke('get_fabric_minecraft_versions').then((obj) => {
-    mcVersions = obj as FabricMinecraftVersion[];
-});
-await invoke('get_fabric_versions').then((obj) => {
-    fabricVersions = obj as FabricVersion[];
-});
-
 interface ForgeVersionMenuProps {
     autoScroll: boolean
     selectedMcVersion: string
     setSelectedMcVersion: (mcVersion: string) => void
     selectedVersion: string
     setSelectedVersion: (version: string) => void
+    quilt: boolean
 }
 function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
     const [stable, setStable] = useState(true);
+    const [mcVersions, setMcVersions] = useState<FabricMinecraftVersion[]>([]);
+    const [loaderVersions, setLoaderVersions] = useState<FabricVersion[]>([]);
     useEffect(() => {
-        props.setSelectedMcVersion(mcVersions.filter(mcVersion => mcVersion.stable === stable)[0].version);
+        invoke(`get_${props.quilt ? 'quilt' : 'fabric'}_minecraft_versions`).then((obj) => {
+            setMcVersions(obj as FabricMinecraftVersion[]);
+            props.setSelectedMcVersion(mcVersions.filter(mcVersion => mcVersion.stable === stable)[0].version);
+        }).catch(e => {});
+        invoke(`get_${props.quilt ? 'quilt' : 'fabric'}_versions`).then((obj) => {
+            setLoaderVersions(obj as FabricVersion[]);
+        }).catch(e => {});
     }, []);
 
     return (
@@ -56,7 +56,7 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                     ))}
                 </div>
                 <div className='forge-container forge-versions'>
-                    {fabricVersions.map((element, key) => (
+                    {loaderVersions.map((element, key) => (
                         <div key={key} className={`version clickable ${props.selectedVersion === element.version ? 'selected' : ''}`} onClick={() => {
                             props.setSelectedVersion(element.version);
                         }}>

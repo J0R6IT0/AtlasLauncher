@@ -44,7 +44,7 @@
 .instance-background {
     position: absolute;
     opacity: 1;
-    filter: blur(0.75px);
+    filter: blur(0.5px);
     height: 100%;
     width: 100%;
     object-fit: cover;

@@ -62,6 +62,11 @@ pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri:
             .as_str()
             .unwrap()
             .to_string();
+    } else if modloader.starts_with("quilt-") {
+        let quilt_manifest: Value = modloader::quilt::download_manifest(&id, modloader)
+            .await
+            .unwrap();
+        id = quilt_manifest["inheritsFrom"].as_str().unwrap().to_string();
     }
 
     downloader::download(&id, app, name).await.unwrap();
@@ -77,6 +82,10 @@ pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri:
             .unwrap();
     } else if modloader.starts_with("fabric") {
         modloader::fabric::download_fabric(&id, &modloader.replace("fabric-", ""), app, &name)
+            .await
+            .unwrap();
+    } else if modloader.starts_with("quilt") {
+        modloader::quilt::download_quilt(&id, &modloader.replace("quilt-", ""), app, &name)
             .await
             .unwrap();
     }
@@ -146,6 +155,15 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
                     .as_str()
                     .unwrap()
                     .to_string()
+            } else if instance_info.modloader.starts_with("quilt-") {
+                let quilt_manifest: Value = file::read_as_value(&format!(
+                    "launcher/meta/org.quiltmc/{}-{}.json",
+                    instance_info.modloader.replace("quilt-", ""),
+                    instance_info.version
+                ))
+                .await
+                .unwrap();
+                quilt_manifest["inheritsFrom"].as_str().unwrap().to_string()
             } else {
                 instance_info.version.to_string()
             },
@@ -381,6 +399,7 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
 
     if instance_info.modloader.starts_with("forge-")
         || instance_info.modloader.starts_with("fabric-")
+        || instance_info.modloader.starts_with("quilt-")
     {
         let modloader_manifest: Value = if instance_info.modloader.starts_with("forge-") {
             file::read_as_value(
@@ -392,11 +411,22 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
             )
             .await
             .unwrap()
-        } else {
+        } else if instance_info.modloader.starts_with("fabric-") {
             file::read_as_value(
                 format!(
                     "launcher/meta/net.fabricmc/{}-{}.json",
                     &instance_info.modloader.replace("fabric-", ""),
+                    instance_info.version
+                )
+                .as_str(),
+            )
+            .await
+            .unwrap()
+        } else {
+            file::read_as_value(
+                format!(
+                    "launcher/meta/org.quiltmc/{}-{}.json",
+                    &instance_info.modloader.replace("quilt-", ""),
                     instance_info.version
                 )
                 .as_str(),

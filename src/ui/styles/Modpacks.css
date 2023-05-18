@@ -6,21 +6,24 @@
 
 .modpacks-container {
     height: calc(100% - 8.5rem);
-    width: calc(100% - 2.5rem);
+    width: calc(100%);
     position: absolute;
     bottom: 2rem;
-    left: 1.5rem;
     overflow-y: auto;
     overflow-x: hidden;
 }
 
-.modpack-item {
+.modpacks .grid {
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    width: calc(100% - 2.2rem);
+}
+
+.modpack {
     background: var(--background-transparent);
     box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
     backdrop-filter: blur(10px);
     width: 100%;
-    height: 6rem;
-    margin-bottom: 0.7rem;
+    height: 6.5rem;
     border-radius: 0.5rem;
     overflow: hidden;
     display: flex;
@@ -28,22 +31,30 @@
     justify-content: center;
 }
 
-.modpack-item-bg {
+.modpack-bg {
     position: relative;
     width: 100%;
     object-fit: cover;
 }
 
-.modpack-item-bg-gradient {
+.modpack-bg-gradient {
     position: absolute;
     width: 100%;
     height: 100%;
-    background: linear-gradient(99deg, rgb(32 39 53 / 90%) 47%, rgb(0 0 0 / 0%) 93%);
+    background: var(--background-transparent);
+    backdrop-filter: blur(px);
     display: flex;
     align-items: center;
+    gap: 1rem;
 }
 
-.modpack-item-icon {
+.modpack-icon {
     height: 4.5rem;
-    margin-left: 0.8rem;
+    margin-left: 1rem;
+    border-radius: 0.5rem;
+}
+
+.modpack-title {
+    color: var(--text-color-primary);
+    font-weight: bold;
 }

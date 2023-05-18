@@ -31,7 +31,8 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
             <TextInput value={titleInputValue} onChange={handleTitleInputChange} name='Instance name' inputValid={titleInputValid}/>
             {props.flavour === 0 && <VersionMenu autoScroll={false} selectedVersionType={selectedVersionType} selectedVersion={selectedVersion} setSelectedVersionType={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>}
             {props.flavour === 1 && <ForgeVersionMenu autoScroll={false} selectedMcVersion={selectedVersionType} selectedVersion={selectedVersion} setSelectedMcVersion={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>}
-            {props.flavour === 2 && <FabricVersionMenu autoScroll={false} selectedMcVersion={selectedVersionType} selectedVersion={selectedVersion} setSelectedMcVersion={setSelectedVersionType} setSelectedVersion={setSelectedVersion}/>}
+            {props.flavour === 2 && <FabricVersionMenu autoScroll={false} selectedMcVersion={selectedVersionType} selectedVersion={selectedVersion} setSelectedMcVersion={setSelectedVersionType} setSelectedVersion={setSelectedVersion} quilt={false}/>}
+            {props.flavour === 3 && <FabricVersionMenu autoScroll={false} selectedMcVersion={selectedVersionType} selectedVersion={selectedVersion} setSelectedMcVersion={setSelectedVersionType} setSelectedVersion={setSelectedVersion} quilt={true}/>}
             <TextButton onClick={() => {
                 if (props.flavour === 0) {
                     invoke('create_instance', { name: titleInputValue.trim(), id: selectedVersion, modloader: '' }).catch(e => { console.log(e); });
@@ -39,6 +40,8 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
                     invoke('create_instance', { name: titleInputValue.trim(), id: selectedVersionType, modloader: 'forge-' + selectedVersion }).catch(e => { console.log(e); });
                 } else if (props.flavour === 2) {
                     invoke('create_instance', { name: titleInputValue.trim(), id: selectedVersionType, modloader: 'fabric-' + selectedVersion }).catch(e => { console.log(e); });
+                } else if (props.flavour === 3) {
+                    invoke('create_instance', { name: titleInputValue.trim(), id: selectedVersionType, modloader: 'quilt-' + selectedVersion }).catch(e => { console.log(e); });
                 }
                 props.goToLibrary();
             }} text='Create' clickable={titleInputValid && selectedVersion.length > 0}/>

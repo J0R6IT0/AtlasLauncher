@@ -19,12 +19,15 @@ pub static EXTRA_FORGE_VERSION_MANIFEST: &str =
 
 pub static FABRIC_VERSION_MANIFEST: &str = "https://meta.fabricmc.net/v1/versions";
 
+pub static QUILT_VERSION_MANIFEST: &str = "https://meta.quiltmc.org/v3/versions";
+
 // local
 pub static NET_MINECRAFT_VERSION_MANIFEST: &str =
     "launcher/meta/net.minecraft/version_manifest.json";
 pub static NET_MINECRAFTFORGE_VERSION_MANIFEST: &str =
     "launcher/meta/net.minecraftforge/version_manifest.json";
 pub static NET_FABRICMC_VERSION_MANIFEST: &str = "launcher/meta/net.fabricmc/version_manifest.json";
+pub static ORG_QUILTMC_VERSION_MANIFEST: &str = "launcher/meta/org.quiltmc/version_manifest.json";
 
 // modplatform
 pub static MODRINTH_BASE: &str = "https://api.modrinth.com/v2";

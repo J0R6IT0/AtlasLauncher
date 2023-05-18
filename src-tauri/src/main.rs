@@ -12,7 +12,10 @@ use common::{
     auth, java,
     minecraft::{
         self,
-        versions::{get_fabric_loader_versions, get_fabric_mc_versions},
+        versions::{
+            get_fabric_loader_versions, get_fabric_mc_versions, get_quilt_loader_versions,
+            get_quilt_mc_versions,
+        },
     },
     modpacks::modrinth::fetch_modpacks,
     utils,
@@ -119,6 +122,22 @@ async fn get_fabric_versions() -> Vec<Value> {
 }
 
 #[tauri::command]
+async fn get_quilt_minecraft_versions() -> Vec<Value> {
+    match get_quilt_mc_versions().await {
+        Ok(versions) => versions,
+        Err(_) => [].to_vec(),
+    }
+}
+
+#[tauri::command]
+async fn get_quilt_versions() -> Vec<Value> {
+    match get_quilt_loader_versions().await {
+        Ok(versions) => versions,
+        Err(_) => [].to_vec(),
+    }
+}
+
+#[tauri::command]
 async fn get_modrinth_modpacks() -> Value {
     match fetch_modpacks().await {
         Ok(value) => value,
@@ -158,7 +177,9 @@ async fn main() {
             get_forge_versions,
             get_fabric_minecraft_versions,
             get_fabric_versions,
-            get_modrinth_modpacks
+            get_modrinth_modpacks,
+            get_quilt_minecraft_versions,
+            get_quilt_versions
         ])
         .setup(|app| {
             let handle: AppHandle = app.handle();

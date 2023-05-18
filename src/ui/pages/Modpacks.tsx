@@ -41,7 +41,9 @@ function Modpacks(): JSX.Element {
                 <span>Ready-to-play modpacks</span>
             </div>
             <div className='modpacks-container'>
-                {modpacks.map((element, key) => <ModpackItem key={key} modpack={element} />)}
+                <div className='grid'>
+                    {modpacks.map((element, key) => <ModpackItem key={key} modpack={element} />)}
+                </div>
             </div>
         </div>
     );
@@ -51,10 +53,13 @@ export default Modpacks;
 
 function ModpackItem({ modpack }: ModpackItemProps): JSX.Element {
     return (
-        <div className='modpack-item'>
-            <img className='modpack-item-bg' src={modpack.featured_gallery} alt="" />
-            <div className='modpack-item-bg-gradient'>
-                <img className='modpack-item-icon' src={modpack.icon_url} alt="" />
+        <div className='modpack'>
+            <img className='modpack-bg' src={modpack.featured_gallery !== undefined && modpack.featured_gallery !== null && modpack.featured_gallery.length > 0 ? modpack.featured_gallery : modpack.icon_url} alt="" />
+            <div className='modpack-bg-gradient'>
+                <img className='modpack-icon' src={modpack.icon_url} alt="" />
+                <div className='modpack-info'>
+                    <span className='modpack-title'>{modpack.title}</span>
+                </div>
             </div>
         </div>
     );
