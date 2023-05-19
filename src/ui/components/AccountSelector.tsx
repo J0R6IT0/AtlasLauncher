@@ -44,7 +44,7 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
                         invoke('set_active_account', { uuid: element.uuid }).catch(e => {});
                         props.updateAccounts();
                     }}>
-                    <img src={`https://crafatar.com/avatars/${element.uuid}?overlay`} alt="" />
+                    <img src={`data:image/png;base64,${element.avatar_64px}`} alt="" />
                     <span>{element.username}
                         <span id='active-account-label'>{element.active ? '\nActive' : ''}</span>
                     </span>

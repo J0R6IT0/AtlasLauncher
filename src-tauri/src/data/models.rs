@@ -31,6 +31,7 @@ pub struct MinecraftAccount {
     pub refresh_token: String,
     pub access_token: String,
     pub active: bool,
+    pub avatar_64px: String,
 }
 
 #[derive(Serialize, Deserialize)]

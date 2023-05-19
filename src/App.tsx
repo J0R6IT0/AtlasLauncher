@@ -54,6 +54,7 @@ export interface AccountInfo {
     username: string
     uuid: string
     active: boolean
+    avatar_64px: string
 }
 
 interface LoginEvent {
@@ -86,7 +87,7 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
         const accountsIcon = button?.querySelector('img');
         const activeAccount = accounts.filter(acc => acc.active)[0];
         if (activeAccount !== null && activeAccount !== undefined) {
-            accountsIcon?.setAttribute('src', `https://crafatar.com/avatars/${activeAccount.uuid}?overlay`);
+            accountsIcon?.setAttribute('src', `data:image/png;base64,${activeAccount.avatar_64px}`);
             button?.classList.add('active-user');
         } else {
             accountsIcon?.setAttribute('src', UserIcon);
