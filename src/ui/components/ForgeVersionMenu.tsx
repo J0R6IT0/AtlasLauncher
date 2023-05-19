@@ -1,22 +1,10 @@
 import { invoke } from '@tauri-apps/api/tauri';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import CheckIcon from '../../assets/icons/check.svg';
 import AlertIcon from '../../assets/icons/alert-triangle.svg';
 import '../styles/ForgeVersionMenu.css';
 
 type ForgeVersionData = Record<string, string[]>;
-
-let versions: ForgeVersionData[];
-const keys: string[] = [];
-await invoke('get_forge_versions').then((obj) => {
-    versions = obj as ForgeVersionData[];
-    versions.reverse();
-    versions.forEach(version => {
-        const key = Object.keys(version)[0];
-        version[key].reverse();
-        keys.push(key);
-    });
-});
 
 interface ForgeVersionMenuProps {
     autoScroll: boolean
@@ -25,9 +13,27 @@ interface ForgeVersionMenuProps {
     selectedVersion: string
     setSelectedVersion: (version: string) => void
 }
+
 function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
+    const [versions, setVersions] = useState<ForgeVersionData[]>([]);
+    const [keys, setKeys] = useState<string[]>([]);
+
     useEffect(() => {
-        props.setSelectedMcVersion(keys[0]);
+        let newVersions: ForgeVersionData[] = [];
+        const keys: string[] = [];
+        invoke('get_forge_versions').then((obj) => {
+            console.log('invoke');
+            newVersions = obj as ForgeVersionData[];
+            newVersions.reverse();
+            newVersions.forEach(version => {
+                const key = Object.keys(version)[0];
+                version[key].reverse();
+                keys.push(key);
+            });
+            setVersions(newVersions);
+            setKeys(keys);
+            props.setSelectedMcVersion(keys[0]);
+        }).catch(e => {});
     }, []);
 
     return (

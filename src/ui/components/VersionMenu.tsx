@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri';
-import React, { memo, useEffect, useRef } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import CheckIcon from '../../assets/icons/check.svg';
 import AlertIcon from '../../assets/icons/alert-triangle.svg';
 import '../styles/VersionMenu.css';
@@ -9,8 +9,6 @@ interface MinecraftVersion {
     type: string
 }
 
-const versions: MinecraftVersion[] = await invoke('get_minecraft_versions');
-
 interface VersionMenuProps {
     autoScroll: boolean
     selectedVersion: string
@@ -18,12 +16,17 @@ interface VersionMenuProps {
     selectedVersionType: string
     setSelectedVersionType: (type: string) => void
 }
+
 function VersionMenu(props: VersionMenuProps): JSX.Element {
+    const [versions, setVersions] = useState<MinecraftVersion[]>([]);
     const selectedVersionRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
-        if (selectedVersionRef.current !== null && props.autoScroll) {
-            selectedVersionRef.current.scrollIntoView();
-        }
+        invoke('get_minecraft_versions').then(obj => {
+            setVersions(obj as MinecraftVersion[]);
+            if (selectedVersionRef.current !== null && props.autoScroll) {
+                selectedVersionRef.current.scrollIntoView();
+            }
+        }).catch(e => {});
     }, []);
 
     return (

@@ -184,8 +184,7 @@ async fn main() {
                 match minecraft::versions::download_version_manifests().await {
                     Ok(_) => println!("Version manifest successfully updated"),
                     Err(err) => {
-                        println!("Error updating manifest: {:?}", err);
-                        write_line(&err.to_string());
+                        write_line(&format!("Error updating manifest: {:?}", err));
                     }
                 }
             });

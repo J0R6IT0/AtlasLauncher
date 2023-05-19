@@ -1,7 +1,9 @@
+use std::collections::HashMap;
 use std::error::Error;
 use std::io::{Cursor, BufReader, BufRead};
 use std::process::{Command, Stdio};
 
+use serde::{Serialize, Deserialize};
 use serde_json::Value;
 use regex::Regex;
 use tauri::{AppHandle, Manager};
@@ -13,7 +15,14 @@ use crate::common::utils::file::{self, download_as_vec, extract_file, read_as_va
 use crate::common::utils::file::{
     download_as_json, merge_zips, read_as_vec, write_vec, ChecksumType,
 };
+use crate::data::constants::{FORGE_VERSION_MANFIEST, EXTRA_FORGE_VERSION_MANIFEST, NET_MINECRAFTFORGE_VERSION_MANIFEST};
 use crate::data::models::{DownloadInstanceEventPayload, BaseEventPayload};
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ForgeVersions {
+    #[serde(flatten)]
+    data: HashMap<String, Vec<String>>,
+}
 
 pub async fn download_forge(
     id: &str,
@@ -423,4 +432,72 @@ async fn extract_main_class(class: &str) -> Result<String, Box<dyn std::error::E
         std::io::ErrorKind::Other,
         "Main Class not found!",
     )));
+}
+
+pub async fn download_versions() -> Result<(), Box<dyn std::error::Error>> {
+    let mut forge_manifest: String = file::download_as_string(
+        FORGE_VERSION_MANFIEST,
+        "",
+        &file::ChecksumType::SHA1,
+        "",
+        false,
+        true,
+        None,
+    )
+    .await?;
+
+    forge_manifest = forge_manifest
+        .replace("{", "[{")
+        .replace("}", "}]")
+        .replace("],", "]},{")
+        .replace("1.4.0", "1.4")
+        .replace("1.7.10_pre4", "1.7.10-pre4");
+
+    let mut final_forge_manifest: Vec<ForgeVersions> = serde_json::from_str(&forge_manifest)?;
+
+    let extra_forge_versions = file::download_as_json(
+        EXTRA_FORGE_VERSION_MANIFEST,
+        "",
+        &file::ChecksumType::SHA1,
+        "",
+        false,
+        false,
+        None,
+    )
+    .await?;
+
+    let mut extra_forge_versions: Vec<Value> = extra_forge_versions.as_array().unwrap().to_owned();
+    extra_forge_versions.reverse();
+
+    'extra: for extra_forge_version in extra_forge_versions {
+        let mc_id: &str = extra_forge_version["mc_id"].as_str().unwrap();
+        let versions: Vec<String> = extra_forge_version["versions"]
+            .as_array()
+            .unwrap()
+            .into_iter()
+            .map(|version| version["id"].as_str().unwrap().to_string())
+            .collect();
+
+        for final_forge_version in final_forge_manifest.iter_mut() {
+            let key: String = final_forge_version
+                .data
+                .keys()
+                .next()
+                .unwrap()
+                .replace("\"", "");
+            let og_versions: &mut Vec<String> =
+                final_forge_version.data.values_mut().next().unwrap();
+            if mc_id == key {
+                *og_versions = versions.clone();
+                continue 'extra;
+            }
+        }
+        let mut data: HashMap<String, Vec<String>> = HashMap::new();
+        data.insert(String::from(mc_id), versions);
+
+        final_forge_manifest.insert(0, ForgeVersions { data });
+    }
+
+    write_value(&final_forge_manifest, NET_MINECRAFTFORGE_VERSION_MANIFEST)?;
+    Ok(())
 }
