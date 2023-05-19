@@ -13,8 +13,11 @@ use std::{
 
 use crate::{
     common::auth::login::get_active_account,
-    common::utils::file::{self},
     common::{modloader, utils::directory::check_directory_sync},
+    common::{
+        modloader::util::get_manifest,
+        utils::file::{self},
+    },
     data::models::{
         BaseEventPayload, DownloadInstanceEventPayload, InstanceInfo, MinecraftAccount,
         StartInstanceEventPayload,
@@ -132,41 +135,24 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
             .await
             .unwrap();
 
+    let mut modloader_manifest: Option<Value> = None;
+
     let version_info: Value = file::read_as_value(
         format!(
             "launcher/meta/net.minecraft/{}.json",
-            if instance_info.modloader.starts_with("forge-") {
-                let forge_manifest: Value = file::read_as_value(&format!(
-                    "launcher/meta/net.minecraftforge/{}.json",
-                    instance_info.modloader.replace("forge-", "")
-                ))
-                .await
-                .unwrap();
-                forge_manifest["inheritsFrom"].as_str().unwrap().to_string()
-            } else if instance_info.modloader.starts_with("fabric-") {
-                let fabric_manifest: Value = file::read_as_value(&format!(
-                    "launcher/meta/net.fabricmc/{}-{}.json",
-                    instance_info.modloader.replace("fabric-", ""),
-                    instance_info.version
-                ))
-                .await
-                .unwrap();
-                fabric_manifest["inheritsFrom"]
+            if instance_info.modloader.is_empty() {
+                instance_info.version.to_string()
+            } else {
+                let new_modloader_manifest: Value =
+                    get_manifest(&instance_info.modloader, app, name, &instance_info.version)
+                        .await
+                        .unwrap();
+                modloader_manifest = Some(new_modloader_manifest.clone());
+                new_modloader_manifest["inheritsFrom"]
                     .as_str()
                     .unwrap()
                     .to_string()
-            } else if instance_info.modloader.starts_with("quilt-") {
-                let quilt_manifest: Value = file::read_as_value(&format!(
-                    "launcher/meta/org.quiltmc/{}-{}.json",
-                    instance_info.modloader.replace("quilt-", ""),
-                    instance_info.version
-                ))
-                .await
-                .unwrap();
-                quilt_manifest["inheritsFrom"].as_str().unwrap().to_string()
-            } else {
-                instance_info.version.to_string()
-            },
+            }
         )
         .as_str(),
     )
@@ -397,44 +383,8 @@ pub async fn launch_instance(name: &str, app: &tauri::AppHandle) {
 
     let mut main_class: String = version_info["mainClass"].as_str().unwrap().to_string();
 
-    if instance_info.modloader.starts_with("forge-")
-        || instance_info.modloader.starts_with("fabric-")
-        || instance_info.modloader.starts_with("quilt-")
-    {
-        let modloader_manifest: Value = if instance_info.modloader.starts_with("forge-") {
-            file::read_as_value(
-                format!(
-                    "launcher/meta/net.minecraftforge/{}.json",
-                    &instance_info.modloader.replace("forge-", ""),
-                )
-                .as_str(),
-            )
-            .await
-            .unwrap()
-        } else if instance_info.modloader.starts_with("fabric-") {
-            file::read_as_value(
-                format!(
-                    "launcher/meta/net.fabricmc/{}-{}.json",
-                    &instance_info.modloader.replace("fabric-", ""),
-                    instance_info.version
-                )
-                .as_str(),
-            )
-            .await
-            .unwrap()
-        } else {
-            file::read_as_value(
-                format!(
-                    "launcher/meta/org.quiltmc/{}-{}.json",
-                    &instance_info.modloader.replace("quilt-", ""),
-                    instance_info.version
-                )
-                .as_str(),
-            )
-            .await
-            .unwrap()
-        };
-
+    if modloader_manifest.is_some() {
+        let modloader_manifest: Value = modloader_manifest.unwrap();
         if let Some(modloader_arguments) = modloader_manifest["arguments"]["game"].as_array() {
             for argument in modloader_arguments {
                 parsed_game_arguments.push(argument.as_str().unwrap().to_string());
