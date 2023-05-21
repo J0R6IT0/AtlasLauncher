@@ -15,63 +15,65 @@ import BellIcon from './assets/icons/bell.svg';
 import DownloadIcon from './assets/icons/download.svg';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
-import DownloadsBar, { type DownloadItemProps } from './ui/components/DownloadsBar';
+import DownloadsBar, {
+    type DownloadItemProps,
+} from './ui/components/DownloadsBar';
 import Modpacks from './ui/pages/Modpacks';
 
 interface StartInstanceEvent {
-    payload: StartInstanceEventPayload
+    payload: StartInstanceEventPayload;
 }
 
 interface StartInstanceEventPayload {
-    base: BaseEventPayload
+    base: BaseEventPayload;
 }
 
 interface DownloadEvent {
-    payload: DownloadEventPayload
+    payload: DownloadEventPayload;
 }
 
 interface DownloadEventPayload {
-    base: BaseEventPayload
-    total: number
-    downloaded: number
-    name: string
+    base: BaseEventPayload;
+    total: number;
+    downloaded: number;
+    name: string;
 }
 
 export interface InstanceInfo {
-    name: string
-    modloader: string
-    version: string
-    background: string
-    icon: string
-    version_type: string
-    height: string
-    width: string
-    fullscreen: boolean
-    [key: string]: any
+    name: string;
+    modloader: string;
+    version: string;
+    background: string;
+    icon: string;
+    version_type: string;
+    height: string;
+    width: string;
+    fullscreen: boolean;
+    [key: string]: any;
 }
 
 export interface AccountInfo {
-    username: string
-    uuid: string
-    active: boolean
-    avatar_64px: string
+    username: string;
+    uuid: string;
+    active: boolean;
+    avatar_64px: string;
 }
 
 interface LoginEvent {
-    payload: LoginEventPayload
+    payload: LoginEventPayload;
 }
 
 interface LoginEventPayload {
-    base: BaseEventPayload
+    base: BaseEventPayload;
 }
 
 interface BaseEventPayload {
-    status: string
-    message: string
+    status: string;
+    message: string;
 }
 
 interface SecondaryButtonsProps {
-    refreshInstances: () => void
+    refreshInstances: () => void;
 }
 
 function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
@@ -81,13 +83,18 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
     const [accounts, setAccounts] = useState<AccountInfo[]>([]);
 
     async function getAccounts(): Promise<void> {
-        const accounts = await invoke('get_accounts').catch(e => {}) as AccountInfo[];
+        const accounts = (await invoke('get_accounts').catch(
+            (e) => {}
+        )) as AccountInfo[];
         setAccounts(accounts);
         const button = accountButtonRef.current;
         const accountsIcon = button?.querySelector('img');
-        const activeAccount = accounts.filter(acc => acc.active)[0];
+        const activeAccount = accounts.filter((acc) => acc.active)[0];
         if (activeAccount !== null && activeAccount !== undefined) {
-            accountsIcon?.setAttribute('src', `data:image/png;base64,${activeAccount.avatar_64px}`);
+            accountsIcon?.setAttribute(
+                'src',
+                `data:image/png;base64,${activeAccount.avatar_64px}`
+            );
             button?.classList.add('active-user');
         } else {
             accountsIcon?.setAttribute('src', UserIcon);
@@ -100,32 +107,42 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
     useEffect(() => {
         listen('auth', (event: LoginEvent) => {
             if (event.payload.base.status === 'Success') {
-                getAccounts().catch(e => {});
-                toast.success(event.payload.base.message, { id: 'currentLoginNotification' });
+                getAccounts().catch((e) => {});
+                toast.success(event.payload.base.message, {
+                    id: 'currentLoginNotification',
+                });
             } else if (event.payload.base.status === 'Error') {
-                toast.error(event.payload.base.message, { id: 'currentLoginNotification' });
+                toast.error(event.payload.base.message, {
+                    id: 'currentLoginNotification',
+                });
             } else if (event.payload.base.status === 'Loading') {
                 console.log('e');
-                toast.loading(event.payload.base.message, { id: 'currentLoginNotification' });
+                toast.loading(event.payload.base.message, {
+                    id: 'currentLoginNotification',
+                });
             } else {
                 toast.dismiss('currentLoginNotification');
             }
-        }).catch(e => {});
+        }).catch((e) => {});
         listen('download', (event: DownloadEvent) => {
             if (event.payload.base.status === 'Success') {
                 setDownloads((prevDownloads) => [
-                    ...prevDownloads.filter(download => download.name !== event.payload.name)
+                    ...prevDownloads.filter(
+                        (download) => download.name !== event.payload.name
+                    ),
                 ]);
                 props.refreshInstances();
             } else if (event.payload.base.status === 'Loading') {
                 setDownloads((prevDownloads) => [
-                    ...prevDownloads.filter(download => download.name !== event.payload.name),
+                    ...prevDownloads.filter(
+                        (download) => download.name !== event.payload.name
+                    ),
                     {
                         name: event.payload.name,
                         downloaded: event.payload.downloaded,
                         total: event.payload.total,
-                        step: event.payload.base.message
-                    }
+                        step: event.payload.base.message,
+                    },
                 ]);
             } else if (event.payload.base.status === 'Update') {
                 console.log(event.payload);
@@ -134,15 +151,17 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
                         if (download.name === event.payload.name) {
                             return {
                                 ...download,
-                                downloaded: download.downloaded + event.payload.downloaded
+                                downloaded:
+                                    download.downloaded +
+                                    event.payload.downloaded,
                             };
                         }
                         return download;
                     });
                 });
             }
-        }).catch(e => {});
-        getAccounts().catch(e => {});
+        }).catch((e) => {});
+        getAccounts().catch((e) => {});
     }, []);
 
     return (
@@ -150,21 +169,45 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
             <div className='secondary-button clickable'>
                 <img src={BellIcon} />
             </div>
-            <div className='secondary-button clickable' onClick={() => {
-                if (!downloadsActive) setDownloadsActive(true);
-            }}>
+            <div
+                className='secondary-button clickable'
+                onClick={() => {
+                    if (!downloadsActive) setDownloadsActive(true);
+                }}
+            >
                 <img src={DownloadIcon} />
-                {downloads.length > 0 && <div className='active-downloads-notification' />}
+                {downloads.length > 0 && (
+                    <div className='active-downloads-notification' />
+                )}
             </div>
-            <div className='secondary-button clickable' onClick={() => {
-                if (!accountSelectorActive) setAccountSelectorActive(true);
-            }} ref={accountButtonRef}>
+            <div
+                className='secondary-button clickable'
+                onClick={() => {
+                    if (!accountSelectorActive) setAccountSelectorActive(true);
+                }}
+                ref={accountButtonRef}
+            >
                 <img src={UserIcon} />
             </div>
-            {accountSelectorActive && <AccountSelector onClose={() => { setAccountSelectorActive(false); }} accounts={accounts} updateAccounts={() => {
-                getAccounts().catch(e => {});
-            }}/>}
-            {downloadsActive && <DownloadsBar onClose={() => { setDownloadsActive(false); }} items={downloads}/>}
+            {accountSelectorActive && (
+                <AccountSelector
+                    onClose={() => {
+                        setAccountSelectorActive(false);
+                    }}
+                    accounts={accounts}
+                    updateAccounts={() => {
+                        getAccounts().catch((e) => {});
+                    }}
+                />
+            )}
+            {downloadsActive && (
+                <DownloadsBar
+                    onClose={() => {
+                        setDownloadsActive(false);
+                    }}
+                    items={downloads}
+                />
+            )}
         </div>
     );
 }
@@ -174,21 +217,29 @@ function App(): JSX.Element {
     const [instances, setInstances] = useState<InstanceInfo[]>([]);
 
     async function getInstances(): Promise<void> {
-        const newInstances = await invoke('get_instances').catch(e => {}) as InstanceInfo[];
+        const newInstances = (await invoke('get_instances').catch(
+            (e) => {}
+        )) as InstanceInfo[];
         setInstances(newInstances);
     }
 
     useEffect(() => {
         listen('start_instance', (event: StartInstanceEvent) => {
             if (event.payload.base.status === 'Success') {
-                toast.success(event.payload.base.message, { id: 'startInstance' });
+                toast.success(event.payload.base.message, {
+                    id: 'startInstance',
+                });
             } else if (event.payload.base.status === 'Error') {
-                toast.error(event.payload.base.message, { id: 'startInstance' });
+                toast.error(event.payload.base.message, {
+                    id: 'startInstance',
+                });
             } else {
-                toast.loading(event.payload.base.message, { id: 'startInstance' });
+                toast.loading(event.payload.base.message, {
+                    id: 'startInstance',
+                });
             }
-        }).catch(e => {});
-        getInstances().catch(e => {});
+        }).catch((e) => {});
+        getInstances().catch((e) => {});
 
         function contextMenuHandler(event: Event): void {
             event.preventDefault();
@@ -205,28 +256,56 @@ function App(): JSX.Element {
                 <div className='background-color'></div>
                 <img className='background-image' src={BackgroundImage} />
             </div>
-            <div data-tauri-drag-region className="titlebar">
-                <div className="titlebar-button clickable" onClick={() => { appWindow.minimize().catch(e => {}); }}>
+            <div data-tauri-drag-region className='titlebar'>
+                <div
+                    className='titlebar-button clickable'
+                    onClick={() => {
+                        appWindow.minimize().catch((e) => {});
+                    }}
+                >
                     <img src={MinusIcon} />
                 </div>
-                <div className="titlebar-button clickable" onClick={() => { appWindow.maximize().catch(e => {}); }}>
+                <div
+                    className='titlebar-button clickable'
+                    onClick={() => {
+                        appWindow.maximize().catch((e) => {});
+                    }}
+                >
                     <img src={SquareIcon} style={{ height: '0.8rem' }} />
                 </div>
-                <div className="titlebar-button clickable" onClick={() => { appWindow.close().catch(e => {}); }}>
+                <div
+                    className='titlebar-button clickable'
+                    onClick={() => {
+                        appWindow.close().catch((e) => {});
+                    }}
+                >
                     <img src={XIcon} />
                 </div>
             </div>
-            <SideBar setActivePage={setActivePage} activePage={activePage}/>
+            <SideBar setActivePage={setActivePage} activePage={activePage} />
             <div className='content'>
-                {activePage === 1 && <NewInstance goToLibrary={() => {
-                    setActivePage(2);
-                }}/>}
-                {activePage === 2 && <Library instances={instances} updateInstances={() => {
-                    getInstances().catch(e => {});
-                }}/>}
-                {activePage === 3 && <Modpacks/>}
+                {activePage === 1 && (
+                    <NewInstance
+                        goToLibrary={() => {
+                            setActivePage(2);
+                        }}
+                    />
+                )}
+                {activePage === 2 && (
+                    <Library
+                        instances={instances}
+                        updateInstances={() => {
+                            getInstances().catch((e) => {});
+                        }}
+                    />
+                )}
+                {activePage === 3 && <Modpacks />}
             </div>
-            <SecondaryButtons refreshInstances={() => { getInstances().catch(e => {}); }}/>
+            <SecondaryButtons
+                refreshInstances={() => {
+                    getInstances().catch((e) => {});
+                }}
+            />
             <Toaster
                 position='bottom-center'
                 toastOptions={{
@@ -235,25 +314,26 @@ function App(): JSX.Element {
                         className: 'toast-notification',
                         iconTheme: {
                             primary: 'var(--icons-color-hover)',
-                            secondary: 'var(--text-color-primary)'
-                        }
+                            secondary: 'var(--text-color-primary)',
+                        },
                     },
                     error: {
                         duration: 10000,
                         className: 'toast-notification',
                         iconTheme: {
                             primary: 'var(--icons-color-hover)',
-                            secondary: 'var(--text-color-primary)'
-                        }
+                            secondary: 'var(--text-color-primary)',
+                        },
                     },
                     loading: {
                         className: 'toast-notification',
                         iconTheme: {
                             primary: 'var(--icons-color-hover)',
-                            secondary: 'var(--icons-color)'
-                        }
-                    }
-                }}/>
+                            secondary: 'var(--icons-color)',
+                        },
+                    },
+                }}
+            />
         </div>
     );
 }

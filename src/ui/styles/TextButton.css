@@ -9,7 +9,6 @@
     align-items: center;
     cursor: not-allowed !important;
     transition: all 0.15s ease-in-out;
-
 }
 
 .text-button.valid {

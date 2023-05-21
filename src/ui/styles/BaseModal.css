@@ -28,7 +28,7 @@
 .base-modal-title img {
     vertical-align: middle;
     margin-right: 0.5rem;
-    filter: var(--icons-filter-hover)
+    filter: var(--icons-filter-hover);
 }
 
 .base-modal-description {

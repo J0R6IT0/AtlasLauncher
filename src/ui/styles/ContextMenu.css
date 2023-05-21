@@ -41,5 +41,4 @@
 
 .context-menu-item:hover img {
     filter: var(--icons-filter-hover);
-
 }

@@ -14,18 +14,38 @@ enum Flavours {
     Vanilla,
     Forge,
     Fabric,
-    Quilt
+    Quilt,
 }
 
 const flavours = [
-    { id: Flavours.Vanilla, name: 'Vanilla', background: MinecraftCover, icon: BoxIcon },
-    { id: Flavours.Forge, name: 'Forge', background: MinecraftForge, icon: ForgeIcon },
-    { id: Flavours.Fabric, name: 'Fabric', background: MinecraftFabric, icon: FabricIcon },
-    { id: Flavours.Quilt, name: 'Quilt', background: MinecraftQuilt, icon: QuiltIcon }
+    {
+        id: Flavours.Vanilla,
+        name: 'Vanilla',
+        background: MinecraftCover,
+        icon: BoxIcon,
+    },
+    {
+        id: Flavours.Forge,
+        name: 'Forge',
+        background: MinecraftForge,
+        icon: ForgeIcon,
+    },
+    {
+        id: Flavours.Fabric,
+        name: 'Fabric',
+        background: MinecraftFabric,
+        icon: FabricIcon,
+    },
+    {
+        id: Flavours.Quilt,
+        name: 'Quilt',
+        background: MinecraftQuilt,
+        icon: QuiltIcon,
+    },
 ];
 
 interface NewInstanceProps {
-    goToLibrary: () => void
+    goToLibrary: () => void;
 }
 
 const NewInstance = React.memo((props: NewInstanceProps) => {
@@ -37,21 +57,57 @@ const NewInstance = React.memo((props: NewInstanceProps) => {
                 <span>Add a new instance to your library</span>
             </div>
             <div className='flavour-container'>
-                { flavours.map((element, index) => <div key={index} className={`flavour ${selectedFlavour === element.id ? 'selected' : ''}`} onClick={() => {
-                    setSelectedFlavour(element.id);
-                }}>
-                    <img className='flavour-background' src={element.background} alt="" />
-                    <span className='flavour-icon' ><img src={element.icon} className={`${element.name === 'Fabric' ? 'fabric-icon' : ''}`} alt="" />{element.name}</span>
-                    <div className='flavour-wrapper'>
-                        <div className='flavour-data'>
-                            <img className={`${element.name === 'Fabric' ? 'fabric-icon' : ''}`} src={element.icon} alt="" />
-                            <span>{element.name}</span>
-                        </div>
-                        <div className='flavour-content'>
-                            {selectedFlavour === element.id && <CreateInstance flavour={selectedFlavour} goToLibrary={props.goToLibrary}/>}
+                {flavours.map((element, index) => (
+                    <div
+                        key={index}
+                        className={`flavour ${
+                            selectedFlavour === element.id ? 'selected' : ''
+                        }`}
+                        onClick={() => {
+                            setSelectedFlavour(element.id);
+                        }}
+                    >
+                        <img
+                            className='flavour-background'
+                            src={element.background}
+                            alt=''
+                        />
+                        <span className='flavour-icon'>
+                            <img
+                                src={element.icon}
+                                className={`${
+                                    element.name === 'Fabric'
+                                        ? 'fabric-icon'
+                                        : ''
+                                }`}
+                                alt=''
+                            />
+                            {element.name}
+                        </span>
+                        <div className='flavour-wrapper'>
+                            <div className='flavour-data'>
+                                <img
+                                    className={`${
+                                        element.name === 'Fabric'
+                                            ? 'fabric-icon'
+                                            : ''
+                                    }`}
+                                    src={element.icon}
+                                    alt=''
+                                />
+                                <span>{element.name}</span>
+                            </div>
+                            <div className='flavour-content'>
+                                {selectedFlavour === element.id && (
+                                    <CreateInstance
+                                        flavour={selectedFlavour}
+                                        goToLibrary={props.goToLibrary}
+                                    />
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>)}
+                ))}
             </div>
         </div>
     );

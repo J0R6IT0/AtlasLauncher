@@ -8,9 +8,9 @@ import { type AccountInfo } from '../../App';
 import '../styles/AccountSelector.css';
 
 interface AccountSelectorProps {
-    onClose: () => void
-    updateAccounts: () => void
-    accounts: AccountInfo[]
+    onClose: () => void;
+    updateAccounts: () => void;
+    accounts: AccountInfo[];
 }
 
 function AccountSelector(props: AccountSelectorProps): JSX.Element {
@@ -38,29 +38,59 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
 
     return (
         <div className='account-selector' ref={menuRef}>
-            {props.accounts.map((element, index) => <div key={index} className={`account-items ${element.active ? 'active' : ''}`}>
-                <div className='clickable'
-                    onClick={() => {
-                        invoke('set_active_account', { uuid: element.uuid }).catch(e => {});
-                        props.updateAccounts();
-                    }}>
-                    <img src={`data:image/png;base64,${element.avatar_64px}`} alt="" />
-                    <span>{element.username}
-                        <span id='active-account-label'>{element.active ? '\nActive' : ''}</span>
-                    </span>
+            {props.accounts.map((element, index) => (
+                <div
+                    key={index}
+                    className={`account-items ${
+                        element.active ? 'active' : ''
+                    }`}
+                >
+                    <div
+                        className='clickable'
+                        onClick={() => {
+                            invoke('set_active_account', {
+                                uuid: element.uuid,
+                            }).catch((e) => {});
+                            props.updateAccounts();
+                        }}
+                    >
+                        <img
+                            src={`data:image/png;base64,${element.avatar_64px}`}
+                            alt=''
+                        />
+                        <span>
+                            {element.username}
+                            <span id='active-account-label'>
+                                {element.active ? '\nActive' : ''}
+                            </span>
+                        </span>
+                    </div>
+                    <img
+                        onClick={() => {
+                            invoke('remove_account', { uuid: element.uuid })
+                                .then(() => {
+                                    props.updateAccounts();
+                                })
+                                .catch((e) => {});
+                        }}
+                        className='remove-account clickable'
+                        src={TrashIcon}
+                        alt=''
+                    />
                 </div>
-                <img onClick={() => {
-                    invoke('remove_account', { uuid: element.uuid }).then(() => {
-                        props.updateAccounts();
-                    }).catch(e => {});
-                }} className='remove-account clickable' src={TrashIcon} alt="" />
-            </div>)}
-            <div className='account-items clickable' id='add-account' onClick={() => {
-                invoke('start_oauth').catch(e => {});
-                toast.loading('Logging In.', { id: 'currentLoginNotification' });
-            }}>
+            ))}
+            <div
+                className='account-items clickable'
+                id='add-account'
+                onClick={() => {
+                    invoke('start_oauth').catch((e) => {});
+                    toast.loading('Logging In.', {
+                        id: 'currentLoginNotification',
+                    });
+                }}
+            >
                 <div>
-                    <img src={UserPlus} alt="" />
+                    <img src={UserPlus} alt='' />
                     <span>Add Account</span>
                 </div>
             </div>

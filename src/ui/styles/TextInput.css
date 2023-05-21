@@ -6,7 +6,6 @@
     height: fit-content;
     color: var(--text-color-secondary);
     max-width: 25rem;
-
 }
 
 .input input {
@@ -23,7 +22,6 @@
     transition: all 0.3s ease;
     font-family: MetropolisRegular, sans-serif;
     font-size: 1rem;
-
 }
 
 .floating-input-label {
@@ -32,8 +30,6 @@
     left: 0.6rem;
     pointer-events: none;
     transition: all 0.3s ease;
-
-
 }
 
 .input-image {
@@ -49,22 +45,19 @@
 .input input:valid {
     height: 2.5rem;
     padding-top: 0.8rem;
-
 }
 
 .input input:focus {
-    box-shadow: 0 0 0.2rem var(--icons-color-hover)
-
+    box-shadow: 0 0 0.2rem var(--icons-color-hover);
 }
 
-.input input:focus  ~ .floating-input-label,
-.input input:valid  ~ .floating-input-label {
+.input input:focus ~ .floating-input-label,
+.input input:valid ~ .floating-input-label {
     color: #666572;
     font-size: 0.6rem;
 }
 
-.input input:focus  ~ .input-image,
-.input input:valid  ~ .input-image {
+.input input:focus ~ .input-image,
+.input input:valid ~ .input-image {
     margin-top: 0.8rem;
-
 }

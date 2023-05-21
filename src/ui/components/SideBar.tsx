@@ -8,30 +8,51 @@ import SettingsIcon from '../../assets/icons/settings.svg';
 import '../styles/SideBar.css';
 
 interface SideBarProps {
-    activePage: number
-    setActivePage: (page: number) => void
+    activePage: number;
+    setActivePage: (page: number) => void;
 }
 
 function SideBar({ setActivePage, activePage }: SideBarProps): JSX.Element {
     return (
         <div id='side-bar' className='side-bar'>
             <div className='side-bar-items clickable'>
-                <img src={HomeIcon}/>
+                <img src={HomeIcon} />
             </div>
-            <div className={`side-bar-items clickable ${activePage === 2 ? 'selected' : ''}`} onClick={() => { setActivePage(2); }}>
+            <div
+                className={`side-bar-items clickable ${
+                    activePage === 2 ? 'selected' : ''
+                }`}
+                onClick={() => {
+                    setActivePage(2);
+                }}
+            >
                 <div className='side-bar-selector' />
-                <img src={GridIcon}/>
+                <img src={GridIcon} />
             </div>
-            <div className={`side-bar-items clickable ${activePage === 1 ? 'selected' : ''}`} onClick={() => { setActivePage(1); }}>
+            <div
+                className={`side-bar-items clickable ${
+                    activePage === 1 ? 'selected' : ''
+                }`}
+                onClick={() => {
+                    setActivePage(1);
+                }}
+            >
                 <div className='side-bar-selector' />
-                <img src={PlusIcon}/>
+                <img src={PlusIcon} />
             </div>
-            <div className={`side-bar-items clickable ${activePage === 3 ? 'selected' : ''}`} onClick={() => { setActivePage(3); }}>
+            <div
+                className={`side-bar-items clickable ${
+                    activePage === 3 ? 'selected' : ''
+                }`}
+                onClick={() => {
+                    setActivePage(3);
+                }}
+            >
                 <div className='side-bar-selector' />
-                <img src={PackageIcon}/>
+                <img src={PackageIcon} />
             </div>
             <div className='side-bar-items clickable'>
-                <img src={SettingsIcon}/>
+                <img src={SettingsIcon} />
             </div>
         </div>
     );

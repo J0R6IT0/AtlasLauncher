@@ -3,15 +3,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import '../styles/DownloadsBar.css';
 
 interface DownloadBarProps {
-    onClose: () => void
-    items: DownloadItemProps[]
+    onClose: () => void;
+    items: DownloadItemProps[];
 }
 
 export interface DownloadItemProps {
-    name: string
-    total: number
-    downloaded: number
-    step: string
+    name: string;
+    total: number;
+    downloaded: number;
+    step: string;
 }
 
 function DownloadsBar(props: DownloadBarProps): JSX.Element {
@@ -39,8 +39,18 @@ function DownloadsBar(props: DownloadBarProps): JSX.Element {
 
     return (
         <div ref={menuRef} className='downloads-bar'>
-            {props.items.length <= 0 && <span className='no-active-dls'>No active downloads</span>}
-            {props.items.map((element, key) => <DownloadItem key={key} name={element.name} downloaded={element.downloaded / 2} total={element.total} step={element.step}/>)}
+            {props.items.length <= 0 && (
+                <span className='no-active-dls'>No active downloads</span>
+            )}
+            {props.items.map((element, key) => (
+                <DownloadItem
+                    key={key}
+                    name={element.name}
+                    downloaded={element.downloaded / 2}
+                    total={element.total}
+                    step={element.step}
+                />
+            ))}
         </div>
     );
 }
@@ -54,7 +64,9 @@ function DownloadItem(props: DownloadItemProps): JSX.Element {
     useEffect(() => {
         if (progressRef.current !== null) {
             if (props.total > 0) {
-                progressRef.current.style.width = `${(props.downloaded / props.total) * 100}%`;
+                progressRef.current.style.width = `${
+                    (props.downloaded / props.total) * 100
+                }%`;
                 setIsInfinite(false);
             } else {
                 setIsInfinite(true);
@@ -67,10 +79,23 @@ function DownloadItem(props: DownloadItemProps): JSX.Element {
             <div className='download-item-info'>
                 <span className='download-item-name'>{props.name}</span>
                 <span className='download-item-step'>{props.step}</span>
-                <span className='download-item-progress'>{(props.downloaded / 1_000_000).toFixed(2)} MB{props.total > 0 ? ` / ${(props.total / 1_000_000.0).toFixed(2)} MB (${((props.downloaded / props.total) * 100).toFixed(0)}%)` : ''}</span>
+                <span className='download-item-progress'>
+                    {(props.downloaded / 1_000_000).toFixed(2)} MB
+                    {props.total > 0
+                        ? ` / ${(props.total / 1_000_000.0).toFixed(2)} MB (${(
+                              (props.downloaded / props.total) *
+                              100
+                          ).toFixed(0)}%)`
+                        : ''}
+                </span>
             </div>
             <div className='progress-bar'>
-                <div className='bar'><div ref={progressRef} className={`progress ${isInfinite ? 'infinite' : ''}`} /></div>
+                <div className='bar'>
+                    <div
+                        ref={progressRef}
+                        className={`progress ${isInfinite ? 'infinite' : ''}`}
+                    />
+                </div>
             </div>
         </div>
     );

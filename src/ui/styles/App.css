@@ -1,140 +1,132 @@
 .container {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 .background-color {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--background);
-  opacity: 0.95;
-  z-index: 100;
-  
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--background);
+    opacity: 0.95;
+    z-index: 100;
 }
 
 .background-image {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: auto;
-  height: 100%;
-  opacity: 1;
-  filter: blur(4px);
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: auto;
+    height: 100%;
+    opacity: 1;
+    filter: blur(4px);
 }
 
 .content {
-  position: fixed;
-  left: 4.5rem;
-  top: 0;
-  width: calc(100% - 5rem);
-  height: calc(100% + 0.5rem);
-  transition: all 0.3s ease;
-  z-index: 4000;
+    position: fixed;
+    left: 4.5rem;
+    top: 0;
+    width: calc(100% - 5rem);
+    height: calc(100% + 0.5rem);
+    transition: all 0.3s ease;
+    z-index: 4000;
 }
 
 .secondary-buttons {
-  position: fixed;
-  top: 2rem;
-  right: 1.5rem;
-  height: auto;
-  z-index: 7000;
-  display: flex;
-  justify-content: flex-end;
+    position: fixed;
+    top: 2rem;
+    right: 1.5rem;
+    height: auto;
+    z-index: 7000;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .secondary-button img {
-  height: 1.5rem;
-  filter: var(--text-filter-primary);
-  transition: all 0.1s ease;
-
-
+    height: 1.5rem;
+    filter: var(--text-filter-primary);
+    transition: all 0.1s ease;
 }
 
 .secondary-button {
-  width: auto;
-  height: auto;
-  margin-left: 0.5rem;
+    width: auto;
+    height: auto;
+    margin-left: 0.5rem;
 }
 
 .active-user {
-  border-radius: 10%;
-  overflow: hidden;
-  margin-left: 0.6rem;
+    border-radius: 10%;
+    overflow: hidden;
+    margin-left: 0.6rem;
 }
 
 .active-user img {
-  filter: none;
-  transition: all 0.1s ease;
+    filter: none;
+    transition: all 0.1s ease;
 }
 
-
 .titlebar-button img {
-  filter: var(--icons-filter);
-  height: 1rem;
+    filter: var(--icons-filter);
+    height: 1rem;
 }
 
 .titlebar-button:hover img {
-  filter: var(--icons-filter-hover);
+    filter: var(--icons-filter-hover);
 }
 
-
 .secondary-button:hover img {
-  filter: var(--icons-filter-hover);
-
+    filter: var(--icons-filter-hover);
 }
 
 .secondary-button.active-user:hover img {
-  filter: none;
+    filter: none;
 }
 
 .titlebar {
-  height: 1.7rem;
-  display: flex;
-  justify-content: flex-end;
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-
+    height: 1.7rem;
+    display: flex;
+    justify-content: flex-end;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
 }
 
 .titlebar-button {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  margin-left: 0.3rem;
-  width: 1.7rem;
-  height: 1.7rem;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 0.3rem;
+    width: 1.7rem;
+    height: 1.7rem;
 }
 
 .page-info {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  left: 1.5rem;
-  top: 2.2rem;
-  width: 100%;
-  color: var(--text-color-secondary);
-  font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    left: 1.5rem;
+    top: 2.2rem;
+    width: 100%;
+    color: var(--text-color-secondary);
+    font-size: 0.85rem;
 }
 
 .page-title {
-  color: var(--text-color-primary);
-  font-size: 1.2rem;
-  margin-bottom: 0.6rem;
-  font-weight: bold;
-
+    color: var(--text-color-primary);
+    font-size: 1.2rem;
+    margin-bottom: 0.6rem;
+    font-weight: bold;
 }
 
 .active-downloads-notification {
-  height: 0.6rem;
-  width: 0.6rem;
-  background: var(--icons-color-hover);
-  position: absolute;
-  bottom: 0;
-  border-radius: 100%;
-  border-style: solid;
-  border-color: var(--side-bar-color);
-  margin-left: 0.8rem
+    height: 0.6rem;
+    width: 0.6rem;
+    background: var(--icons-color-hover);
+    position: absolute;
+    bottom: 0;
+    border-radius: 100%;
+    border-style: solid;
+    border-color: var(--side-bar-color);
+    margin-left: 0.8rem;
 }

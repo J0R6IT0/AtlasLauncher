@@ -1,4 +1,3 @@
-
 .account-selector {
     position: fixed;
     background: var(--background-transparent);
@@ -14,15 +13,12 @@
     pointer-events: none;
     max-height: 0;
     transition: all 0.2s ease-in-out;
-
-
 }
 
 .account-selector.visible {
     pointer-events: all;
     max-height: 10rem;
 }
-
 
 .account-items {
     display: flex;
@@ -49,9 +45,7 @@
 
 .remove-account:hover {
     filter: var(--icons-filter-hover);
-
 }
-
 
 .account-items div img {
     width: 1.5rem;
@@ -60,13 +54,12 @@
 }
 
 .account-items span {
-   color: var(--text-color-secondary);
-   transition: all 0.2s ease;
+    color: var(--text-color-secondary);
+    transition: all 0.2s ease;
 }
 
 .account-items.active span {
-    color: var(--text-color-primary)
-
+    color: var(--text-color-primary);
 }
 
 #active-account-label {
@@ -86,7 +79,6 @@
     position: relative;
     filter: var(--text-filter-secondary);
     transition: all 0.2s ease;
-
 }
 
 #add-account:hover img {

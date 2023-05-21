@@ -28,36 +28,39 @@ const resolutions = [
     '1280x720',
     '1024x768',
     '800x600',
-    '640x480'
+    '640x480',
 ];
 
 interface ManageInstanceProps {
-    onClose: () => void
-    target: Element | null
-    updateInstances: () => void
+    onClose: () => void;
+    target: Element | null;
+    updateInstances: () => void;
 }
 
 interface GeneralProps extends BaseManageInstancePageProps {
-    titleInputValid: boolean
-    titleInputValue: string
-    handleTitleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+    titleInputValid: boolean;
+    titleInputValue: string;
+    handleTitleInputChange: (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => void;
 }
 
-interface AppearanceProps extends BaseManageInstancePageProps {
-}
+interface AppearanceProps extends BaseManageInstancePageProps {}
 
-interface JavaProps extends BaseManageInstancePageProps {
-}
+interface JavaProps extends BaseManageInstancePageProps {}
 
 interface BaseManageInstancePageProps {
-    changeProperty: (propertyName: string, propertyValue: string | boolean) => void
-    instanceInfo: InstanceInfo | undefined
+    changeProperty: (
+        propertyName: string,
+        propertyValue: string | boolean
+    ) => void;
+    instanceInfo: InstanceInfo | undefined;
 }
 
 enum Categories {
     General,
     Java,
-    Appearance
+    Appearance,
 }
 
 function ManageInstance(props: ManageInstanceProps): JSX.Element {
@@ -77,13 +80,19 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
         }, 300);
     };
 
-    function handleTitleInputChange(event: React.ChangeEvent<HTMLInputElement>): void {
+    function handleTitleInputChange(
+        event: React.ChangeEvent<HTMLInputElement>
+    ): void {
         const { value } = event.target;
         setTitleInputValue(value);
-        // eslint-disable-next-line no-control-regex
-        setTitleInputValid(/^(?!^(?:(?:CON|PRN|AUX|NUL|COM\d|LPT\d)(?:\..*)?)$)[^<>:"/\\|?*\x00-\x1F]*[^<>:"/\\|?*\x00-\x1F .]$/i.test(value.trim()));
+        setTitleInputValid(
+            // eslint-disable-next-line no-control-regex
+            /^(?!^(?:(?:CON|PRN|AUX|NUL|COM\d|LPT\d)(?:\..*)?)$)[^<>:"/\\|?*\x00-\x1F]*[^<>:"/\\|?*\x00-\x1F .]$/i.test(
+                value.trim()
+            )
+        );
         handlePropertyChange('name', value);
-    };
+    }
 
     const handleOutsideClick = (event: MouseEvent): void => {
         const menu = document.querySelector('.manage-instance') as HTMLElement;
@@ -92,8 +101,16 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
         }
     };
 
-    const handlePropertyChange = (propertyName: string, propertyValue: string | boolean): void => {
-        if (instanceInfo !== undefined && !Object.prototype.hasOwnProperty.call(instanceInfo, propertyName)) return;
+    const handlePropertyChange = (
+        propertyName: string,
+        propertyValue: string | boolean
+    ): void => {
+        if (
+            instanceInfo !== undefined &&
+            !Object.prototype.hasOwnProperty.call(instanceInfo, propertyName)
+        ) {
+            return;
+        }
         setWasValueModified(true);
         const newInstanceInfo: InstanceInfo = instanceInfo as InstanceInfo;
         newInstanceInfo[propertyName] = propertyValue;
@@ -108,10 +125,12 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
         if (instanceName !== undefined) {
             setInstanceName(instanceName);
             setTitleInputValue(instanceName);
-            invoke('read_instance_data', { name: instanceName }).then((info): void => {
-                setInstanceInfo(info as InstanceInfo);
-            }).catch(e => {});
-        };
+            invoke('read_instance_data', { name: instanceName })
+                .then((info): void => {
+                    setInstanceInfo(info as InstanceInfo);
+                })
+                .catch((e) => {});
+        }
 
         setTimeout(() => {
             menuRef.current?.classList.add('visible');
@@ -126,39 +145,89 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
     return (
         <div ref={menuRef} className='manage-instance-container'>
             <div className='manage-instance'>
-                <div className='manage-instance-title'><span>{instanceName}</span></div>
+                <div className='manage-instance-title'>
+                    <span>{instanceName}</span>
+                </div>
                 <div className='manage-instance-categories'>
-                    <div className={`instance-category clickable ${category === Categories.General ? 'active' : ''}`} onClick={() => {
-                        setCategory(Categories.General);
-                    }}>
-                        <img src={GlobeIcon} alt="" />
+                    <div
+                        className={`instance-category clickable ${
+                            category === Categories.General ? 'active' : ''
+                        }`}
+                        onClick={() => {
+                            setCategory(Categories.General);
+                        }}
+                    >
+                        <img src={GlobeIcon} alt='' />
                         <span>General</span>
                         <hr />
                     </div>
-                    <div className={`instance-category clickable ${category === Categories.Java ? 'active' : ''}`} onClick={() => {
-                        setCategory(Categories.Java);
-                    }}>
-                        <img src={CoffeeIcon} alt="" />
+                    <div
+                        className={`instance-category clickable ${
+                            category === Categories.Java ? 'active' : ''
+                        }`}
+                        onClick={() => {
+                            setCategory(Categories.Java);
+                        }}
+                    >
+                        <img src={CoffeeIcon} alt='' />
                         <span>Java</span>
                         <hr />
                     </div>
-                    <div className={`instance-category clickable ${category === Categories.Appearance ? 'active' : ''}`} onClick={() => {
-                        setCategory(Categories.Appearance);
-                    }}>
-                        <img src={PenToolIcon} alt="" />
+                    <div
+                        className={`instance-category clickable ${
+                            category === Categories.Appearance ? 'active' : ''
+                        }`}
+                        onClick={() => {
+                            setCategory(Categories.Appearance);
+                        }}
+                    >
+                        <img src={PenToolIcon} alt='' />
                         <span>Appearance</span>
                         <hr />
                     </div>
-                    <TextButton text='Save' clickable={titleInputValid && wasValueModified} onClick={() => {
-                        invoke('write_instance_data', { name: instanceName, data: instanceInfo }).then(() => {
-                            props.updateInstances();
-                            closeMenu();
-                        }).catch(e => {});
-                    }} />
+                    <TextButton
+                        text='Save'
+                        clickable={titleInputValid && wasValueModified}
+                        onClick={() => {
+                            invoke('write_instance_data', {
+                                name: instanceName,
+                                data: instanceInfo,
+                            })
+                                .then(() => {
+                                    props.updateInstances();
+                                    closeMenu();
+                                })
+                                .catch((e) => {});
+                        }}
+                    />
                 </div>
-                {category === Categories.General && <General changeProperty={(propertyName, propertyValue) => { handlePropertyChange(propertyName, propertyValue); }} instanceInfo={instanceInfo} titleInputValid={titleInputValid} titleInputValue={titleInputValue} handleTitleInputChange={handleTitleInputChange}/>}
-                {category === Categories.Java && <Java instanceInfo={instanceInfo} changeProperty={(propertyName, propertyValue) => { handlePropertyChange(propertyName, propertyValue); }}/>}
-                {category === Categories.Appearance && <Appearance instanceInfo={instanceInfo} changeProperty={(propertyName, propertyValue) => { handlePropertyChange(propertyName, propertyValue); }} />}
+                {category === Categories.General && (
+                    <General
+                        changeProperty={(propertyName, propertyValue) => {
+                            handlePropertyChange(propertyName, propertyValue);
+                        }}
+                        instanceInfo={instanceInfo}
+                        titleInputValid={titleInputValid}
+                        titleInputValue={titleInputValue}
+                        handleTitleInputChange={handleTitleInputChange}
+                    />
+                )}
+                {category === Categories.Java && (
+                    <Java
+                        instanceInfo={instanceInfo}
+                        changeProperty={(propertyName, propertyValue) => {
+                            handlePropertyChange(propertyName, propertyValue);
+                        }}
+                    />
+                )}
+                {category === Categories.Appearance && (
+                    <Appearance
+                        instanceInfo={instanceInfo}
+                        changeProperty={(propertyName, propertyValue) => {
+                            handlePropertyChange(propertyName, propertyValue);
+                        }}
+                    />
+                )}
             </div>
         </div>
     );
@@ -168,54 +237,86 @@ export default ManageInstance;
 
 function General(props: GeneralProps): JSX.Element {
     if (props.instanceInfo !== undefined) {
-        const [selectedVersionType, setSelectedVersionType] = useState(props.instanceInfo.version_type);
-        const [selectedVersion, setSelectedVersion] = useState(props.instanceInfo.version);
+        const [selectedVersionType, setSelectedVersionType] = useState(
+            props.instanceInfo.version_type
+        );
+        const [selectedVersion, setSelectedVersion] = useState(
+            props.instanceInfo.version
+        );
         return (
             <div className='manage-instance-fields'>
-                <TextInput value={props.titleInputValue} onChange={props.handleTitleInputChange} name='Instance name' inputValid={props.titleInputValid}/>
-                <VersionMenu autoScroll={true} selectedVersion={selectedVersion} setSelectedVersion={(version) => {
-                    props.changeProperty('version', version);
-                    props.changeProperty('version_type', selectedVersionType);
-                    setSelectedVersion(version);
-                }} selectedVersionType={selectedVersionType} setSelectedVersionType={(type) => { setSelectedVersionType(type); }}/>
+                <TextInput
+                    value={props.titleInputValue}
+                    onChange={props.handleTitleInputChange}
+                    name='Instance name'
+                    inputValid={props.titleInputValid}
+                />
+                <VersionMenu
+                    autoScroll={true}
+                    selectedVersion={selectedVersion}
+                    setSelectedVersion={(version) => {
+                        props.changeProperty('version', version);
+                        props.changeProperty(
+                            'version_type',
+                            selectedVersionType
+                        );
+                        setSelectedVersion(version);
+                    }}
+                    selectedVersionType={selectedVersionType}
+                    setSelectedVersionType={(type) => {
+                        setSelectedVersionType(type);
+                    }}
+                />
             </div>
         );
     }
-    return (
-        <div className='manage-instance-fields'>
-        </div>
-    );
-};
+    return <div className='manage-instance-fields'></div>;
+}
 
 function Java(props: JavaProps): JSX.Element {
     if (props.instanceInfo !== undefined) {
-        const [isFullscreenEnabled, setFullscreenEnabled] = useState(props.instanceInfo.fullscreen);
+        const [isFullscreenEnabled, setFullscreenEnabled] = useState(
+            props.instanceInfo.fullscreen
+        );
         return (
             <div className='manage-instance-fields'>
                 <div className='resolution-wrapper'>
-                    <BaseDropdown onSelect={(value) => {
-                        const resolution = value.split('x');
-                        props.changeProperty('width', resolution[0]);
-                        props.changeProperty('height', resolution[1]);
-                    }} autoScroll={true} default={props.instanceInfo.width + 'x' + props.instanceInfo.height} values={resolutions} placeholder='Resolution'/>
+                    <BaseDropdown
+                        onSelect={(value) => {
+                            const resolution = value.split('x');
+                            props.changeProperty('width', resolution[0]);
+                            props.changeProperty('height', resolution[1]);
+                        }}
+                        autoScroll={true}
+                        default={
+                            props.instanceInfo.width +
+                            'x' +
+                            props.instanceInfo.height
+                        }
+                        values={resolutions}
+                        placeholder='Resolution'
+                    />
                 </div>
-                <div className={`option ${isFullscreenEnabled ? 'enabled' : ''}`}>
-                    <BaseToggle default={isFullscreenEnabled} onEnable={() => {
-                        setFullscreenEnabled(true);
-                        props.changeProperty('fullscreen', true);
-                    }} onDisable={() => {
-                        setFullscreenEnabled(false);
-                        props.changeProperty('fullscreen', false);
-                    }}/>
+                <div
+                    className={`option ${isFullscreenEnabled ? 'enabled' : ''}`}
+                >
+                    <BaseToggle
+                        default={isFullscreenEnabled}
+                        onEnable={() => {
+                            setFullscreenEnabled(true);
+                            props.changeProperty('fullscreen', true);
+                        }}
+                        onDisable={() => {
+                            setFullscreenEnabled(false);
+                            props.changeProperty('fullscreen', false);
+                        }}
+                    />
                     <span>Fullscreen</span>
                 </div>
             </div>
         );
     }
-    return (
-        <div className='manage-instance-fields'>
-        </div>
-    );
+    return <div className='manage-instance-fields'></div>;
 }
 
 function Appearance(props: AppearanceProps): JSX.Element {
@@ -225,71 +326,133 @@ function Appearance(props: AppearanceProps): JSX.Element {
         return (
             <div className='manage-instance-fields appearance'>
                 <div className='instance-preview'>
-                    <Instance key={newBackground + newIcon} element={props.instanceInfo} handleContextMenu={() => {}} setShowRetryModal={() => {}} onClick={() => {}}/>
+                    <Instance
+                        key={newBackground + newIcon}
+                        element={props.instanceInfo}
+                        handleContextMenu={() => {}}
+                        setShowRetryModal={() => {}}
+                        onClick={() => {}}
+                    />
                 </div>
                 <div className='backgrounds'>
                     <span>Background</span>
                     <div className='default-backgrounds'>
-                        <div className='default-background-wrapper clickable' onClick={() => {
-                            open({
-                                multiple: false,
-                                filters: [{
-                                    name: 'Instance Background',
-                                    extensions: ['png', 'jpeg', 'webp', 'gif']
-                                }]
-                            }).then((selected) => {
-                                if (selected !== null && !Array.isArray(selected)) {
-                                    setNewBackground(selected);
-                                    props.changeProperty('background', selected);
-                                }
-                            }).catch((e) => {});
-                        }}>
-                            <img className='default-background plus' src={PlusIcon}/>
+                        <div
+                            className='default-background-wrapper clickable'
+                            onClick={() => {
+                                open({
+                                    multiple: false,
+                                    filters: [
+                                        {
+                                            name: 'Instance Background',
+                                            extensions: [
+                                                'png',
+                                                'jpeg',
+                                                'webp',
+                                                'gif',
+                                            ],
+                                        },
+                                    ],
+                                })
+                                    .then((selected) => {
+                                        if (
+                                            selected !== null &&
+                                            !Array.isArray(selected)
+                                        ) {
+                                            setNewBackground(selected);
+                                            props.changeProperty(
+                                                'background',
+                                                selected
+                                            );
+                                        }
+                                    })
+                                    .catch((e) => {});
+                            }}
+                        >
+                            <img
+                                className='default-background plus'
+                                src={PlusIcon}
+                            />
                         </div>
-                        {defaultBackgrounds.map((element, key) =>
-                            <div key={key} className='default-background-wrapper clickable' onClick={() => {
-                                setNewBackground(`default${key}`);
-                                props.changeProperty('background', `default${key}`);
-                            }}>
-                                <img className='default-background' src={defaultBackgrounds[key]}/>
+                        {defaultBackgrounds.map((element, key) => (
+                            <div
+                                key={key}
+                                className='default-background-wrapper clickable'
+                                onClick={() => {
+                                    setNewBackground(`default${key}`);
+                                    props.changeProperty(
+                                        'background',
+                                        `default${key}`
+                                    );
+                                }}
+                            >
+                                <img
+                                    className='default-background'
+                                    src={defaultBackgrounds[key]}
+                                />
                             </div>
-                        )}
+                        ))}
                     </div>
                 </div>
                 <div className='icons'>
                     <span>Icon</span>
                     <div className='default-icons'>
-                        <div className='default-icon-wrapper new clickable' onClick={() => {
-                            open({
-                                multiple: false,
-                                filters: [{
-                                    name: 'Instance Icon',
-                                    extensions: ['png', 'jpeg', 'webp', 'gif']
-                                }]
-                            }).then((selected) => {
-                                if (selected !== null && !Array.isArray(selected)) {
-                                    setNewIcon(selected);
-                                    props.changeProperty('icon', selected);
-                                }
-                            }).catch((e) => {});
-                        }}>
-                            <img className='default-icon plus' src={PlusIcon}/>
+                        <div
+                            className='default-icon-wrapper new clickable'
+                            onClick={() => {
+                                open({
+                                    multiple: false,
+                                    filters: [
+                                        {
+                                            name: 'Instance Icon',
+                                            extensions: [
+                                                'png',
+                                                'jpeg',
+                                                'webp',
+                                                'gif',
+                                            ],
+                                        },
+                                    ],
+                                })
+                                    .then((selected) => {
+                                        if (
+                                            selected !== null &&
+                                            !Array.isArray(selected)
+                                        ) {
+                                            setNewIcon(selected);
+                                            props.changeProperty(
+                                                'icon',
+                                                selected
+                                            );
+                                        }
+                                    })
+                                    .catch((e) => {});
+                            }}
+                        >
+                            <img className='default-icon plus' src={PlusIcon} />
                         </div>
-                        {defaultIcons.map((element, key) =>
-                            <div key={key} className='default-icon-wrapper clickable' onClick={() => {
-                                setNewIcon(`default${key}`);
-                                props.changeProperty('icon', `default${key}`);
-                            }}>
-                                <img className='default-icon' src={defaultIcons[key]}/>
+                        {defaultIcons.map((element, key) => (
+                            <div
+                                key={key}
+                                className='default-icon-wrapper clickable'
+                                onClick={() => {
+                                    setNewIcon(`default${key}`);
+                                    props.changeProperty(
+                                        'icon',
+                                        `default${key}`
+                                    );
+                                }}
+                            >
+                                <img
+                                    className='default-icon'
+                                    src={defaultIcons[key]}
+                                />
                             </div>
-                        )}
+                        ))}
                     </div>
                 </div>
             </div>
         );
     }
-    return (
-        <div className='manage-instance-fields'>
-        </div>
-    );
-};
+    return <div className='manage-instance-fields'></div>;
+}

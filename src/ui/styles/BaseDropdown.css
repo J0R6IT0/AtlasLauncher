@@ -39,7 +39,7 @@
     position: absolute;
     margin-top: 1.6rem;
     margin-left: 0.6rem;
-    color: var(--text-color-primary)
+    color: var(--text-color-primary);
 }
 
 .base-dropdown img {
@@ -71,7 +71,7 @@
     overflow: auto;
 }
 
-.base-dropdown.selected .dropdown-values{
+.base-dropdown.selected .dropdown-values {
     margin-top: 3.3rem;
 }
 

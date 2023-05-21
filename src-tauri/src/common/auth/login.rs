@@ -23,7 +23,11 @@ pub fn create_login_window(handle: tauri::AppHandle) {
         None => (),
     }
 
-    let url: String = format!("https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?client_id={}&response_type=code&response_mode=query&redirect_uri={}&scope={}&prompt=select_account", constants::OAUTH_CLIENT_ID, constants::OAUTH_ENCODED_REDIRECT_URI, constants::OAUTH_SCOPE);
+    let url: String = format!("https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?client_id={}&response_type=code&response_mode=query&redirect_uri={}&scope={}&prompt=select_account", 
+        constants::OAUTH_CLIENT_ID, 
+        constants::OAUTH_ENCODED_REDIRECT_URI, 
+        constants::OAUTH_SCOPE
+    );
 
     let app: AppHandle = handle.to_owned();
 

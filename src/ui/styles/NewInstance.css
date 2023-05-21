@@ -1,125 +1,122 @@
 .new-instance {
-  position: relative;
-  height: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
+    position: relative;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .flavour-container {
-  position: absolute;
-  bottom: 2rem;
-  left: 1.5rem;
-  height: calc(100% - 8.5rem);
-  width: calc(100% - 2.5rem);
-  display: flex;
-  gap: 0.5rem;
+    position: absolute;
+    bottom: 2rem;
+    left: 1.5rem;
+    height: calc(100% - 8.5rem);
+    width: calc(100% - 2.5rem);
+    display: flex;
+    gap: 0.5rem;
 }
 
 .flavour {
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
-  background-color: rgb(53 30 95 / 10%);
-  border-radius: 0.5rem;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(53 30 95 / 10%);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease-in-out;
 }
 
 .flavour.selected {
-  width: 360%;
+    width: 360%;
 }
 
 .flavour-background {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  object-fit: cover;
-  opacity: 0.25;
-  transition: all 0.3s ease-in-out;
-  filter: blur(2px);
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    opacity: 0.25;
+    transition: all 0.3s ease-in-out;
+    filter: blur(2px);
 }
 
 .flavour:hover .flavour-background,
 .flavour.selected .flavour-background {
-  opacity: 1;
-  transform: scale(1.01);
-  filter: blur(0);
+    opacity: 1;
+    transform: scale(1.01);
+    filter: blur(0);
 }
 
 .flavour-icon {
-  filter: var(--text-filter-secondary);
-  transition: all 0.3s ease-in-out;
-  width: 50%;
-  text-align: center;
-  font-size: 1.5rem;
+    filter: var(--text-filter-secondary);
+    transition: all 0.3s ease-in-out;
+    width: 50%;
+    text-align: center;
+    font-size: 1.5rem;
 }
 
 .flavour:hover .flavour-icon,
 .flavour.selected .flavour-icon {
-  opacity: 0;
+    opacity: 0;
 }
 
 .flavour-wrapper {
-  background: var(--background-transparent);
-  backdrop-filter: blur(10px);
-  opacity: 1;
-  position: absolute;
-  bottom: -3rem;
-  width: 100%;
-  height: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease-in-out;
-
+    background: var(--background-transparent);
+    backdrop-filter: blur(10px);
+    opacity: 1;
+    position: absolute;
+    bottom: -3rem;
+    width: 100%;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease-in-out;
 }
 
 .flavour-data {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease-in-out;
-
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease-in-out;
 }
 
 .flavour-data span {
-  font-size: 1.2rem;
-  transition: all 0.3s ease-in-out;
-  color: var(--text-color-secondary);
-  display: inline-block;
-  margin-left: 0.3rem;
+    font-size: 1.2rem;
+    transition: all 0.3s ease-in-out;
+    color: var(--text-color-secondary);
+    display: inline-block;
+    margin-left: 0.3rem;
 }
 
 .flavour-data img {
-  height: 1.5rem;
-  filter: var(--text-filter-secondary);
-  margin-bottom: 0.2rem;
-
+    height: 1.5rem;
+    filter: var(--text-filter-secondary);
+    margin-bottom: 0.2rem;
 }
 
 .flavour:hover .flavour-wrapper,
 .flavour.selected .flavour-wrapper {
-  bottom: 0;
+    bottom: 0;
 }
 
 .flavour.selected .flavour-wrapper {
-  height: 100%;
-  align-items: flex-start;
-  cursor: default;
+    height: 100%;
+    align-items: flex-start;
+    cursor: default;
 }
 
 .flavour.selected .flavour-data {
-  margin-top: 2rem;
+    margin-top: 2rem;
 }
 
 .flavour-content {
-  position: absolute;
-  width: 100%;
-  height: calc(100% - 5rem);
-  bottom: 0;
+    position: absolute;
+    width: 100%;
+    height: calc(100% - 5rem);
+    bottom: 0;
 }

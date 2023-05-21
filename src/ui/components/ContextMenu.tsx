@@ -6,11 +6,11 @@ import FolderIcon from '../../assets/icons/folder.svg';
 import { invoke } from '@tauri-apps/api';
 
 interface ContextMenuProps {
-    target: Element | null
-    onClose: () => void
-    position: { x: number, y: number }
-    updateInstances: () => void
-    manageInstance: () => void
+    target: Element | null;
+    onClose: () => void;
+    position: { x: number; y: number };
+    updateInstances: () => void;
+    manageInstance: () => void;
 }
 
 function ContextMenu(props: ContextMenuProps): JSX.Element {
@@ -58,27 +58,47 @@ function ContextMenu(props: ContextMenuProps): JSX.Element {
     }, [props.position.x, props.position.y]);
 
     return (
-        <div ref={menuRef} className='context-menu' style={{ left: props.position.x, top: props.position.y }}>
-            <div className='context-menu-item clickable' onClick={() => {
-                closeMenu();
-                props.manageInstance();
-            }}>
+        <div
+            ref={menuRef}
+            className='context-menu'
+            style={{ left: props.position.x, top: props.position.y }}
+        >
+            <div
+                className='context-menu-item clickable'
+                onClick={() => {
+                    closeMenu();
+                    props.manageInstance();
+                }}
+            >
                 <img src={ToolIcon} />
                 <span>Manage Instance</span>
             </div>
-            <div className='context-menu-item clickable' onClick={() => {
-                invoke('open_instance_folder', { name: props.target?.querySelector('span')?.innerText }).then(() => {
-                }).catch(e => {});
-            }}>
+            <div
+                className='context-menu-item clickable'
+                onClick={() => {
+                    invoke('open_instance_folder', {
+                        name: props.target?.querySelector('span')?.innerText,
+                    })
+                        .then(() => {})
+                        .catch((e) => {});
+                }}
+            >
                 <img src={FolderIcon} />
                 <span>Open Folder</span>
             </div>
-            <div className='context-menu-item clickable' onClick={() => {
-                closeMenu();
-                invoke('remove_instance', { name: props.target?.querySelector('span')?.innerText }).then(() => {
-                    props.updateInstances();
-                }).catch(e => {});
-            }}>
+            <div
+                className='context-menu-item clickable'
+                onClick={() => {
+                    closeMenu();
+                    invoke('remove_instance', {
+                        name: props.target?.querySelector('span')?.innerText,
+                    })
+                        .then(() => {
+                            props.updateInstances();
+                        })
+                        .catch((e) => {});
+                }}
+            >
                 <img src={TrashIcon} />
                 <span>Remove Instance</span>
             </div>

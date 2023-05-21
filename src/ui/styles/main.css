@@ -1,75 +1,75 @@
-@import url("fonts.css");
+@import url('fonts.css');
 
 :root {
-  height: 100%;
-  width: 100%;
-  background: var(--background);
-  text-decoration: none;
-  overflow: hidden;
-  color: var(--text-color);
-  font-family: MetropolisRegular, sans-serif;
-  font-weight: lighter;
-  -webkit-touch-callout: none;
-  user-select: none;
+    height: 100%;
+    width: 100%;
+    background: var(--background);
+    text-decoration: none;
+    overflow: hidden;
+    color: var(--text-color);
+    font-family: MetropolisRegular, sans-serif;
+    font-weight: lighter;
+    -webkit-touch-callout: none;
+    user-select: none;
 
-  --background: linear-gradient(180deg, rgb(32 39 53) 0%, rgb(28 33 45) 100%);
-  --background-transparent: radial-gradient(
-    circle,
-    rgb(32 39 53 / 70%) 20%,
-    rgb(28 33 45 / 70%) 100%
-  );
-  --side-bar-color: #252b3b;
-  --icons-color: #414c68;
-  --icons-filter: invert(27%) sepia(13%) saturate(1347%) hue-rotate(185deg)
-    brightness(94%) contrast(87%);
-  --icons-color-hover: #5776ff;
-  --icons-filter-hover: invert(49%) sepia(80%) saturate(2775%)
-    hue-rotate(211deg) brightness(94%) contrast(115%);
-  --text-color-primary: #fcffff;
-  --text-filter-primary: invert(94%) sepia(2%) saturate(1556%)
-    hue-rotate(188deg) brightness(94%) contrast(82%);
-  --text-color-secondary: #6b6f80;
-  --text-filter-secondary: invert(45%) sepia(7%) saturate(878%)
-    hue-rotate(191deg) brightness(94%) contrast(88%);
-  --scroll-bar-color: #6b6f80;
-  --instance-sidebar: #252b3b88;
+    --background: linear-gradient(180deg, rgb(32 39 53) 0%, rgb(28 33 45) 100%);
+    --background-transparent: radial-gradient(
+        circle,
+        rgb(32 39 53 / 70%) 20%,
+        rgb(28 33 45 / 70%) 100%
+    );
+    --side-bar-color: #252b3b;
+    --icons-color: #414c68;
+    --icons-filter: invert(27%) sepia(13%) saturate(1347%) hue-rotate(185deg)
+        brightness(94%) contrast(87%);
+    --icons-color-hover: #5776ff;
+    --icons-filter-hover: invert(49%) sepia(80%) saturate(2775%)
+        hue-rotate(211deg) brightness(94%) contrast(115%);
+    --text-color-primary: #fcffff;
+    --text-filter-primary: invert(94%) sepia(2%) saturate(1556%)
+        hue-rotate(188deg) brightness(94%) contrast(82%);
+    --text-color-secondary: #6b6f80;
+    --text-filter-secondary: invert(45%) sepia(7%) saturate(878%)
+        hue-rotate(191deg) brightness(94%) contrast(88%);
+    --scroll-bar-color: #6b6f80;
+    --instance-sidebar: #252b3b88;
 }
 
 ::-webkit-scrollbar {
-  width: 0.4rem;
-  height: 0.4rem;
+    width: 0.4rem;
+    height: 0.4rem;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--scroll-bar-color);
-  border-radius: 0.5rem;
+    background: var(--scroll-bar-color);
+    border-radius: 0.5rem;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--icons-color-hover);
+    background: var(--icons-color-hover);
 }
 
 .toast-notification {
-  background: var(--background-transparent) !important;
-  backdrop-filter: blur(10px) !important;
-  box-shadow: 0 0 0.4rem rgb(0 0 0 30%) !important;
-  color: var(--text-color-secondary) !important;
-  border-radius: 0.3rem !important;
+    background: var(--background-transparent) !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 0 0.4rem rgb(0 0 0 30%) !important;
+    color: var(--text-color-secondary) !important;
+    border-radius: 0.3rem !important;
 }
 
 .fabric-icon {
-  transform: scale(0.9) scaleX(-1);
+    transform: scale(0.9) scaleX(-1);
 }
 
 .clickable {
-  cursor: pointer;
-  transition: all 0.2s ease-out;
+    cursor: pointer;
+    transition: all 0.2s ease-out;
 }
 
 .clickable:active {
-  transform: scale(0.9);
+    transform: scale(0.9);
 }

@@ -4,10 +4,10 @@ import AlertIcon from '../../assets/icons/alert-triangle.svg';
 import TextButton from './TextButton';
 
 interface BaseModalProps {
-    description: string
-    title: string
-    onAccept: () => void
-    onClose: () => void
+    description: string;
+    title: string;
+    onAccept: () => void;
+    onClose: () => void;
 }
 
 function BaseModal(props: BaseModalProps): JSX.Element {
@@ -39,9 +39,16 @@ function BaseModal(props: BaseModalProps): JSX.Element {
 
     return (
         <div ref={menuRef} className='base-modal'>
-            <span className='base-modal-title'><img src={AlertIcon} />{props.title}</span>
+            <span className='base-modal-title'>
+                <img src={AlertIcon} />
+                {props.title}
+            </span>
             <span className='base-modal-description'>{props.description}</span>
-            <TextButton text='Accept' clickable={true} onClick={props.onAccept}/>
+            <TextButton
+                text='Accept'
+                clickable={true}
+                onClick={props.onAccept}
+            />
         </div>
     );
 }

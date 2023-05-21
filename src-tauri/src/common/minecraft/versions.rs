@@ -264,8 +264,15 @@ pub async fn get_forge_versions() -> Result<Value, Box<dyn std::error::Error>> {
     Ok(data)
 }
 
-pub async fn get_fabric_mc_versions() -> Result<Vec<Value>, Box<dyn std::error::Error>> {
-    let manifest: Value = read_as_value(NET_FABRICMC_VERSION_MANIFEST).await?;
+pub async fn get_fabric_mc_versions(
+    is_quilt: bool,
+) -> Result<Vec<Value>, Box<dyn std::error::Error>> {
+    let manifest: Value = read_as_value(if is_quilt {
+        ORG_QUILTMC_VERSION_MANIFEST
+    } else {
+        NET_FABRICMC_VERSION_MANIFEST
+    })
+    .await?;
     if manifest["game"].is_array() {
         return Ok(manifest["game"].as_array().unwrap().to_owned());
     } else {
@@ -273,26 +280,15 @@ pub async fn get_fabric_mc_versions() -> Result<Vec<Value>, Box<dyn std::error::
     }
 }
 
-pub async fn get_fabric_loader_versions() -> Result<Vec<Value>, Box<dyn std::error::Error>> {
-    let manifest: Value = read_as_value(NET_FABRICMC_VERSION_MANIFEST).await?;
-    if manifest["loader"].is_array() {
-        return Ok(manifest["loader"].as_array().unwrap().to_owned());
+pub async fn get_fabric_loader_versions(
+    is_quilt: bool,
+) -> Result<Vec<Value>, Box<dyn std::error::Error>> {
+    let manifest: Value = read_as_value(if is_quilt {
+        ORG_QUILTMC_VERSION_MANIFEST
     } else {
-        return Ok([].to_vec());
-    }
-}
-
-pub async fn get_quilt_mc_versions() -> Result<Vec<Value>, Box<dyn std::error::Error>> {
-    let manifest: Value = read_as_value(ORG_QUILTMC_VERSION_MANIFEST).await?;
-    if manifest["game"].is_array() {
-        return Ok(manifest["game"].as_array().unwrap().to_owned());
-    } else {
-        return Ok([].to_vec());
-    }
-}
-
-pub async fn get_quilt_loader_versions() -> Result<Vec<Value>, Box<dyn std::error::Error>> {
-    let manifest: Value = read_as_value(ORG_QUILTMC_VERSION_MANIFEST).await?;
+        NET_FABRICMC_VERSION_MANIFEST
+    })
+    .await?;
     if manifest["loader"].is_array() {
         return Ok(manifest["loader"].as_array().unwrap().to_owned());
     } else {

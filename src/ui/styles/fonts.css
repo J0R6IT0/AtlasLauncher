@@ -2,7 +2,6 @@
     font-family: MetropolisRegular;
     font-weight: normal;
     font-style: normal;
-    src: 
-      local('Metropolis-Regular'), 
-      url('../../assets/fonts/Metropolis-Regular.woff2') format('woff2');
-  }
+    src: local('Metropolis-Regular'),
+        url('../../assets/fonts/Metropolis-Regular.woff2') format('woff2');
+}
