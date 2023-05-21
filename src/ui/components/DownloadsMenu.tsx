@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-import '../styles/DownloadsBar.css';
+import '../styles/DownloadsMenu.css';
 
 interface DownloadBarProps {
     onClose: () => void;

@@ -15,9 +15,9 @@ import BellIcon from './assets/icons/bell.svg';
 import DownloadIcon from './assets/icons/download.svg';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
-import DownloadsBar, {
+import DownloadsMenu, {
     type DownloadItemProps,
-} from './ui/components/DownloadsBar';
+} from './ui/components/DownloadsMenu';
 import Modpacks from './ui/pages/Modpacks';
 
 interface StartInstanceEvent {
@@ -201,7 +201,7 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
                 />
             )}
             {downloadsActive && (
-                <DownloadsBar
+                <DownloadsMenu
                     onClose={() => {
                         setDownloadsActive(false);
                     }}
