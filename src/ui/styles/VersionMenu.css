@@ -33,8 +33,12 @@
     padding: 0.3rem;
 }
 
-.version-menu img {
+.version-menu svg {
+    position: relative;
+    float: right;
     margin-top: -2.2rem;
+    height: 1.5rem;
+    stroke: var(--icons-color-hover);
 }
 
 .version-tabs div:hover {

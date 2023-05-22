@@ -1,8 +1,7 @@
 import { invoke } from '@tauri-apps/api/tauri';
 import React, { memo, useEffect, useRef, useState } from 'react';
-import CheckIcon from '../../assets/icons/check.svg';
-import AlertIcon from '../../assets/icons/alert-triangle.svg';
 import '../styles/VersionMenu.css';
+import { AlertTriangleIcon, CheckIcon } from '../../assets/icons/Icons';
 
 interface MinecraftVersion {
     id: string;
@@ -11,14 +10,13 @@ interface MinecraftVersion {
 
 interface VersionMenuProps {
     autoScroll: boolean;
-    selectedVersion: string;
-    setSelectedVersion: (version: string) => void;
-    selectedVersionType: string;
-    setSelectedVersionType: (type: string) => void;
+    mcVersion: string;
+    setMcVersion: (version: string) => void;
 }
 
 function VersionMenu(props: VersionMenuProps): JSX.Element {
     const [versions, setVersions] = useState<MinecraftVersion[]>([]);
+    const [selectedVersionType, setSelectedVersionType] = useState('release');
     const selectedVersionRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         invoke('get_minecraft_versions')
@@ -36,165 +34,153 @@ function VersionMenu(props: VersionMenuProps): JSX.Element {
             <div className='version-tabs'>
                 <div
                     className={`version-type clickable ${
-                        props.selectedVersionType === 'release'
-                            ? 'selected'
-                            : ''
+                        selectedVersionType === 'release' ? 'selected' : ''
                     }`}
                     onClick={() => {
-                        props.setSelectedVersionType('release');
+                        setSelectedVersionType('release');
                     }}
                 >
                     <span>Release</span>
                 </div>
                 <div
                     className={`version-type clickable ${
-                        props.selectedVersionType === 'snapshot'
-                            ? 'selected'
-                            : ''
+                        selectedVersionType === 'snapshot' ? 'selected' : ''
                     }`}
                     onClick={() => {
-                        props.setSelectedVersionType('snapshot');
+                        setSelectedVersionType('snapshot');
                     }}
                 >
                     <span>Snapshot</span>
                 </div>
                 <div
                     className={`version-type clickable ${
-                        props.selectedVersionType === 'old_beta'
-                            ? 'selected'
-                            : ''
+                        selectedVersionType === 'old_beta' ? 'selected' : ''
                     }`}
                     onClick={() => {
-                        props.setSelectedVersionType('old_beta');
+                        setSelectedVersionType('old_beta');
                     }}
                 >
                     <span>Beta</span>
                 </div>
                 <div
                     className={`version-type clickable ${
-                        props.selectedVersionType === 'old_alpha'
-                            ? 'selected'
-                            : ''
+                        selectedVersionType === 'old_alpha' ? 'selected' : ''
                     }`}
                     onClick={() => {
-                        props.setSelectedVersionType('old_alpha');
+                        setSelectedVersionType('old_alpha');
                     }}
                 >
                     <span>Alpha</span>
                 </div>
             </div>
-            <img
-                className='input-image'
-                src={props.selectedVersion.length > 0 ? CheckIcon : AlertIcon}
-                alt=''
-            />
+            {props.mcVersion.length > 0 ? <CheckIcon /> : <AlertTriangleIcon />}
             <div className='version-container'>
-                {props.selectedVersionType === 'release' &&
+                {selectedVersionType === 'release' &&
                     versions
                         .filter((element) => element.type === 'release')
                         .map((element, index) => (
                             <div
                                 key={index}
                                 ref={
-                                    props.selectedVersion === element.id
+                                    props.mcVersion === element.id
                                         ? selectedVersionRef
                                         : null
                                 }
                                 className={`version clickable ${
-                                    props.selectedVersion === element.id
+                                    props.mcVersion === element.id
                                         ? 'selected'
                                         : ''
                                 }`}
                                 onClick={() => {
-                                    props.setSelectedVersion(element.id);
+                                    props.setMcVersion(element.id);
                                 }}
                             >
                                 <span>
-                                    {props.selectedVersion === element.id && (
+                                    {props.mcVersion === element.id && (
                                         <div className='dot'></div>
                                     )}
                                     {element.id}
                                 </span>
                             </div>
                         ))}
-                {props.selectedVersionType === 'snapshot' &&
+                {selectedVersionType === 'snapshot' &&
                     versions
                         .filter((element) => element.type === 'snapshot')
                         .map((element, index) => (
                             <div
                                 key={index}
                                 ref={
-                                    props.selectedVersion === element.id
+                                    props.mcVersion === element.id
                                         ? selectedVersionRef
                                         : null
                                 }
                                 className={`version clickable ${
-                                    props.selectedVersion === element.id
+                                    props.mcVersion === element.id
                                         ? 'selected'
                                         : ''
                                 }`}
                                 onClick={() => {
-                                    props.setSelectedVersion(element.id);
+                                    props.setMcVersion(element.id);
                                 }}
                             >
                                 <span>
-                                    {props.selectedVersion === element.id && (
+                                    {props.mcVersion === element.id && (
                                         <div className='dot'></div>
                                     )}
                                     {element.id}
                                 </span>
                             </div>
                         ))}
-                {props.selectedVersionType === 'old_beta' &&
+                {selectedVersionType === 'old_beta' &&
                     versions
                         .filter((element) => element.type === 'old_beta')
                         .map((element, index) => (
                             <div
                                 key={index}
                                 ref={
-                                    props.selectedVersion === element.id
+                                    props.mcVersion === element.id
                                         ? selectedVersionRef
                                         : null
                                 }
                                 className={`version clickable ${
-                                    props.selectedVersion === element.id
+                                    props.mcVersion === element.id
                                         ? 'selected'
                                         : ''
                                 }`}
                                 onClick={() => {
-                                    props.setSelectedVersion(element.id);
+                                    props.setMcVersion(element.id);
                                 }}
                             >
                                 <span>
-                                    {props.selectedVersion === element.id && (
+                                    {props.mcVersion === element.id && (
                                         <div className='dot'></div>
                                     )}
                                     {element.id}
                                 </span>
                             </div>
                         ))}
-                {props.selectedVersionType === 'old_alpha' &&
+                {selectedVersionType === 'old_alpha' &&
                     versions
                         .filter((element) => element.type === 'old_alpha')
                         .map((element, index) => (
                             <div
                                 key={index}
                                 ref={
-                                    props.selectedVersion === element.id
+                                    props.mcVersion === element.id
                                         ? selectedVersionRef
                                         : null
                                 }
                                 className={`version clickable ${
-                                    props.selectedVersion === element.id
+                                    props.mcVersion === element.id
                                         ? 'selected'
                                         : ''
                                 }`}
                                 onClick={() => {
-                                    props.setSelectedVersion(element.id);
+                                    props.setMcVersion(element.id);
                                 }}
                             >
                                 <span>
-                                    {props.selectedVersion === element.id && (
+                                    {props.mcVersion === element.id && (
                                         <div className='dot'></div>
                                     )}
                                     {element.id}

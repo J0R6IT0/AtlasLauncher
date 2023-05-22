@@ -1,17 +1,16 @@
 import { invoke } from '@tauri-apps/api/tauri';
 import React, { useEffect, useState } from 'react';
-import CheckIcon from '../../assets/icons/check.svg';
-import AlertIcon from '../../assets/icons/alert-triangle.svg';
 import '../styles/ForgeVersionMenu.css';
+import { AlertTriangleIcon, CheckIcon } from '../../assets/icons/Icons';
 
 type ForgeVersionData = Record<string, string[]>;
 
 interface ForgeVersionMenuProps {
     autoScroll: boolean;
-    selectedMcVersion: string;
-    setSelectedMcVersion: (mcVersion: string) => void;
-    selectedVersion: string;
-    setSelectedVersion: (version: string) => void;
+    mcVersion: string;
+    setMcVersion: (mcVersion: string) => void;
+    modloaderVersion: string;
+    setModloaderVersion: (version: string) => void;
 }
 
 function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
@@ -33,37 +32,33 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                 });
                 setVersions(newVersions);
                 setKeys(keys);
-                props.setSelectedMcVersion(keys[0]);
+                props.setMcVersion(keys[0]);
             })
             .catch((e) => {});
     }, []);
 
     return (
-        <div className='version-menu'>
-            <img
-                className='input-image forge'
-                src={props.selectedVersion.length > 0 ? CheckIcon : AlertIcon}
-                alt=''
-            />
+        <div className='version-menu forge'>
+            {props.modloaderVersion.length > 0 ? <CheckIcon /> : <AlertTriangleIcon />}
             <div className='forge-version-menu-container'>
                 <div className='forge-container minecraft-versions'>
                     {keys.map((mcId, key) => (
                         <div
                             key={key}
                             className={`version clickable ${
-                                props.selectedMcVersion === mcId
+                                props.mcVersion === mcId
                                     ? 'selected'
                                     : ''
                             }`}
                             onClick={() => {
-                                props.setSelectedMcVersion(mcId);
-                                if (props.selectedMcVersion !== mcId) {
-                                    props.setSelectedVersion('');
+                                props.setMcVersion(mcId);
+                                if (props.mcVersion !== mcId) {
+                                    props.setModloaderVersion('');
                                 }
                             }}
                         >
                             <span>
-                                {props.selectedMcVersion === mcId && (
+                                {props.mcVersion === mcId && (
                                     <div className='dot'></div>
                                 )}
                                 {mcId}
@@ -72,24 +67,24 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                     ))}
                 </div>
                 <div className='forge-container forge-versions'>
-                    {versions[keys.indexOf(props.selectedMcVersion)] !==
+                    {versions[keys.indexOf(props.mcVersion)] !==
                         undefined &&
-                        versions[keys.indexOf(props.selectedMcVersion)][
-                            props.selectedMcVersion
+                        versions[keys.indexOf(props.mcVersion)][
+                            props.mcVersion
                         ].map((element, key) => (
                             <div
                                 key={key}
                                 className={`version clickable ${
-                                    props.selectedVersion === element
+                                    props.modloaderVersion === element
                                         ? 'selected'
                                         : ''
                                 }`}
                                 onClick={() => {
-                                    props.setSelectedVersion(element);
+                                    props.setModloaderVersion(element);
                                 }}
                             >
                                 <span>
-                                    {props.selectedVersion === element && (
+                                    {props.modloaderVersion === element && (
                                         <div className='dot'></div>
                                     )}
                                     {element.split('-')[1] !== undefined

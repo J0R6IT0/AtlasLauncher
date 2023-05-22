@@ -237,9 +237,6 @@ export default ManageInstance;
 
 function General(props: GeneralProps): JSX.Element {
     if (props.instanceInfo !== undefined) {
-        const [selectedVersionType, setSelectedVersionType] = useState(
-            props.instanceInfo.version_type
-        );
         const [selectedVersion, setSelectedVersion] = useState(
             props.instanceInfo.version
         );
@@ -253,18 +250,10 @@ function General(props: GeneralProps): JSX.Element {
                 />
                 <VersionMenu
                     autoScroll={true}
-                    selectedVersion={selectedVersion}
-                    setSelectedVersion={(version) => {
+                    mcVersion={selectedVersion}
+                    setMcVersion={(version) => {
                         props.changeProperty('version', version);
-                        props.changeProperty(
-                            'version_type',
-                            selectedVersionType
-                        );
                         setSelectedVersion(version);
-                    }}
-                    selectedVersionType={selectedVersionType}
-                    setSelectedVersionType={(type) => {
-                        setSelectedVersionType(type);
                     }}
                 />
             </div>

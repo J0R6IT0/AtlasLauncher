@@ -98,7 +98,6 @@ pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri:
         version: og_id,
         background: String::from("default0"),
         icon: String::from("default0"),
-        version_type: version_info["type"].as_str().unwrap().to_string(),
         width: String::from("1920"),
         height: String::from("1080"),
         modloader: String::from(modloader),
@@ -708,7 +707,6 @@ pub async fn write_instance(name: &str, data: InstanceInfo, app: &AppHandle) {
             .await
             .unwrap();
         instance.version = data.version;
-        instance.version_type = data.version_type;
     }
 
     instance.height = data.height;

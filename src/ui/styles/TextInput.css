@@ -2,10 +2,11 @@
     width: 90%;
     position: relative;
     margin-bottom: 0.7rem;
-    display: inline-block;
     height: fit-content;
     color: var(--text-color-secondary);
     max-width: 25rem;
+    display: flex;
+    align-items: center;
 }
 
 .input input {
@@ -15,49 +16,39 @@
     height: 2.5rem;
     border-radius: 0.5rem;
     width: calc(100% - 3.5rem);
-    outline: none;
     padding-left: 0.6rem;
     padding-right: 0.6rem;
     color: var(--text-color-primary);
-    transition: all 0.3s ease;
+    transition: padding 0.3s ease;
     font-family: MetropolisRegular, sans-serif;
     font-size: 1rem;
 }
 
 .floating-input-label {
     position: absolute;
-    margin-top: 0.8rem;
     left: 0.6rem;
     pointer-events: none;
     transition: all 0.3s ease;
 }
 
-.input-image {
-    position: relative;
-    float: right;
-    margin-right: 0;
-    margin-top: 0.5rem;
-    transition: all 0.3s ease;
-    filter: var(--icons-filter-hover);
+.input svg {
+    position: absolute;
+    stroke: var(--icons-color-hover);
+    height: 1.5rem;
+    right: 0;
 }
 
 .input input:focus,
 .input input:valid {
-    height: 2.5rem;
     padding-top: 0.8rem;
 }
 
 .input input:focus {
-    box-shadow: 0 0 0.2rem var(--icons-color-hover);
+    outline: 0.1rem solid var(--icons-color-hover);
 }
 
 .input input:focus ~ .floating-input-label,
 .input input:valid ~ .floating-input-label {
-    color: #666572;
     font-size: 0.6rem;
-}
-
-.input input:focus ~ .input-image,
-.input input:valid ~ .input-image {
-    margin-top: 0.8rem;
+    margin-top: -1.4rem;
 }

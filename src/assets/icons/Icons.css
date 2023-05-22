@@ -5,3 +5,10 @@
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+
+.custom path {
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-width: 0.6px;
+    stroke-miterlimit: 10;
+}

@@ -15,7 +15,6 @@ pub struct InstanceInfo {
     pub version: String,
     pub background: String,
     pub icon: String,
-    pub version_type: String,
     pub height: String,
     pub width: String,
     pub fullscreen: bool,

@@ -25,10 +25,11 @@
     margin-top: 1.2rem;
 }
 
-.base-modal-title img {
+.base-modal-title svg {
     vertical-align: middle;
     margin-right: 0.5rem;
     filter: var(--icons-filter-hover);
+    height: 1.5rem;
 }
 
 .base-modal-description {

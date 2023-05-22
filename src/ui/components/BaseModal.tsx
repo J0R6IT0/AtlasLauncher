@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import '../styles/BaseModal.css';
-import AlertIcon from '../../assets/icons/alert-triangle.svg';
 import TextButton from './TextButton';
+import { AlertTriangleIcon } from '../../assets/icons/Icons';
 
 interface BaseModalProps {
     description: string;
@@ -40,7 +40,7 @@ function BaseModal(props: BaseModalProps): JSX.Element {
     return (
         <div ref={menuRef} className='base-modal'>
             <span className='base-modal-title'>
-                <img src={AlertIcon} />
+                <AlertTriangleIcon />
                 {props.title}
             </span>
             <span className='base-modal-description'>{props.description}</span>

@@ -1,7 +1,6 @@
 import React from 'react';
 import '../styles/TextInput.css';
-import CheckIcon from '../../assets/icons/check.svg';
-import AlertIcon from '../../assets/icons/alert-triangle.svg';
+import { AlertTriangleIcon, CheckIcon } from '../../assets/icons/Icons';
 
 interface TextInputProps {
     value: string;
@@ -23,11 +22,7 @@ function TextInput(props: TextInputProps): JSX.Element {
                 title=''
             />
             <span className='floating-input-label'>{props.name}</span>
-            <img
-                className='input-image'
-                src={props.inputValid ? CheckIcon : AlertIcon}
-                alt=''
-            />
+            {props.inputValid ? <CheckIcon /> : <AlertTriangleIcon />}
         </div>
     );
 }

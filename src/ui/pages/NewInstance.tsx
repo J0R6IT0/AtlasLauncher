@@ -5,12 +5,15 @@ import MinecraftFabric from '../../assets/images/minecraft-fabric.webp';
 import MinecraftQuilt from '../../assets/images/minecraft-quilt.webp';
 import MinecraftCover from '../../assets/images/minecraft-cover.webp';
 import CreateInstance from '../components/CreateInstance';
-import BoxIcon from '../../assets/icons/box-thin.svg';
-import ForgeIcon from '../../assets/icons/forge-thin.svg';
-import FabricIcon from '../../assets/icons/fabric-thin.svg';
-import QuiltIcon from '../../assets/icons/quilt-thin.svg';
 
-enum Flavours {
+import {
+    BoxIcon,
+    FabricIcon,
+    ForgeIcon,
+    QuiltIcon,
+} from '../../assets/icons/Icons';
+
+export enum Flavours {
     Vanilla,
     Forge,
     Fabric,
@@ -68,27 +71,12 @@ const NewInstance = React.memo((props: NewInstanceProps) => {
                             src={element.background}
                         />
                         <span className='flavour-icon'>
-                            <img
-                                src={element.icon}
-                                className={`${
-                                    element.name === 'Fabric'
-                                        ? 'fabric-icon'
-                                        : ''
-                                }`}
-                            />
+                            <element.icon />
                             {element.name}
                         </span>
                         <div className='flavour-wrapper'>
                             <div className='flavour-data'>
-                                <img
-                                    className={`${
-                                        element.name === 'Fabric'
-                                            ? 'fabric-icon'
-                                            : ''
-                                    }`}
-                                    src={element.icon}
-                                    alt=''
-                                />
+                                <element.icon />
                                 <span>{element.name}</span>
                             </div>
                             <div className='flavour-content'>

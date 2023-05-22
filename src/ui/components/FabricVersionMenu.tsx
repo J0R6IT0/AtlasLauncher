@@ -1,8 +1,7 @@
 import { invoke } from '@tauri-apps/api/tauri';
 import React, { useEffect, useState } from 'react';
-import CheckIcon from '../../assets/icons/check.svg';
-import AlertIcon from '../../assets/icons/alert-triangle.svg';
 import '../styles/FabricVersionMenu.css';
+import { AlertTriangleIcon, CheckIcon } from '../../assets/icons/Icons';
 
 interface FabricMinecraftVersion {
     version: string;
@@ -15,28 +14,28 @@ interface FabricVersion {
 
 interface ForgeVersionMenuProps {
     autoScroll: boolean;
-    selectedMcVersion: string;
-    setSelectedMcVersion: (mcVersion: string) => void;
-    selectedVersion: string;
-    setSelectedVersion: (version: string) => void;
-    quilt: boolean;
+    mcVersion: string;
+    setMcVersion: (mcVersion: string) => void;
+    modloaderVersion: string;
+    setModloaderVersion: (version: string) => void;
+    isQuilt: boolean;
 }
 function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
     const [stable, setStable] = useState(true);
     const [mcVersions, setMcVersions] = useState<FabricMinecraftVersion[]>([]);
     const [loaderVersions, setLoaderVersions] = useState<FabricVersion[]>([]);
     useEffect(() => {
-        invoke('get_fabric_minecraft_versions', { isQuilt: !!props.quilt })
+        invoke('get_fabric_minecraft_versions', { isQuilt: !!props.isQuilt })
             .then((obj) => {
                 setMcVersions(obj as FabricMinecraftVersion[]);
-                props.setSelectedMcVersion(
-                    mcVersions.filter(
+                props.setMcVersion(
+                    (obj as FabricMinecraftVersion[]).filter(
                         (mcVersion) => mcVersion.stable === stable
                     )[0].version
                 );
             })
             .catch((e) => {});
-        invoke('get_fabric_versions', { isQuilt: !!props.quilt })
+        invoke('get_fabric_versions', { isQuilt: !!props.isQuilt })
             .then((obj) => {
                 setLoaderVersions(obj as FabricVersion[]);
             })
@@ -67,11 +66,11 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                     <span>Snapshot</span>
                 </div>
             </div>
-            <img
-                className='input-image'
-                src={props.selectedVersion.length > 0 ? CheckIcon : AlertIcon}
-                alt=''
-            />
+            {props.modloaderVersion.length > 0 ? (
+                <CheckIcon />
+            ) : (
+                <AlertTriangleIcon />
+            )}
             <div className='forge-version-menu-container fabric'>
                 <div className='forge-container minecraft-versions fabric'>
                     {mcVersions
@@ -80,26 +79,19 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                             <div
                                 key={key}
                                 className={`version clickable ${
-                                    props.selectedMcVersion ===
-                                    mcVersion.version
+                                    props.mcVersion === mcVersion.version
                                         ? 'selected'
                                         : ''
                                 }`}
                                 onClick={() => {
-                                    props.setSelectedMcVersion(
-                                        mcVersion.version
-                                    );
-                                    if (
-                                        props.selectedMcVersion !==
-                                        mcVersion.version
-                                    ) {
-                                        props.setSelectedVersion('');
+                                    props.setMcVersion(mcVersion.version);
+                                    if (props.mcVersion !== mcVersion.version) {
+                                        props.setModloaderVersion('');
                                     }
                                 }}
                             >
                                 <span>
-                                    {props.selectedMcVersion ===
-                                        mcVersion.version && (
+                                    {props.mcVersion === mcVersion.version && (
                                         <div className='dot'></div>
                                     )}
                                     {mcVersion.version}
@@ -112,16 +104,16 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                         <div
                             key={key}
                             className={`version clickable ${
-                                props.selectedVersion === element.version
+                                props.modloaderVersion === element.version
                                     ? 'selected'
                                     : ''
                             }`}
                             onClick={() => {
-                                props.setSelectedVersion(element.version);
+                                props.setModloaderVersion(element.version);
                             }}
                         >
                             <span>
-                                {props.selectedVersion === element.version && (
+                                {props.mcVersion === element.version && (
                                     <div className='dot'></div>
                                 )}
                                 {element.version.split('+')[0]}
