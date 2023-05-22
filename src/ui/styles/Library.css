@@ -1,15 +1,8 @@
-.library {
-    position: relative;
-    height: 100%;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
 .instances {
-    margin-top: 3.5rem;
-    height: calc(100% - 7rem);
-    width: calc(100% + 1rem);
+    position: absolute;
+    left: -0.5rem;
+    height: 100%;
+    width: calc(100% + 3.6rem);
     overflow-y: scroll;
     overflow-x: hidden;
 }
@@ -19,10 +12,11 @@
     top: 0.5rem;
     height: auto;
     width: calc(100% - 3.2rem);
-    left: 1.5rem;
+    left: 0.5rem;
     grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
     grid-gap: 1rem;
     display: grid;
+
 }
 
 .instance {

@@ -1,24 +1,31 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import SideBar from './ui/components/SideBar';
 import NewInstance from './ui/pages/NewInstance';
 import Library from './ui/pages/Library';
 import AccountSelector from './ui/components/AccountSelector';
 import './ui/styles/App.css';
 import { appWindow } from '@tauri-apps/api/window';
-import MinusIcon from './assets/icons/minus.svg';
-import SquareIcon from './assets/icons/square.svg';
-import XIcon from './assets/icons/x.svg';
 import toast, { Toaster } from 'react-hot-toast';
 import BackgroundImage from './assets/images/minecraft-background.webp';
-import UserIcon from './assets/icons/user.svg';
-import BellIcon from './assets/icons/bell.svg';
-import DownloadIcon from './assets/icons/download.svg';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
 import DownloadsMenu, {
     type DownloadItemProps,
 } from './ui/components/DownloadsMenu';
 import Modpacks from './ui/pages/Modpacks';
+import {
+    HomeIcon,
+    MinusIcon,
+    SquareIcon,
+    XIcon,
+    GridIcon,
+    PlusIcon,
+    PackageIcon,
+    SettingsIcon,
+    BellIcon,
+    DownloadIcon,
+    UserIcon,
+} from './assets/icons/Icons';
 
 interface StartInstanceEvent {
     payload: StartInstanceEventPayload;
@@ -76,36 +83,72 @@ interface SecondaryButtonsProps {
     refreshInstances: () => void;
 }
 
+export enum Pages {
+    Home,
+    Library,
+    New,
+    Modpacks,
+    Settings,
+}
+
+export const pages = [
+    {
+        page: Pages.Home,
+        icon: HomeIcon,
+        name: 'Home',
+        desc: 'nothing here yet',
+    },
+    {
+        page: Pages.Library,
+        icon: GridIcon,
+        name: 'Library',
+        desc: 'Your Minecraft worlds are awaiting',
+    },
+    {
+        page: Pages.New,
+        icon: PlusIcon,
+        name: 'New Instance',
+        desc: 'Add a new instance to your library',
+    },
+    {
+        page: Pages.Modpacks,
+        icon: PackageIcon,
+        name: 'Modpacks',
+        desc: 'Ready-to-play modpacks',
+    },
+    {
+        page: Pages.Settings,
+        icon: SettingsIcon,
+        name: 'Settings',
+        desc: 'nothing here yet',
+    },
+];
+
 function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
     const [accountSelectorActive, setAccountSelectorActive] = useState(false);
     const [downloadsActive, setDownloadsActive] = useState(false);
     const [downloads, setDownloads] = useState<DownloadItemProps[]>([]);
     const [accounts, setAccounts] = useState<AccountInfo[]>([]);
+    const [activeAccount, setActiveAccount] = useState<AccountInfo | null>(
+        null
+    );
 
     async function getAccounts(): Promise<void> {
         const accounts = (await invoke('get_accounts').catch(
             (e) => {}
         )) as AccountInfo[];
         setAccounts(accounts);
-        const button = accountButtonRef.current;
-        const accountsIcon = button?.querySelector('img');
         const activeAccount = accounts.filter((acc) => acc.active)[0];
         if (activeAccount !== null && activeAccount !== undefined) {
-            accountsIcon?.setAttribute(
-                'src',
-                `data:image/png;base64,${activeAccount.avatar_64px}`
-            );
-            button?.classList.add('active-user');
+            setActiveAccount(activeAccount);
         } else {
-            accountsIcon?.setAttribute('src', UserIcon);
-            button?.classList.remove('active-user');
+            setActiveAccount(null);
         }
     }
 
-    const accountButtonRef = useRef<HTMLDivElement>(null);
-
     useEffect(() => {
         listen('auth', (event: LoginEvent) => {
+            console.log(Math.random());
             if (event.payload.base.status === 'Success') {
                 getAccounts().catch((e) => {});
                 toast.success(event.payload.base.message, {
@@ -166,28 +209,35 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
 
     return (
         <div className='secondary-buttons'>
-            <div className='secondary-button clickable'>
-                <img src={BellIcon} />
+            <div className='secondary-button clickable hover accent-text-primary'>
+                <BellIcon />
             </div>
             <div
-                className='secondary-button clickable'
+                className='secondary-button clickable hover accent-text-primary'
                 onClick={() => {
                     if (!downloadsActive) setDownloadsActive(true);
                 }}
             >
-                <img src={DownloadIcon} />
+                <DownloadIcon />
                 {downloads.length > 0 && (
                     <div className='active-downloads-notification' />
                 )}
             </div>
             <div
-                className='secondary-button clickable'
+                className={`secondary-button clickable hover ${
+                    activeAccount === null ? 'accent-text-primary' : ''
+                }`}
                 onClick={() => {
                     if (!accountSelectorActive) setAccountSelectorActive(true);
                 }}
-                ref={accountButtonRef}
             >
-                <img src={UserIcon} />
+                {activeAccount === null ? (
+                    <UserIcon />
+                ) : (
+                    <img
+                        src={`data:image/png;base64,${activeAccount.avatar_64px}`}
+                    />
+                )}
             </div>
             {accountSelectorActive && (
                 <AccountSelector
@@ -213,7 +263,7 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
 }
 
 function App(): JSX.Element {
-    const [activePage, setActivePage] = useState(2);
+    const [activePage, setActivePage] = useState(Pages.Library);
     const [instances, setInstances] = useState<InstanceInfo[]>([]);
 
     async function getInstances(): Promise<void> {
@@ -221,6 +271,10 @@ function App(): JSX.Element {
             (e) => {}
         )) as InstanceInfo[];
         setInstances(newInstances);
+    }
+
+    function contextMenuHandler(event: Event): void {
+        event.preventDefault();
     }
 
     useEffect(() => {
@@ -241,9 +295,6 @@ function App(): JSX.Element {
         }).catch((e) => {});
         getInstances().catch((e) => {});
 
-        function contextMenuHandler(event: Event): void {
-            event.preventDefault();
-        }
         document.addEventListener('contextmenu', contextMenuHandler);
         return () => {
             document.removeEventListener('contextmenu', contextMenuHandler);
@@ -251,55 +302,62 @@ function App(): JSX.Element {
     }, []);
 
     return (
-        <div className='container'>
-            <div className='background'>
-                <div className='background-color'></div>
-                <img className='background-image' src={BackgroundImage} />
-            </div>
+        <React.Fragment>
+            <img
+                className='background background-image'
+                src={BackgroundImage}
+            />
+            <div className='background background-color' />
             <div data-tauri-drag-region className='titlebar'>
                 <div
-                    className='titlebar-button clickable'
+                    className='titlebar-button clickable hover accent-icons'
                     onClick={() => {
                         appWindow.minimize().catch((e) => {});
                     }}
                 >
-                    <img src={MinusIcon} />
+                    <MinusIcon />
                 </div>
                 <div
-                    className='titlebar-button clickable'
+                    className='titlebar-button clickable hover accent-icons'
                     onClick={() => {
                         appWindow.maximize().catch((e) => {});
                     }}
                 >
-                    <img src={SquareIcon} style={{ height: '0.8rem' }} />
+                    <SquareIcon />
                 </div>
                 <div
-                    className='titlebar-button clickable'
+                    className='titlebar-button clickable hover accent-icons'
                     onClick={() => {
                         appWindow.close().catch((e) => {});
                     }}
                 >
-                    <img src={XIcon} />
+                    <XIcon />
                 </div>
             </div>
             <SideBar setActivePage={setActivePage} activePage={activePage} />
-            <div className='content'>
-                {activePage === 1 && (
-                    <NewInstance
-                        goToLibrary={() => {
-                            setActivePage(2);
-                        }}
-                    />
-                )}
-                {activePage === 2 && (
-                    <Library
-                        instances={instances}
-                        updateInstances={() => {
-                            getInstances().catch((e) => {});
-                        }}
-                    />
-                )}
-                {activePage === 3 && <Modpacks />}
+            <div className='page'>
+                <div className='page-info'>
+                    <span className='page-title'>{pages[activePage].name}</span>
+                    <span>{pages[activePage].desc}</span>
+                </div>
+                <div className='page-content'>
+                    {activePage === Pages.New && (
+                        <NewInstance
+                            goToLibrary={() => {
+                                setActivePage(Pages.Library);
+                            }}
+                        />
+                    )}
+                    {activePage === Pages.Library && (
+                        <Library
+                            instances={instances}
+                            updateInstances={() => {
+                                getInstances().catch((e) => {});
+                            }}
+                        />
+                    )}
+                    {activePage === Pages.Modpacks && <Modpacks />}
+                </div>
             </div>
             <SecondaryButtons
                 refreshInstances={() => {
@@ -334,7 +392,7 @@ function App(): JSX.Element {
                     },
                 }}
             />
-        </div>
+        </React.Fragment>
     );
 }
 

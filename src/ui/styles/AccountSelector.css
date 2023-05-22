@@ -7,21 +7,22 @@
     top: 4rem;
     right: 1.5rem;
     border-radius: 0.5rem;
-    z-index: 20000;
+    z-index: 9999;
     box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
-    overflow: hidden;
-    pointer-events: none;
     max-height: 0;
-    transition: all 0.2s ease-in-out;
+    overflow: hidden;
+    transition: max-height 0.2s ease-in-out;
 }
 
 .account-selector.visible {
     pointer-events: all;
     max-height: 10rem;
+    overflow-y: scroll;
 }
 
 .account-items {
     display: flex;
+    position: relative;
 }
 
 .account-items div {
@@ -30,7 +31,6 @@
     display: flex;
     width: 10rem;
     border-radius: 0.3rem;
-    margin-right: 0.3rem;
 }
 
 .account-items div:hover {
@@ -38,19 +38,26 @@
 }
 
 .remove-account {
-    width: 1.2rem;
     transition: all 0.2s ease;
-    filter: var(--text-filter-secondary);
+    width: 1.8rem !important;
+    right: 0;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.remove-account:hover {
-    filter: var(--icons-filter-hover);
-}
-
-.account-items div img {
+.account img,
+.account svg {
     width: 1.5rem;
     margin-left: 0.6rem;
     margin-right: 0.6rem;
+}
+
+.remove-account svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    margin: 0;
 }
 
 .account-items span {
@@ -67,22 +74,8 @@
     color: var(--icons-color-hover);
 }
 
-#add-account {
-    display: block;
-}
-
 #add-account div {
     width: 100%;
-}
-
-#add-account div img {
-    position: relative;
-    filter: var(--text-filter-secondary);
-    transition: all 0.2s ease;
-}
-
-#add-account:hover img {
-    filter: var(--icons-filter-hover);
 }
 
 #add-account:hover span {

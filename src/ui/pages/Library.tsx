@@ -62,11 +62,7 @@ function Library(props: LibraryProps): JSX.Element {
     };
 
     return (
-        <div className='library'>
-            <div className='page-info'>
-                <span className='page-title'>Library</span>
-                <span>Your Minecraft worlds are awaiting</span>
-            </div>
+        <React.Fragment>
             <div className='instances'>
                 <div className='grid'>
                     {props.instances.map((element, key) => (
@@ -130,7 +126,7 @@ function Library(props: LibraryProps): JSX.Element {
                     updateInstances={props.updateInstances}
                 />
             )}
-        </div>
+        </React.Fragment>
     );
 }
 

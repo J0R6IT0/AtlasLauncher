@@ -1,11 +1,11 @@
 import { invoke } from '@tauri-apps/api/tauri';
-import React, { useEffect, useRef } from 'react';
-import UserPlus from '../../assets/icons/user-plus.svg';
-import TrashIcon from '../../assets/icons/trash.svg';
+import React, { useRef } from 'react';
 import toast from 'react-hot-toast';
 import { type AccountInfo } from '../../App';
 
 import '../styles/AccountSelector.css';
+import mountAnimationHandler from '../../utils/mountAnimationHandler';
+import { TrashIcon, UserPlusIcon } from '../../assets/icons/Icons';
 
 interface AccountSelectorProps {
     onClose: () => void;
@@ -14,30 +14,19 @@ interface AccountSelectorProps {
 }
 
 function AccountSelector(props: AccountSelectorProps): JSX.Element {
-    const menuRef = useRef<HTMLDivElement>(null);
+    const accountSelectorRef = useRef<HTMLDivElement>(null);
 
-    const handleOutsideClick = (event: MouseEvent): void => {
-        const menu = menuRef.current;
-        if (menu !== null && !menu.contains(event.target as Node)) {
-            menu.classList.remove('visible');
-            setTimeout(() => {
-                props.onClose();
-            }, 300);
-        }
+    const handleClose = (): void => {
+        accountSelectorRef.current?.classList.remove('visible');
+        setTimeout(() => {
+            props.onClose();
+        }, 300);
     };
 
-    useEffect(() => {
-        setTimeout(() => {
-            menuRef.current?.classList.add('visible');
-            document.addEventListener('click', handleOutsideClick);
-        }, 10);
-        return () => {
-            document.removeEventListener('click', handleOutsideClick);
-        };
-    }, []);
+    mountAnimationHandler(accountSelectorRef, handleClose);
 
     return (
-        <div className='account-selector' ref={menuRef}>
+        <div className='account-selector' ref={accountSelectorRef}>
             {props.accounts.map((element, index) => (
                 <div
                     key={index}
@@ -46,7 +35,7 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
                     }`}
                 >
                     <div
-                        className='clickable'
+                        className='account clickable'
                         onClick={() => {
                             invoke('set_active_account', {
                                 uuid: element.uuid,
@@ -56,7 +45,6 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
                     >
                         <img
                             src={`data:image/png;base64,${element.avatar_64px}`}
-                            alt=''
                         />
                         <span>
                             {element.username}
@@ -65,7 +53,7 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
                             </span>
                         </span>
                     </div>
-                    <img
+                    <div
                         onClick={() => {
                             invoke('remove_account', { uuid: element.uuid })
                                 .then(() => {
@@ -73,14 +61,14 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
                                 })
                                 .catch((e) => {});
                         }}
-                        className='remove-account clickable'
-                        src={TrashIcon}
-                        alt=''
-                    />
+                        className='remove-account clickable hover accent-text-secondary'
+                    >
+                        <TrashIcon />
+                    </div>
                 </div>
             ))}
             <div
-                className='account-items clickable'
+                className='account-items clickable hover accent-text-secondary'
                 id='add-account'
                 onClick={() => {
                     invoke('start_oauth').catch((e) => {});
@@ -89,8 +77,8 @@ function AccountSelector(props: AccountSelectorProps): JSX.Element {
                     });
                 }}
             >
-                <div>
-                    <img src={UserPlus} alt='' />
+                <div className='account'>
+                    <UserPlusIcon />
                     <span>Add Account</span>
                 </div>
             </div>

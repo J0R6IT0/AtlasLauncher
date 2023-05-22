@@ -4,18 +4,17 @@
     background-color: var(--side-bar-color);
     inset: 0;
     position: fixed;
-    transition: all 0.3s ease;
     z-index: 4000;
     box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
     display: flex;
     justify-content: center;
     flex-direction: column;
     align-items: center;
+    gap: 0.8rem;
 }
 
 .side-bar-items {
     position: relative;
-    margin: 0.5rem;
     display: flex;
     height: 3rem;
     width: 3rem;
@@ -30,7 +29,7 @@
     height: 100%;
     border-radius: 100%;
     transform: scale(0);
-    transition: all 0.15s ease-in-out;
+    transition: transform 0.15s ease-in-out;
     box-shadow: 0 0 0.5rem rgb(0 0 0 / 20%);
 }
 
@@ -38,20 +37,15 @@
     transform: scale(1);
 }
 
-.side-bar-items img {
-    filter: var(--icons-filter);
-    transition: all 0.2s ease;
-    height: 1.8rem;
+.side-bar-items svg {
+    height: 1.9rem;
+    z-index: 10;
 }
 
-.side-bar-items:hover img {
-    filter: var(--icons-filter-hover);
+.side-bar-items.selected svg {
+    stroke: var(--text-color-primary);
 }
 
-.side-bar-items.selected img {
-    filter: var(--text-filter-primary);
-}
-
-.side-bar-items.selected:hover img {
-    filter: var(--icons-filter);
+.side-bar-items.selected:hover svg {
+    stroke: var(--icons-color);
 }

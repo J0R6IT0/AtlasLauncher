@@ -5,17 +5,16 @@
 }
 
 .modpacks-container {
-    height: calc(100% - 8.5rem);
-    width: calc(100%);
+    height: 100%;
+    width: 100%;
     position: absolute;
-    bottom: 2rem;
     overflow-y: auto;
     overflow-x: hidden;
 }
 
 .modpacks .grid {
     grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-    width: calc(100% - 2.2rem);
+    width: calc(100% - 1rem);
 }
 
 .modpack {

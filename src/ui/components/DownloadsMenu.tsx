@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import '../styles/DownloadsMenu.css';
+import mountAnimationHandler from '../../utils/mountAnimationHandler';
 
 interface DownloadBarProps {
     onClose: () => void;
@@ -17,25 +18,14 @@ export interface DownloadItemProps {
 function DownloadsBar(props: DownloadBarProps): JSX.Element {
     const menuRef = useRef<HTMLDivElement>(null);
 
-    const handleOutsideClick = (event: MouseEvent): void => {
-        const menu = menuRef.current;
-        if (menu !== null && !menu.contains(event.target as Node)) {
-            menu.classList.remove('visible');
-            setTimeout(() => {
-                props.onClose();
-            }, 300);
-        }
+    const handleClose = (): void => {
+        menuRef.current?.classList.remove('visible');
+        setTimeout(() => {
+            props.onClose();
+        }, 300);
     };
 
-    useEffect(() => {
-        setTimeout(() => {
-            menuRef.current?.classList.add('visible');
-            document.addEventListener('click', handleOutsideClick);
-        }, 10);
-        return () => {
-            document.removeEventListener('click', handleOutsideClick);
-        };
-    }, []);
+    mountAnimationHandler(menuRef, handleClose);
 
     return (
         <div ref={menuRef} className='downloads-bar'>
@@ -46,7 +36,7 @@ function DownloadsBar(props: DownloadBarProps): JSX.Element {
                 <DownloadItem
                     key={key}
                     name={element.name}
-                    downloaded={element.downloaded / 2}
+                    downloaded={element.downloaded}
                     total={element.total}
                     step={element.step}
                 />

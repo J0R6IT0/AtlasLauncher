@@ -33,6 +33,7 @@
             }
         ],
         "comma-dangle": "off",
-        "@typescript-eslint/comma-dangle": "off"
+        "@typescript-eslint/comma-dangle": "off",
+        "multiline-ternary": "off"
     }
 }

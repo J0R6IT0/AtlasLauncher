@@ -38,10 +38,6 @@ function Modpacks(): JSX.Element {
 
     return (
         <div className='modpacks'>
-            <div className='page-info'>
-                <span className='page-title'>Modpacks</span>
-                <span>Ready-to-play modpacks</span>
-            </div>
             <div className='modpacks-container'>
                 <div className='grid'>
                     {modpacks.map((element, key) => (

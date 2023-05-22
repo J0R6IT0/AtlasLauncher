@@ -51,11 +51,7 @@ interface NewInstanceProps {
 const NewInstance = React.memo((props: NewInstanceProps) => {
     const [selectedFlavour, setSelectedFlavour] = useState<number | null>(null);
     return (
-        <div className='new-instance'>
-            <div className='page-info'>
-                <span className='page-title'>New Instance</span>
-                <span>Add a new instance to your library</span>
-            </div>
+        <React.Fragment>
             <div className='flavour-container'>
                 {flavours.map((element, index) => (
                     <div
@@ -70,7 +66,6 @@ const NewInstance = React.memo((props: NewInstanceProps) => {
                         <img
                             className='flavour-background'
                             src={element.background}
-                            alt=''
                         />
                         <span className='flavour-icon'>
                             <img
@@ -80,7 +75,6 @@ const NewInstance = React.memo((props: NewInstanceProps) => {
                                         ? 'fabric-icon'
                                         : ''
                                 }`}
-                                alt=''
                             />
                             {element.name}
                         </span>
@@ -109,7 +103,7 @@ const NewInstance = React.memo((props: NewInstanceProps) => {
                     </div>
                 ))}
             </div>
-        </div>
+        </React.Fragment>
     );
 });
 
