@@ -3,6 +3,9 @@
     width: 90%;
     height: calc(100% - 8.6rem);
     max-width: 25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
 }
 
 .version-tabs {
@@ -14,7 +17,7 @@
     display: flex;
     color: var(--text-color-secondary);
     justify-content: center;
-    margin-bottom: 0.2rem;
+    align-items: center;
 }
 
 .version-tabs div {
@@ -24,7 +27,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 0.3rem;
-    cursor: pointer;
+    height: calc(100% - 0.3rem);
 }
 
 .version-tabs span {
@@ -34,19 +37,14 @@
 }
 
 .version-menu svg {
-    position: relative;
-    float: right;
-    margin-top: -2.2rem;
+    right: 0;
+    position: absolute;
     height: 1.5rem;
     stroke: var(--icons-color-hover);
 }
 
-.version-tabs div:hover {
-    background-color: rgb(0 0 0 / 20%);
-}
-
 .version-tabs div.selected {
-    background-color: rgb(0 0 0 / 30%);
+    background-color: rgb(0 0 0 / 40%);
     color: var(--text-color-primary);
 }
 
@@ -57,6 +55,7 @@
     border-radius: 0.3rem;
     background-color: var(--side-bar-color);
     overflow-y: scroll;
+    overflow-x: hidden;
 }
 
 .version {
@@ -69,12 +68,13 @@
     border-radius: 0.3rem;
 }
 
-.version:nth-child(1) {
-    margin-top: 0.2rem;
-}
-
+.version-tabs div:hover,
 .version:hover {
     background-color: rgb(0 0 0 / 30%);
+}
+
+.version:nth-child(1) {
+    margin-top: 0.2rem;
 }
 
 .version span {

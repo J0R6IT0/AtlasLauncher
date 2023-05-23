@@ -1,6 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri';
 import React, { useEffect, useState } from 'react';
-import '../styles/FabricVersionMenu.css';
 import { AlertTriangleIcon, CheckIcon } from '../../assets/icons/Icons';
 
 interface FabricMinecraftVersion {
@@ -65,14 +64,14 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                 >
                     <span>Snapshot</span>
                 </div>
+                {props.modloaderVersion.length > 0 ? (
+                    <CheckIcon />
+                ) : (
+                    <AlertTriangleIcon />
+                )}
             </div>
-            {props.modloaderVersion.length > 0 ? (
-                <CheckIcon />
-            ) : (
-                <AlertTriangleIcon />
-            )}
-            <div className='forge-version-menu-container fabric'>
-                <div className='forge-container minecraft-versions fabric'>
+            <div className='version-container forge'>
+                <div className='forge-container'>
                     {mcVersions
                         .filter((mcVersion) => mcVersion.stable === stable)
                         .map((mcVersion, key) => (

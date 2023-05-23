@@ -74,11 +74,6 @@ pub async fn create_instance(id: &str, name: &str, modloader: &str, app: &tauri:
 
     downloader::download(&id, app, name).await.unwrap();
 
-    let version_info: Value =
-        file::read_as_value(format!("launcher/meta/net.minecraft/{}.json", &id).as_str())
-            .await
-            .unwrap();
-
     if modloader.starts_with("forge") {
         modloader::forge::download_forge(&id, &modloader.replace("forge-", ""), name, app)
             .await

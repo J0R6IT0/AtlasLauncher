@@ -1,27 +1,17 @@
-.forge-version-menu-container {
-    width: calc(100% - 2.3rem) !important;
-    height: 100%;
+.version-container.forge {
     display: flex;
+    flex-direction: row;
+    height: 100%;
     gap: 0.2rem;
+    background-color: transparent;
+    width: calc(100% - 1.9rem) !important;
+
 }
 
 .forge-container {
-    height: 100%;
     width: 100%;
     background-color: var(--side-bar-color);
     border-radius: 0.5rem;
     overflow-y: auto;
     overflow-x: hidden;
-}
-
-.forge-container.minecraft-versions {
-    width: 90%;
-}
-
-.forge-container.minecraft-versions.fabric {
-    width: 100%;
-}
-
-.version-menu.forge svg {
-    margin-top: 0
 }

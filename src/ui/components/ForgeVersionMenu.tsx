@@ -22,7 +22,6 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
         const keys: string[] = [];
         invoke('get_forge_versions')
             .then((obj) => {
-                console.log('invoke');
                 newVersions = obj as ForgeVersionData[];
                 newVersions.reverse();
                 newVersions.forEach((version) => {
@@ -38,17 +37,14 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
     }, []);
 
     return (
-        <div className='version-menu forge'>
-            {props.modloaderVersion.length > 0 ? <CheckIcon /> : <AlertTriangleIcon />}
-            <div className='forge-version-menu-container'>
-                <div className='forge-container minecraft-versions'>
+        <div className='version-menu'>
+            <div className='version-container forge'>
+                <div className='forge-container' style={{ width: '90%' }}>
                     {keys.map((mcId, key) => (
                         <div
                             key={key}
                             className={`version clickable ${
-                                props.mcVersion === mcId
-                                    ? 'selected'
-                                    : ''
+                                props.mcVersion === mcId ? 'selected' : ''
                             }`}
                             onClick={() => {
                                 props.setMcVersion(mcId);
@@ -66,9 +62,8 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                         </div>
                     ))}
                 </div>
-                <div className='forge-container forge-versions'>
-                    {versions[keys.indexOf(props.mcVersion)] !==
-                        undefined &&
+                <div className='forge-container'>
+                    {versions[keys.indexOf(props.mcVersion)] !== undefined &&
                         versions[keys.indexOf(props.mcVersion)][
                             props.mcVersion
                         ].map((element, key) => (
@@ -95,6 +90,11 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                         ))}
                 </div>
             </div>
+            {props.modloaderVersion.length > 0 ? (
+                <CheckIcon />
+            ) : (
+                <AlertTriangleIcon />
+            )}
         </div>
     );
 }
