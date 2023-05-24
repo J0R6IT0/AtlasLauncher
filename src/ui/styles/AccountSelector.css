@@ -10,14 +10,13 @@
     z-index: 9999;
     box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
     max-height: 0;
-    overflow: hidden;
+    overflow-y: scroll;
     transition: max-height 0.2s ease-in-out;
 }
 
 .account-selector.visible {
     pointer-events: all;
     max-height: 10rem;
-    overflow-y: scroll;
 }
 
 .account-items {
