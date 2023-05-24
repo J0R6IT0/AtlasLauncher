@@ -10,13 +10,16 @@ import DefaultIcon3 from '../../assets/images/default-icon-4.webp';
 import DefaultIcon4 from '../../assets/images/default-icon-2.webp';
 import DefaultIcon5 from '../../assets/images/default-icon-3.webp';
 import DefaultIcon6 from '../../assets/images/default-icon-6.webp';
-import BoxIcon from '../../assets/icons/box.svg';
-import FabricIcon from '../../assets/icons/fabric.svg';
-import ForgeIcon from '../../assets/icons/forge.svg';
 import { toast } from 'react-hot-toast';
 import ContextMenu from '../components/ContextMenu';
 import ManageInstance from '../components/ManageInstance';
 import BaseModal from '../components/BaseModal';
+import {
+    BoxIcon,
+    FabricIcon,
+    ForgeIcon,
+    QuiltIcon,
+} from '../../assets/icons/Icons';
 
 export const defaultBackgrounds = [DefaultBackground1, DefaultBackground2];
 export const defaultIcons = [
@@ -176,23 +179,16 @@ function Instance(props: InstanceProps): JSX.Element {
                     <div className='instance-version'>
                         <span>{props.element.version}</span>
                     </div>
-                    <div className='instance-type fabric'>
-                        <img
-                            className={
-                                props.element.modloader.startsWith('fabric')
-                                    ? 'fabric-icon'
-                                    : ''
-                            }
-                            src={
-                                props.element.modloader.startsWith('forge')
-                                    ? ForgeIcon
-                                    : props.element.modloader.startsWith(
-                                          'fabric'
-                                      )
-                                    ? FabricIcon
-                                    : BoxIcon
-                            }
-                        />
+                    <div className='instance-type'>
+                        {props.element.modloader.startsWith('forge') ? (
+                            <ForgeIcon />
+                        ) : props.element.modloader.startsWith('fabric') ? (
+                            <FabricIcon />
+                        ) : props.element.modloader.startsWith('quilt') ? (
+                            <QuiltIcon />
+                        ) : (
+                            <BoxIcon />
+                        )}
                     </div>
                 </div>
             </div>

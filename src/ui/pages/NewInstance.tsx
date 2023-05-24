@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import '../styles/NewInstance.css';
 import MinecraftForge from '../../assets/images/minecraft-forge.webp';
 import MinecraftFabric from '../../assets/images/minecraft-fabric.webp';
@@ -97,4 +97,4 @@ const NewInstance = React.memo((props: NewInstanceProps) => {
 
 NewInstance.displayName = 'NewInstance';
 
-export default NewInstance;
+export default memo(NewInstance);
