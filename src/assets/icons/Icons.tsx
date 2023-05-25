@@ -215,7 +215,77 @@ const QuiltIcon = (): JSX.Element => (
         xmlns='http://www.w3.org/2000/svg'
         viewBox='0 0 24 24'
     >
-        <path d='M10.324 3.958a.354.354 0 0 0-.354-.354H3.955a.353.353 0 0 0-.354.354v5.999c0 .196.158.355.354.355H9.97a.355.355 0 0 0 .354-.355V3.958Zm0 10.087a.354.354 0 0 0-.354-.354H3.955a.353.353 0 0 0-.354.354v5.999c0 .196.158.355.354.355H9.97a.355.355 0 0 0 .354-.355v-5.999ZM20.408 3.958a.353.353 0 0 0-.354-.354h-6.015a.354.354 0 0 0-.354.354v5.999c0 .196.159.355.354.355h6.015a.354.354 0 0 0 .354-.355V3.958Zm1.705 14.239a.354.354 0 0 0 0-.5l-3.925-3.925a.355.355 0 0 0-.501 0l-3.915 3.915a.355.355 0 0 0 0 .501l3.925 3.924a.353.353 0 0 0 .501 0l3.915-3.915Z' />{' '}
+        <path d='M10.324 3.958a.354.354 0 0 0-.354-.354H3.955a.353.353 0 0 0-.354.354v5.999c0 .196.158.355.354.355H9.97a.355.355 0 0 0 .354-.355V3.958Zm0 10.087a.354.354 0 0 0-.354-.354H3.955a.353.353 0 0 0-.354.354v5.999c0 .196.158.355.354.355H9.97a.355.355 0 0 0 .354-.355v-5.999ZM20.408 3.958a.353.353 0 0 0-.354-.354h-6.015a.354.354 0 0 0-.354.354v5.999c0 .196.159.355.354.355h6.015a.354.354 0 0 0 .354-.355V3.958Zm1.705 14.239a.354.354 0 0 0 0-.5l-3.925-3.925a.355.355 0 0 0-.501 0l-3.915 3.915a.355.355 0 0 0 0 .501l3.925 3.924a.353.353 0 0 0 .501 0l3.915-3.915Z' />
+    </svg>
+);
+
+const ToolIcon = (): JSX.Element => (
+    <svg
+        xmlns='http://www.w3.org/2000/svg'
+        className='feather'
+        viewBox='0 0 24 24'
+    >
+        <path d='M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'></path>
+    </svg>
+);
+
+const FolderIcon = (): JSX.Element => (
+    <svg
+        xmlns='http://www.w3.org/2000/svg'
+        className='feather'
+        viewBox='0 0 24 24'
+    >
+        <path d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'></path>
+    </svg>
+);
+
+const GlobeIcon = (): JSX.Element => (
+    <svg
+        xmlns='http://www.w3.org/2000/svg'
+        className='feather'
+        viewBox='0 0 24 24'
+    >
+        <circle cx='12' cy='12' r='10'></circle>
+        <line x1='2' y1='12' x2='22' y2='12'></line>
+        <path d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'></path>{' '}
+    </svg>
+);
+
+const CoffeeIcon = (): JSX.Element => (
+    <svg
+        xmlns='http://www.w3.org/2000/svg'
+        className='feather'
+        viewBox='0 0 24 24'
+    >
+        <path d='M18 8h1a4 4 0 0 1 0 8h-1'></path>
+        <path d='M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z'></path>
+        <line x1='6' y1='1' x2='6' y2='4'></line>
+        <line x1='10' y1='1' x2='10' y2='4'></line>
+        <line x1='14' y1='1' x2='14' y2='4'></line>
+    </svg>
+);
+
+const PenToolIcon = (): JSX.Element => (
+    <svg
+        xmlns='http://www.w3.org/2000/svg'
+        className='feather'
+        viewBox='0 0 24 24'
+    >
+        <path d='M12 19l7-7 3 3-7 7-3-3z'></path>
+        <path d='M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z'></path>
+        <path d='M2 2l7.586 7.586'></path>
+        <circle cx='11' cy='11' r='2'></circle>
+    </svg>
+);
+
+const ArrowRightIcon = (): JSX.Element => (
+    <svg
+        xmlns='http://www.w3.org/2000/svg'
+        className='feather'
+        viewBox='0 0 24 24'
+    >
+        <line x1='5' y1='12' x2='19' y2='12'></line>
+        <polyline points='12 5 19 12 12 19'></polyline>
     </svg>
 );
 
@@ -239,4 +309,10 @@ export {
     ForgeIcon,
     FabricIcon,
     QuiltIcon,
+    ToolIcon,
+    FolderIcon,
+    GlobeIcon,
+    CoffeeIcon,
+    PenToolIcon,
+    ArrowRightIcon
 };

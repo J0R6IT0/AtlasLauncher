@@ -5,14 +5,17 @@ import TextButton from './TextButton';
 import { type InstanceInfo } from '../../App';
 import { invoke } from '@tauri-apps/api';
 import { open } from '@tauri-apps/api/dialog';
-import GlobeIcon from '../../assets/icons/globe.svg';
-import CoffeeIcon from '../../assets/icons/coffee.svg';
-import PenToolIcon from '../../assets/icons/pen-tool.svg';
-import PlusIcon from '../../assets/icons/plus.svg';
 import { Instance, defaultBackgrounds, defaultIcons } from '../pages/Library';
 import VersionMenu from './VersionMenu';
 import BaseDropdown from './BaseDropdown';
 import BaseToggle from './BaseToggle';
+import mountAnimationHandler from '../../utils/mountAnimationHandler';
+import {
+    PlusIcon,
+    GlobeIcon,
+    CoffeeIcon,
+    PenToolIcon,
+} from '../../assets/icons/Icons';
 
 const resolutions = [
     '3840x2160',
@@ -33,7 +36,7 @@ const resolutions = [
 
 interface ManageInstanceProps {
     onClose: () => void;
-    target: Element | null;
+    target: InstanceInfo | null;
     updateInstances: () => void;
 }
 
@@ -63,6 +66,12 @@ enum Categories {
     Appearance,
 }
 
+const categories = [
+    { category: Categories.General, name: 'General', icon: GlobeIcon },
+    { category: Categories.Java, name: 'Java', icon: CoffeeIcon },
+    { category: Categories.Appearance, name: 'Appearance', icon: PenToolIcon },
+];
+
 function ManageInstance(props: ManageInstanceProps): JSX.Element {
     const [instanceName, setInstanceName] = useState('');
     const [category, setCategory] = useState(Categories.General);
@@ -72,13 +81,6 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
     const [wasValueModified, setWasValueModified] = useState(false);
 
     const menuRef = useRef<HTMLDivElement>(null);
-
-    const closeMenu = (): void => {
-        menuRef.current?.classList.remove('visible');
-        setTimeout(() => {
-            props.onClose();
-        }, 300);
-    };
 
     function handleTitleInputChange(
         event: React.ChangeEvent<HTMLInputElement>
@@ -94,12 +96,14 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
         handlePropertyChange('name', value);
     }
 
-    const handleOutsideClick = (event: MouseEvent): void => {
-        const menu = document.querySelector('.manage-instance') as HTMLElement;
-        if (!menu.contains(event.target as Node)) {
-            closeMenu();
-        }
+    const handleClose = (): void => {
+        menuRef.current?.classList.remove('visible');
+        setTimeout(() => {
+            props.onClose();
+        }, 300);
     };
+
+    mountAnimationHandler(menuRef, handleClose);
 
     const handlePropertyChange = (
         propertyName: string,
@@ -121,70 +125,48 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
         if (menuRef.current == null) {
             return;
         }
-        const instanceName = props.target?.querySelector('span')?.innerText;
-        if (instanceName !== undefined) {
-            setInstanceName(instanceName);
-            setTitleInputValue(instanceName);
-            invoke('read_instance_data', { name: instanceName })
-                .then((info): void => {
-                    setInstanceInfo(info as InstanceInfo);
-                })
-                .catch((e) => {});
+        if (props.target !== null) {
+            setInstanceName(props.target.name);
+            setTitleInputValue(props.target.name);
+            setInstanceInfo({ ...props.target });
         }
-
-        setTimeout(() => {
-            menuRef.current?.classList.add('visible');
-            document.addEventListener('click', handleOutsideClick);
-        }, 10);
-
-        return () => {
-            document.removeEventListener('click', handleOutsideClick);
-        };
     }, []);
 
+    const pageProps = {
+        changeProperty: (
+            propertyName: string,
+            propertyValue: string | boolean
+        ) => {
+            handlePropertyChange(propertyName, propertyValue);
+        },
+        instanceInfo,
+        titleInputValid,
+        titleInputValue,
+        handleTitleInputChange,
+    };
+
     return (
-        <div ref={menuRef} className='manage-instance-container'>
-            <div className='manage-instance'>
+        <div className='manage-instance-container'>
+            <div className='manage-instance' ref={menuRef}>
                 <div className='manage-instance-title'>
                     <span>{instanceName}</span>
                 </div>
                 <div className='manage-instance-categories'>
-                    <div
-                        className={`instance-category clickable ${
-                            category === Categories.General ? 'active' : ''
-                        }`}
-                        onClick={() => {
-                            setCategory(Categories.General);
-                        }}
-                    >
-                        <img src={GlobeIcon} alt='' />
-                        <span>General</span>
-                        <hr />
-                    </div>
-                    <div
-                        className={`instance-category clickable ${
-                            category === Categories.Java ? 'active' : ''
-                        }`}
-                        onClick={() => {
-                            setCategory(Categories.Java);
-                        }}
-                    >
-                        <img src={CoffeeIcon} alt='' />
-                        <span>Java</span>
-                        <hr />
-                    </div>
-                    <div
-                        className={`instance-category clickable ${
-                            category === Categories.Appearance ? 'active' : ''
-                        }`}
-                        onClick={() => {
-                            setCategory(Categories.Appearance);
-                        }}
-                    >
-                        <img src={PenToolIcon} alt='' />
-                        <span>Appearance</span>
-                        <hr />
-                    </div>
+                    {categories.map((element, key) => (
+                        <div
+                            key={key}
+                            className={`instance-category clickable hover accent-text-secondary ${
+                                category === element.category ? 'active' : ''
+                            }`}
+                            onClick={() => {
+                                setCategory(element.category);
+                            }}
+                        >
+                            <element.icon />
+                            <span>{element.name}</span>
+                            <hr />
+                        </div>
+                    ))}
                     <TextButton
                         text='Save'
                         clickable={titleInputValid && wasValueModified}
@@ -195,38 +177,16 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
                             })
                                 .then(() => {
                                     props.updateInstances();
-                                    closeMenu();
+                                    handleClose();
                                 })
                                 .catch((e) => {});
                         }}
                     />
                 </div>
-                {category === Categories.General && (
-                    <General
-                        changeProperty={(propertyName, propertyValue) => {
-                            handlePropertyChange(propertyName, propertyValue);
-                        }}
-                        instanceInfo={instanceInfo}
-                        titleInputValid={titleInputValid}
-                        titleInputValue={titleInputValue}
-                        handleTitleInputChange={handleTitleInputChange}
-                    />
-                )}
-                {category === Categories.Java && (
-                    <Java
-                        instanceInfo={instanceInfo}
-                        changeProperty={(propertyName, propertyValue) => {
-                            handlePropertyChange(propertyName, propertyValue);
-                        }}
-                    />
-                )}
+                {category === Categories.General && <General {...pageProps} />}
+                {category === Categories.Java && <Java {...pageProps} />}
                 {category === Categories.Appearance && (
-                    <Appearance
-                        instanceInfo={instanceInfo}
-                        changeProperty={(propertyName, propertyValue) => {
-                            handlePropertyChange(propertyName, propertyValue);
-                        }}
-                    />
+                    <Appearance {...pageProps} />
                 )}
             </div>
         </div>
@@ -319,7 +279,6 @@ function Appearance(props: AppearanceProps): JSX.Element {
                         key={newBackground + newIcon}
                         element={props.instanceInfo}
                         handleContextMenu={() => {}}
-                        setShowRetryModal={() => {}}
                         onClick={() => {}}
                     />
                 </div>
@@ -327,7 +286,7 @@ function Appearance(props: AppearanceProps): JSX.Element {
                     <span>Background</span>
                     <div className='default-backgrounds'>
                         <div
-                            className='default-background-wrapper clickable'
+                            className='default-background-wrapper clickable hover accent-text-secondary'
                             onClick={() => {
                                 open({
                                     multiple: false,
@@ -358,15 +317,12 @@ function Appearance(props: AppearanceProps): JSX.Element {
                                     .catch((e) => {});
                             }}
                         >
-                            <img
-                                className='default-background plus'
-                                src={PlusIcon}
-                            />
+                            <PlusIcon />
                         </div>
                         {defaultBackgrounds.map((element, key) => (
                             <div
                                 key={key}
-                                className='default-background-wrapper clickable'
+                                className='default-background-wrapper clickable hover'
                                 onClick={() => {
                                     setNewBackground(`default${key}`);
                                     props.changeProperty(
@@ -387,7 +343,7 @@ function Appearance(props: AppearanceProps): JSX.Element {
                     <span>Icon</span>
                     <div className='default-icons'>
                         <div
-                            className='default-icon-wrapper new clickable'
+                            className='default-icon-wrapper new clickable hover accent-text-secondary'
                             onClick={() => {
                                 open({
                                     multiple: false,
@@ -418,12 +374,12 @@ function Appearance(props: AppearanceProps): JSX.Element {
                                     .catch((e) => {});
                             }}
                         >
-                            <img className='default-icon plus' src={PlusIcon} />
+                            <PlusIcon />
                         </div>
                         {defaultIcons.map((element, key) => (
                             <div
                                 key={key}
-                                className='default-icon-wrapper clickable'
+                                className='default-icon-wrapper clickable hover'
                                 onClick={() => {
                                     setNewIcon(`default${key}`);
                                     props.changeProperty(

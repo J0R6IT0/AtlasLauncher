@@ -148,7 +148,6 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
 
     useEffect(() => {
         listen('auth', (event: LoginEvent) => {
-            console.log(Math.random());
             if (event.payload.base.status === 'Success') {
                 getAccounts().catch((e) => {});
                 toast.success(event.payload.base.message, {
@@ -159,7 +158,6 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
                     id: 'currentLoginNotification',
                 });
             } else if (event.payload.base.status === 'Loading') {
-                console.log('e');
                 toast.loading(event.payload.base.message, {
                     id: 'currentLoginNotification',
                 });
@@ -188,7 +186,6 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
                     },
                 ]);
             } else if (event.payload.base.status === 'Update') {
-                console.log(event.payload);
                 setDownloads((prevDownloads) => {
                     return prevDownloads.map((download) => {
                         if (download.name === event.payload.name) {

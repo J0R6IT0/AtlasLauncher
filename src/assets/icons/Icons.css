@@ -7,8 +7,8 @@
 }
 
 .custom path {
-    fill: currentColor;
-    stroke: currentColor;
+    fill: currentcolor;
+    stroke: currentcolor;
     stroke-width: 0.6px;
     stroke-miterlimit: 10;
 }

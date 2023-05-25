@@ -12,7 +12,7 @@ function BaseToggle(props: BaseToggleProps): JSX.Element {
         <div className='base-toggle'>
             <label className='switch'>
                 <input
-                    checked={props.default}
+                    defaultChecked={props.default}
                     type='checkbox'
                     onClick={(event) => {
                         if (event.currentTarget.checked) {

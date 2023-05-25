@@ -79,9 +79,7 @@ function CreateInstance(props: CreateInstanceProps): JSX.Element {
                         name: titleInputValue.trim(),
                         id: mcVersion,
                         modloader: prefix + modloaderVersion,
-                    }).catch((e) => {
-                        console.log(e);
-                    });
+                    }).catch((e) => {});
                     props.goToLibrary();
                 }}
                 text='Create'

@@ -5,7 +5,6 @@
     height: auto;
     border-radius: 0.5rem;
     width: 9rem;
-    transition: all 0.2s ease;
     overflow: hidden;
     align-items: center;
     max-height: 2.6rem;
@@ -42,25 +41,21 @@
     color: var(--text-color-primary);
 }
 
-.base-dropdown img {
+.base-dropdown svg {
     right: 0.5rem;
+    height: 1.5rem;
     position: absolute;
     rotate: 90deg;
     margin-top: 0.5rem;
-    filter: var(--text-filter-secondary);
     transition: all 0.3s ease;
 }
 
-.base-dropdown.selected img {
+.base-dropdown.selected svg {
     margin-top: 0.9rem;
 }
 
-.base-dropdown.active img {
+.base-dropdown.active svg {
     rotate: 270deg;
-}
-
-.base-dropdown:hover img {
-    filter: var(--icons-filter-hover);
 }
 
 .dropdown-values {
@@ -90,12 +85,10 @@
 
 .dropdown-value span {
     margin-left: 1rem;
+    display: flex;
+    align-items: center;
 }
 
 .dropdown-value.selected span {
     color: var(--text-color-primary);
-}
-
-.dropdown-value .dot {
-    margin-top: 0.25rem;
 }

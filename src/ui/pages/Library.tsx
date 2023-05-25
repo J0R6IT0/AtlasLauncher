@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import '../styles/Library.css';
 import { invoke, convertFileSrc } from '@tauri-apps/api/tauri';
 import type { InstanceInfo } from '../../App';
@@ -13,7 +13,6 @@ import DefaultIcon6 from '../../assets/images/default-icon-6.webp';
 import { toast } from 'react-hot-toast';
 import ContextMenu from '../components/ContextMenu';
 import ManageInstance from '../components/ManageInstance';
-import BaseModal from '../components/BaseModal';
 import {
     BoxIcon,
     FabricIcon,
@@ -41,26 +40,26 @@ interface InstanceProps {
     handleContextMenu: (
         event: React.MouseEvent<HTMLDivElement, MouseEvent>
     ) => void;
-    setShowRetryModal: (name: string) => void;
     onClick: () => void;
 }
 
 function Library(props: LibraryProps): JSX.Element {
     const [showContextMenu, setShowContextMenu] = useState(false);
-    const [contextMenuTarget, setShowContextMenuTarget] =
-        useState<Element | null>(null);
+    const [contextMenuTarget, setShowContextMenuTarget] = useState<
+        InstanceInfo | null
+    >(null);
     const [contextMenuPosition, setContextMenuPosition] = useState<{
         x: number;
         y: number;
     }>({ x: 0, y: 0 });
     const [showManageInstance, setShowManageInstance] = useState(false);
-    const [showRetryModal, setShowRetryModal] = useState<string | null>(null);
 
     const handleContextMenu = (
-        event: React.MouseEvent<HTMLDivElement, MouseEvent>
+        event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+        target: InstanceInfo
     ): void => {
         setShowContextMenu(true);
-        setShowContextMenuTarget(event.currentTarget);
+        setShowContextMenuTarget(target);
         setContextMenuPosition({ x: event.clientX, y: event.clientY });
     };
 
@@ -72,41 +71,21 @@ function Library(props: LibraryProps): JSX.Element {
                         <Instance
                             key={key}
                             element={element}
-                            handleContextMenu={handleContextMenu}
-                            setShowRetryModal={(name) => {
-                                setShowRetryModal(name);
+                            handleContextMenu={(event) => {
+                                handleContextMenu(event, element);
                             }}
                             onClick={() => {
-                                if (element.version.startsWith('rd-')) {
-                                    setShowRetryModal(element.name);
-                                } else {
-                                    invoke('launch_instance', {
-                                        name: element.name,
-                                    }).catch((e) => {});
-                                    toast.loading(`Launching ${element.name}`, {
-                                        id: 'startInstance',
-                                    });
-                                }
+                                invoke('launch_instance', {
+                                    name: element.name,
+                                }).catch((e) => {});
+                                toast.loading(`Launching ${element.name}`, {
+                                    id: 'startInstance',
+                                });
                             }}
                         />
                     ))}
                 </div>
             </div>
-            {showRetryModal !== null && (
-                <BaseModal
-                    title='IMPORTANT'
-                    description='Old Pre-Classic versions usually crash multiple times until they finally launch. Atlas will attempt to launch the instance multiple times. You may see a window popping up multiple times.'
-                    onClose={() => {
-                        setShowRetryModal(null);
-                    }}
-                    onAccept={() => {
-                        invoke('launch_instance', {
-                            name: showRetryModal,
-                        }).catch((e) => {});
-                        setShowRetryModal(null);
-                    }}
-                />
-            )}
             {showContextMenu && (
                 <ContextMenu
                     target={contextMenuTarget}
@@ -133,7 +112,7 @@ function Library(props: LibraryProps): JSX.Element {
     );
 }
 
-export default Library;
+export default memo(Library);
 
 function Instance(props: InstanceProps): JSX.Element {
     return (

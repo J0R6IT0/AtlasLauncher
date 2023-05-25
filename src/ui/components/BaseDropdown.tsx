@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import '../styles/BaseDropdown.css';
-import ArrowIcon from '../../assets/icons/arrow-right.svg';
+import { ArrowRightIcon } from '../../assets/icons/Icons';
 
 interface BaseDropdownProps {
     placeholder: string;
@@ -39,14 +39,14 @@ function BaseDropdown(props: BaseDropdownProps): JSX.Element {
     return (
         <div
             ref={menuRef}
-            className={`base-dropdown ${active ? 'active' : ''} ${
-                selectedValue.length > 0 ? 'selected' : ''
-            }`}
+            className={`base-dropdown hover accent-text-secondary ${
+                active ? 'active' : ''
+            } ${selectedValue.length > 0 ? 'selected' : ''}`}
             onClick={toggleActive}
         >
             <span className='dropdown-label'>{props.placeholder}</span>
             <span className='selected-value'>{selectedValue}</span>
-            <img src={ArrowIcon} />
+            <ArrowRightIcon />
             <div className='dropdown-values'>
                 {props.values.map((value, key) => (
                     <div key={key}>

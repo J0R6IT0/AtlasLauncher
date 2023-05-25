@@ -2,7 +2,7 @@
     position: relative;
     display: inline-block;
     width: 2.4rem;
-    height: 1.3rem;
+    height: 1.35rem;
 }
 
 .switch input {
@@ -25,8 +25,8 @@
     content: '';
     height: 1rem;
     width: 1rem;
-    left: 0.15rem;
-    bottom: 0.15rem;
+    left: 0.17rem;
+    bottom: 0.16rem;
     background-color: var(--text-color-primary);
     transition: 0.3s;
     border-radius: 50%;
@@ -38,5 +38,5 @@ input:checked + .slider {
 }
 
 input:checked + .slider::before {
-    transform: translateX(1.15rem);
+    transform: translateX(1rem);
 }

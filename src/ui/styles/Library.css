@@ -2,7 +2,7 @@
     position: absolute;
     top: -0.5rem;
     left: -0.5rem;
-    height: calc(100% + 1rem);
+    height: calc(100% + 1.2rem);
     width: calc(100% + 3.6rem);
     overflow-y: scroll;
     overflow-x: hidden;
