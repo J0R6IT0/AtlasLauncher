@@ -75,7 +75,7 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                     {mcVersions
                         .filter((mcVersion) => mcVersion.stable === stable)
                         .map((mcVersion, key) => (
-                            <div
+                            <li
                                 key={key}
                                 className={`version clickable ${
                                     props.mcVersion === mcVersion.version
@@ -95,12 +95,12 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                                     )}
                                     {mcVersion.version}
                                 </span>
-                            </div>
+                            </li>
                         ))}
                 </div>
                 <div className='forge-container forge-versions'>
                     {loaderVersions.map((element, key) => (
-                        <div
+                        <li
                             key={key}
                             className={`version clickable ${
                                 props.modloaderVersion === element.version
@@ -112,12 +112,12 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                             }}
                         >
                             <span>
-                                {props.mcVersion === element.version && (
+                                {props.modloaderVersion === element.version && (
                                     <div className='dot'></div>
                                 )}
                                 {element.version.split('+')[0]}
                             </span>
-                        </div>
+                        </li>
                     ))}
                 </div>
             </div>

@@ -69,23 +69,13 @@
 }
 
 .instance:hover .instance-info {
-    background-color: #2028327b;
+    background-color: #2028326e;
     color: var(--text-color-primary);
-}
-
-.instance-type img {
-    filter: var(--text-filter-secondary);
-    transition: all 0.15s ease-in-out;
-    width: 100%;
 }
 
 .instance-content span img {
     margin-bottom: 0.5rem;
     width: 30%;
-}
-
-.instance:hover .instance-type img {
-    filter: var(--text-filter-primary);
 }
 
 .instance-content span {
@@ -103,12 +93,9 @@
     height: 1.2rem;
 }
 
-.instance-type svg {
-    stroke-width: 2px;
-}
-
+.instance-type svg,
 .instance-type .custom path {
-    stroke-width: 2px !important;
+    stroke-width: 2px;
 }
 
 .instance-info div {
@@ -116,7 +103,7 @@
     top: 0.2rem;
     right: 0.2rem;
     background-color: var(--side-bar-color);
-    opacity: 0.5;
+    opacity: 0.8;
     padding: 0.3rem;
     border-radius: 0.5rem;
     overflow: hidden;
@@ -133,10 +120,4 @@
     align-items: flex-start;
     word-break: none;
     margin-right: 0.1rem;
-}
-
-.context-menu-wrapper {
-    width: 100%;
-    height: 100%;
-    position: absolute;
 }

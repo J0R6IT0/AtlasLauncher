@@ -4,6 +4,7 @@ import TrashIcon from '../../assets/icons/trash.svg';
 import ToolIcon from '../../assets/icons/tool.svg';
 import FolderIcon from '../../assets/icons/folder.svg';
 import { invoke } from '@tauri-apps/api';
+import mountAnimationHandler from '../../utils/mountAnimationHandler';
 
 interface ContextMenuProps {
     target: Element | null;
@@ -16,45 +17,30 @@ interface ContextMenuProps {
 function ContextMenu(props: ContextMenuProps): JSX.Element {
     const menuRef = useRef<HTMLDivElement>(null);
 
-    const closeMenu = (): void => {
+    const handleClose = (): void => {
         menuRef.current?.classList.remove('visible');
         setTimeout(() => {
             props.onClose();
         }, 200);
     };
 
-    const handleOutsideClick = (event: MouseEvent): void => {
-        const menu = document.querySelector('.context-menu') as HTMLElement;
-        if (!menu.contains(event.target as Node)) {
-            closeMenu();
-        }
-    };
+    mountAnimationHandler(menuRef, handleClose);
 
     useEffect(() => {
         if (menuRef.current == null) {
             return;
         }
-        setTimeout(() => {
-            menuRef.current?.classList.add('visible');
-        }, 10);
         const rect = menuRef.current.getBoundingClientRect();
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
-
         if (rect.right > windowWidth) {
-            const newLeft = props.position.x - rect.width;
+            const newLeft = props.position.x - rect.right - windowWidth;
             menuRef.current.style.left = `${newLeft}px`;
         }
         if (rect.bottom > windowHeight) {
             const newTop = props.position.y - rect.height;
             menuRef.current.style.top = `${newTop}px`;
         }
-
-        document.addEventListener('click', handleOutsideClick);
-
-        return () => {
-            document.removeEventListener('click', handleOutsideClick);
-        };
     }, [props.position.x, props.position.y]);
 
     return (
@@ -66,7 +52,7 @@ function ContextMenu(props: ContextMenuProps): JSX.Element {
             <div
                 className='context-menu-item clickable'
                 onClick={() => {
-                    closeMenu();
+                    handleClose();
                     props.manageInstance();
                 }}
             >
@@ -89,7 +75,7 @@ function ContextMenu(props: ContextMenuProps): JSX.Element {
             <div
                 className='context-menu-item clickable'
                 onClick={() => {
-                    closeMenu();
+                    handleClose();
                     invoke('remove_instance', {
                         name: props.target?.querySelector('span')?.innerText,
                     })

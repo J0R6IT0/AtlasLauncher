@@ -41,7 +41,7 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
             <div className='version-container forge'>
                 <div className='forge-container' style={{ width: '90%' }}>
                     {keys.map((mcId, key) => (
-                        <div
+                        <li
                             key={key}
                             className={`version clickable ${
                                 props.mcVersion === mcId ? 'selected' : ''
@@ -59,7 +59,7 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                                 )}
                                 {mcId}
                             </span>
-                        </div>
+                        </li>
                     ))}
                 </div>
                 <div className='forge-container'>
@@ -67,7 +67,7 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                         versions[keys.indexOf(props.mcVersion)][
                             props.mcVersion
                         ].map((element, key) => (
-                            <div
+                            <li
                                 key={key}
                                 className={`version clickable ${
                                     props.modloaderVersion === element
@@ -86,7 +86,7 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                                         ? element.split('-')[1]
                                         : element.split('-')[0]}
                                 </span>
-                            </div>
+                            </li>
                         ))}
                 </div>
             </div>

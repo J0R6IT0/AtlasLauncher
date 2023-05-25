@@ -24,7 +24,7 @@ const versionTypes = [
 function VersionMenu(props: VersionMenuProps): JSX.Element {
     const [versions, setVersions] = useState<MinecraftVersion[]>([]);
     const [selectedVersionType, setSelectedVersionType] = useState('release');
-    const selectedVersionRef = useRef<HTMLDivElement>(null);
+    const selectedVersionRef = useRef<HTMLLIElement>(null);
     useEffect(() => {
         invoke('get_minecraft_versions')
             .then((obj) => {
@@ -62,7 +62,7 @@ function VersionMenu(props: VersionMenuProps): JSX.Element {
                 {versions
                     .filter((element) => element.type === selectedVersionType)
                     .map((element, index) => (
-                        <div
+                        <li
                             key={index}
                             ref={
                                 props.mcVersion === element.id
@@ -82,7 +82,7 @@ function VersionMenu(props: VersionMenuProps): JSX.Element {
                                 )}
                                 {element.id}
                             </span>
-                        </div>
+                        </li>
                     ))}
             </div>
         </div>
