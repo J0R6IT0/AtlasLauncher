@@ -118,7 +118,7 @@ pub async fn download_forge(
         return Ok(());
     }
 
-    let forge_copy = forge.clone();
+    let forge_copy: String = forge.clone();
     let forge_install_manifest: Result<Value, Box<dyn Error + Send + Sync>> = tauri::async_runtime::spawn(async move {
         match read_as_value(&format!("launcher/meta/net.minecraftforge/{forge_copy}-install.json")).await {
             Ok(value) => Ok(value),
@@ -131,7 +131,9 @@ pub async fn download_forge(
         }
     }).await?;
 
-    if forge_install_manifest.is_ok() {
+    let forge_client_path: std::path::PathBuf = check_directory(&format!("libraries/net/minecraftforge/forge/{forge}")).await.join(format!("forge-{forge}-client.jar"));
+
+    if forge_install_manifest.is_ok() && !forge_client_path.is_file() {
         let forge_install_manifest: Value = forge_install_manifest.unwrap();
         let instance_name_copy: String = instance_name.to_string();
         app.emit_all(
@@ -210,6 +212,13 @@ pub async fn download_forge(
 
 pub async fn download_manifest(forge: &str, app: &AppHandle, instance_name: &str) -> Result<Value, Box<dyn std::error::Error>> {
     let forge: String = forge.replace("forge-", "");
+
+    let manifest_path: std::path::PathBuf = check_directory("launcher/meta/net.minecraftforge").await.join(format!("{forge}.json"));
+    if manifest_path.is_file() {
+        return read_as_value::<Value>(manifest_path.to_str().unwrap()).await;
+    }
+
+
 
     let forge_copy: String = forge.clone();
     let forge_manifest: Result<Value, Box<dyn Error + Send + Sync>> = tauri::async_runtime::spawn(async move {
