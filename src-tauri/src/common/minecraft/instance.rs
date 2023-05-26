@@ -611,22 +611,6 @@ pub fn open_folder(name: &str) {
     Command::new("explorer").arg(path).spawn().unwrap();
 }
 
-pub async fn read_instance(name: &str) -> InstanceInfo {
-    let mut instance: InstanceInfo =
-        file::read_as_value(format!("instances/{name}/atlas_instance.json").as_str())
-            .await
-            .unwrap();
-    let path: PathBuf = check_directory_sync(format!("instances/{name}").as_str());
-
-    if !instance.background.starts_with("default") {
-        instance.background = path.join(instance.background).to_str().unwrap().to_string();
-    }
-    if !instance.icon.starts_with("default") {
-        instance.icon = path.join(instance.icon).to_str().unwrap().to_string();
-    }
-    instance
-}
-
 pub async fn write_instance(name: &str, data: InstanceInfo, app: &AppHandle) {
     let instances_path: PathBuf = check_directory_sync(format!("instances").as_str());
     let old_instance_path: PathBuf = instances_path.join(name);
@@ -711,6 +695,20 @@ pub async fn write_instance(name: &str, data: InstanceInfo, app: &AppHandle) {
     file::write_value(
         &instance,
         format!("instances/{}/atlas_instance.json", data.name).as_str(),
+    )
+    .unwrap();
+
+    app.emit_all(
+        "download",
+        DownloadInstanceEventPayload {
+            base: BaseEventPayload {
+                message: String::from(""),
+                status: String::from("Success"),
+            },
+            total: 0,
+            downloaded: 0,
+            name: instance.name,
+        },
     )
     .unwrap();
 }

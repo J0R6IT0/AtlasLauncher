@@ -88,11 +88,6 @@ fn open_instance_folder(name: &str) {
 }
 
 #[tauri::command]
-async fn read_instance_data(name: &str) -> Result<InstanceInfo, ()> {
-    Ok(minecraft::instance::read_instance(name).await)
-}
-
-#[tauri::command]
 async fn write_instance_data(
     name: &str,
     data: InstanceInfo,
@@ -145,7 +140,6 @@ async fn main() {
             launch_instance,
             remove_instance,
             open_instance_folder,
-            read_instance_data,
             write_instance_data,
             get_forge_versions,
             get_fabric_minecraft_versions,

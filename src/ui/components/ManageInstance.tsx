@@ -171,13 +171,13 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
                         text='Save'
                         clickable={titleInputValid && wasValueModified}
                         onClick={() => {
+                            handleClose();
                             invoke('write_instance_data', {
                                 name: instanceName,
                                 data: instanceInfo,
                             })
                                 .then(() => {
                                     props.updateInstances();
-                                    handleClose();
                                 })
                                 .catch((e) => {});
                         }}
