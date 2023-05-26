@@ -113,10 +113,6 @@
     width: calc(100% - 2rem);
 }
 
-.instance-category.active svg {
-    stroke: var(--icons-color-hover);
-}
-
 .backgrounds span,
 .icons span {
     color: var(--text-color-primary);
@@ -139,7 +135,8 @@
     padding: 0.3rem;
 }
 
-.manage-instance-fields.appearance svg {
+.backgrounds svg,
+.icons svg {
     height: 45%;
     top: 50%;
     left: 50%;
