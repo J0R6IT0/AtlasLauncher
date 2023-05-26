@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import '../styles/ForgeVersionMenu.css';
 import { AlertTriangleIcon, CheckIcon } from '../../assets/icons/Icons';
 
@@ -17,6 +17,9 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
     const [versions, setVersions] = useState<ForgeVersionData[]>([]);
     const [keys, setKeys] = useState<string[]>([]);
 
+    const selectedMcVersionRef = useRef<HTMLLIElement>(null);
+    const selectedVersionRef = useRef<HTMLLIElement>(null);
+
     useEffect(() => {
         let newVersions: ForgeVersionData[] = [];
         const keys: string[] = [];
@@ -31,7 +34,15 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                 });
                 setVersions(newVersions);
                 setKeys(keys);
-                props.setMcVersion(keys[0]);
+                if (props.mcVersion.length <= 0) {
+                    props.setMcVersion(keys[0]);
+                }
+                if (selectedMcVersionRef.current !== null && props.autoScroll) {
+                    selectedMcVersionRef.current.scrollIntoView();
+                }
+                if (selectedVersionRef.current !== null && props.autoScroll) {
+                    selectedVersionRef.current.scrollIntoView();
+                }
             })
             .catch((e) => {});
     }, []);
@@ -42,6 +53,11 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                 <div className='forge-container' style={{ width: '90%' }}>
                     {keys.map((mcId, key) => (
                         <li
+                            ref={
+                                props.mcVersion === mcId
+                                    ? selectedMcVersionRef
+                                    : null
+                            }
                             key={key}
                             className={`version clickable ${
                                 props.mcVersion === mcId ? 'selected' : ''
@@ -68,6 +84,11 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                             props.mcVersion
                         ].map((element, key) => (
                             <li
+                                ref={
+                                    props.modloaderVersion === element
+                                        ? selectedVersionRef
+                                        : null
+                                }
                                 key={key}
                                 className={`version clickable ${
                                     props.modloaderVersion === element

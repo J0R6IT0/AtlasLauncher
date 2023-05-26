@@ -75,17 +75,17 @@
 }
 
 .accent-icons svg {
-    stroke: var(--icons-color);
+    color: var(--icons-color);
 }
 
 .accent-text-primary svg {
-    stroke: var(--text-color-primary);
+    color: var(--text-color-primary);
 }
 
 .accent-text-secondary svg {
-    stroke: var(--text-color-secondary);
+    color: var(--text-color-secondary);
 }
 
 .hover:hover svg {
-    stroke: var(--icons-color-hover);
+    color: var(--icons-color-hover);
 }

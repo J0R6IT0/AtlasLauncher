@@ -16,6 +16,9 @@ import {
     CoffeeIcon,
     PenToolIcon,
 } from '../../assets/icons/Icons';
+import ForgeVersionMenu from './ForgeVersionMenu';
+import { Flavours, flavours } from '../pages/NewInstance';
+import FabricVersionMenu from './FabricVersionMenu';
 
 const resolutions = [
     '3840x2160',
@@ -169,7 +172,11 @@ function ManageInstance(props: ManageInstanceProps): JSX.Element {
                     ))}
                     <TextButton
                         text='Save'
-                        clickable={titleInputValid && wasValueModified}
+                        clickable={
+                            titleInputValid &&
+                            wasValueModified &&
+                            instanceInfo !== undefined
+                        }
                         onClick={() => {
                             handleClose();
                             invoke('write_instance_data', {
@@ -200,6 +207,39 @@ function General(props: GeneralProps): JSX.Element {
         const [selectedVersion, setSelectedVersion] = useState(
             props.instanceInfo.version
         );
+        const [selectedModloaderVersion, setSelectedModloaderVersion] =
+            useState(props.instanceInfo.modloader);
+        const [selectedModloader, setSelectedModloader] = useState(
+            Flavours.Vanilla
+        );
+
+        useEffect(() => {
+            if (props.instanceInfo !== undefined) {
+                if (props.instanceInfo.modloader.startsWith('forge')) {
+                    setSelectedModloader(Flavours.Forge);
+                } else if (props.instanceInfo.modloader.startsWith('fabric')) {
+                    setSelectedModloader(Flavours.Fabric);
+                } else if (props.instanceInfo.modloader.startsWith('quilt')) {
+                    setSelectedModloader(Flavours.Quilt);
+                } else {
+                    setSelectedModloader(Flavours.Vanilla);
+                }
+            }
+        }, []);
+
+        const modloaderProps = {
+            autoScroll: true,
+            mcVersion: selectedVersion,
+            setMcVersion: (version: string) => {
+                props.changeProperty('version', version);
+                setSelectedVersion(version);
+            },
+            modloaderVersion: selectedModloaderVersion.replace(
+                /^(forge-|fabric-|quilt-)/,
+                ''
+            ),
+        };
+
         return (
             <div className='manage-instance-fields'>
                 <TextInput
@@ -208,14 +248,65 @@ function General(props: GeneralProps): JSX.Element {
                     name='Instance name'
                     inputValid={props.titleInputValid}
                 />
-                <VersionMenu
-                    autoScroll={true}
-                    mcVersion={selectedVersion}
-                    setMcVersion={(version) => {
-                        props.changeProperty('version', version);
-                        setSelectedVersion(version);
-                    }}
-                />
+                <div className='manage-instance-modloaders'>
+                    {flavours.map((element, key) => (
+                        <div
+                            key={key}
+                            className={`modloader-icon hover accent-text-secondary clickable ${
+                                element.id === selectedModloader
+                                    ? 'selected'
+                                    : ''
+                            }`}
+                            onClick={() => {
+                                setSelectedModloaderVersion('');
+                                setSelectedModloader(element.id);
+                            }}
+                        >
+                            <element.icon />
+                        </div>
+                    ))}
+                </div>
+                {selectedModloader === Flavours.Vanilla && (
+                    <VersionMenu {...modloaderProps} />
+                )}
+                {selectedModloader === Flavours.Forge && (
+                    <ForgeVersionMenu
+                        {...modloaderProps}
+                        setModloaderVersion={(version) => {
+                            props.changeProperty(
+                                'modloader',
+                                'forge-' + version
+                            );
+                            setSelectedModloaderVersion(version);
+                        }}
+                    />
+                )}
+                {selectedModloader === Flavours.Fabric && (
+                    <FabricVersionMenu
+                        {...modloaderProps}
+                        isQuilt={false}
+                        setModloaderVersion={(version) => {
+                            props.changeProperty(
+                                'modloader',
+                                'fabric-' + version
+                            );
+                            setSelectedModloaderVersion(version);
+                        }}
+                    />
+                )}
+                {selectedModloader === Flavours.Quilt && (
+                    <FabricVersionMenu
+                        {...modloaderProps}
+                        isQuilt={true}
+                        setModloaderVersion={(version) => {
+                            props.changeProperty(
+                                'modloader',
+                                'quilt-' + version
+                            );
+                            setSelectedModloaderVersion(version);
+                        }}
+                    />
+                )}
             </div>
         );
     }

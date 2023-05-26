@@ -29,8 +29,16 @@ function VersionMenu(props: VersionMenuProps): JSX.Element {
         invoke('get_minecraft_versions')
             .then((obj) => {
                 setVersions(obj as MinecraftVersion[]);
-                if (selectedVersionRef.current !== null && props.autoScroll) {
-                    selectedVersionRef.current.scrollIntoView();
+                if (props.autoScroll) {
+                    const thisVersion = (obj as MinecraftVersion[]).filter(
+                        (element) => element.id === props.mcVersion
+                    );
+                    if (thisVersion.length > 0) {
+                        setSelectedVersionType(thisVersion[0].type);
+                    }
+                    if (selectedVersionRef.current !== null) {
+                        selectedVersionRef.current.scrollIntoView();
+                    }
                 }
             })
             .catch((e) => {});
@@ -39,19 +47,22 @@ function VersionMenu(props: VersionMenuProps): JSX.Element {
     return (
         <div className='version-menu'>
             <div className='version-tabs'>
-                {versionTypes.map((element, key) => (
-                    <div
-                        key={key}
-                        className={`version-type clickable ${
-                            selectedVersionType === element.id ? 'selected' : ''
-                        }`}
-                        onClick={() => {
-                            setSelectedVersionType(element.id);
-                        }}
-                    >
-                        <span>{element.pretty}</span>
-                    </div>
-                ))}
+                {selectedVersionType.length > 0 &&
+                    versionTypes.map((element, key) => (
+                        <div
+                            key={key}
+                            className={`version-type clickable ${
+                                selectedVersionType === element.id
+                                    ? 'selected'
+                                    : ''
+                            }`}
+                            onClick={() => {
+                                setSelectedVersionType(element.id);
+                            }}
+                        >
+                            <span>{element.pretty}</span>
+                        </div>
+                    ))}
                 {props.mcVersion.length > 0 ? (
                     <CheckIcon />
                 ) : (

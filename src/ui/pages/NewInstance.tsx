@@ -20,7 +20,7 @@ export enum Flavours {
     Quilt,
 }
 
-const flavours = [
+export const flavours = [
     {
         id: Flavours.Vanilla,
         name: 'Vanilla',

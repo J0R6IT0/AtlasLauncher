@@ -681,11 +681,57 @@ pub async fn write_instance(name: &str, data: InstanceInfo, app: &AppHandle) {
         instance.icon = data.icon.to_string();
     }
 
-    if instance.version != data.version {
-        downloader::download(&data.version, app, &instance.name)
+    if instance.version != data.version || instance.modloader != data.modloader {
+        let mut id: String = data.version.clone();
+        if data.modloader.starts_with("forge-") {
+            let forge_manifest: Value =
+                modloader::forge::download_manifest(&data.modloader, app, name)
+                    .await
+                    .unwrap();
+            id = forge_manifest["inheritsFrom"].as_str().unwrap().to_string();
+        } else if data.modloader.starts_with("fabric-") {
+            let fabric_manifest: Value = modloader::fabric::download_manifest(&id, &data.modloader)
+                .await
+                .unwrap();
+            id = fabric_manifest["inheritsFrom"]
+                .as_str()
+                .unwrap()
+                .to_string();
+        } else if data.modloader.starts_with("quilt-") {
+            let quilt_manifest: Value = modloader::quilt::download_manifest(&id, &data.modloader)
+                .await
+                .unwrap();
+            id = quilt_manifest["inheritsFrom"].as_str().unwrap().to_string();
+        }
+
+        downloader::download(&id, app, name).await.unwrap();
+
+        if data.modloader.starts_with("forge") {
+            modloader::forge::download_forge(&id, &data.modloader.replace("forge-", ""), name, app)
+                .await
+                .unwrap();
+        } else if data.modloader.starts_with("fabric") {
+            modloader::fabric::download_fabric(
+                &id,
+                &data.modloader.replace("fabric-", ""),
+                app,
+                &name,
+            )
             .await
             .unwrap();
+        } else if data.modloader.starts_with("quilt") {
+            modloader::quilt::download_quilt(
+                &id,
+                &data.modloader.replace("quilt-", ""),
+                app,
+                &name,
+            )
+            .await
+            .unwrap();
+        }
+
         instance.version = data.version;
+        instance.modloader = data.modloader;
     }
 
     instance.height = data.height;

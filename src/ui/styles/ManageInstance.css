@@ -122,10 +122,6 @@
     transform: translate(-50%, -50%);
 }
 
-.instance-category.active svg {
-    stroke: var(--icons-color-hover);
-}
-
 .backgrounds span,
 .icons span {
     color: var(--text-color-primary);
@@ -224,7 +220,7 @@
 }
 
 .manage-instance .version-menu {
-    height: calc(100% - 5.5rem);
+    height: calc(100% - 6.8rem);
 }
 
 .resolution-wrapper {
@@ -248,4 +244,27 @@
 
 .option.enabled {
     color: var(--text-color-primary);
+}
+
+.manage-instance-modloaders {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.modloader-icon svg {
+    height: 1.5rem;
+    width: 1.5rem;
+    stroke-width: 1.5px;
+}
+
+.modloader-icon.selected svg {
+    color: var(--text-color-primary);
+}
+
+.modloader-icon .custom path {
+    stroke-width: 1.5px;
+}
+
+.instance-category.active svg {
+    stroke: var(--icons-color-hover);
 }

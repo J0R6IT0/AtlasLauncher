@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AlertTriangleIcon, CheckIcon } from '../../assets/icons/Icons';
 
 interface FabricMinecraftVersion {
@@ -23,15 +23,27 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
     const [stable, setStable] = useState(true);
     const [mcVersions, setMcVersions] = useState<FabricMinecraftVersion[]>([]);
     const [loaderVersions, setLoaderVersions] = useState<FabricVersion[]>([]);
+
+    const selectedMcVersionRef = useRef<HTMLLIElement>(null);
+    const selectedVersionRef = useRef<HTMLLIElement>(null);
+
     useEffect(() => {
         invoke('get_fabric_minecraft_versions', { isQuilt: !!props.isQuilt })
             .then((obj) => {
                 setMcVersions(obj as FabricMinecraftVersion[]);
-                props.setMcVersion(
-                    (obj as FabricMinecraftVersion[]).filter(
-                        (mcVersion) => mcVersion.stable === stable
-                    )[0].version
-                );
+                if (props.mcVersion.length <= 0) {
+                    props.setMcVersion(
+                        (obj as FabricMinecraftVersion[]).filter(
+                            (mcVers) => mcVers.stable === stable
+                        )[0].version
+                    );
+                } else {
+                    setStable(
+                        (obj as FabricMinecraftVersion[]).filter(
+                            (mcVers) => mcVers.version === props.mcVersion
+                        )[0].stable
+                    );
+                }
             })
             .catch((e) => {});
         invoke('get_fabric_versions', { isQuilt: !!props.isQuilt })
@@ -40,6 +52,17 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
             })
             .catch((e) => {});
     }, []);
+
+    useEffect(() => {
+        if (props.autoScroll) {
+            if (selectedMcVersionRef.current !== null) {
+                selectedMcVersionRef.current.scrollIntoView();
+            }
+            if (selectedVersionRef.current !== null) {
+                selectedVersionRef.current.scrollIntoView();
+            }
+        }
+    }, [mcVersions, loaderVersions]);
 
     return (
         <div className='version-menu'>
@@ -76,6 +99,11 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                         .filter((mcVersion) => mcVersion.stable === stable)
                         .map((mcVersion, key) => (
                             <li
+                                ref={
+                                    props.mcVersion === mcVersion.version
+                                        ? selectedMcVersionRef
+                                        : null
+                                }
                                 key={key}
                                 className={`version clickable ${
                                     props.mcVersion === mcVersion.version
@@ -101,6 +129,11 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
                 <div className='forge-container forge-versions'>
                     {loaderVersions.map((element, key) => (
                         <li
+                            ref={
+                                props.modloaderVersion === element.version
+                                    ? selectedVersionRef
+                                    : null
+                            }
                             key={key}
                             className={`version clickable ${
                                 props.modloaderVersion === element.version
