@@ -113,6 +113,19 @@
     width: calc(100% - 2rem);
 }
 
+.backgrounds svg,
+.icons svg {
+    height: 45%;
+    top: 50%;
+    left: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+}
+
+.instance-category.active svg {
+    stroke: var(--icons-color-hover);
+}
+
 .backgrounds span,
 .icons span {
     color: var(--text-color-primary);
@@ -133,15 +146,6 @@
 .manage-instance-fields.appearance {
     overflow: auto;
     padding: 0.3rem;
-}
-
-.backgrounds svg,
-.icons svg {
-    height: 45%;
-    top: 50%;
-    left: 50%;
-    position: absolute;
-    transform: translate(-50%, -50%);
 }
 
 .instance-preview {
