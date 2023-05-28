@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import '../styles/ForgeVersionMenu.css';
 import { AlertTriangleIcon, CheckIcon } from '../../assets/icons/Icons';
 
@@ -13,39 +13,56 @@ interface ForgeVersionMenuProps {
     setModloaderVersion: (version: string) => void;
 }
 
+let versionCache: ForgeVersionData[] = [];
+let keyCache: string[] = [];
+
 function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
-    const [versions, setVersions] = useState<ForgeVersionData[]>([]);
-    const [keys, setKeys] = useState<string[]>([]);
+    const [versions, setVersions] = useState<ForgeVersionData[]>(versionCache);
+    const [keys, setKeys] = useState<string[]>(keyCache);
 
     const selectedMcVersionRef = useRef<HTMLLIElement>(null);
     const selectedVersionRef = useRef<HTMLLIElement>(null);
 
+    function scroll(): void {
+        if (props.autoScroll) {
+            if (selectedMcVersionRef.current !== null && props.autoScroll) {
+                selectedMcVersionRef.current.scrollIntoView();
+            }
+            if (selectedVersionRef.current !== null && props.autoScroll) {
+                selectedVersionRef.current.scrollIntoView();
+            }
+        }
+    }
+
     useEffect(() => {
-        let newVersions: ForgeVersionData[] = [];
-        const keys: string[] = [];
-        invoke('get_forge_versions')
-            .then((obj) => {
-                newVersions = obj as ForgeVersionData[];
-                newVersions.reverse();
-                newVersions.forEach((version) => {
-                    const key = Object.keys(version)[0];
-                    version[key].reverse();
-                    keys.push(key);
-                });
-                setVersions(newVersions);
-                setKeys(keys);
-                if (props.mcVersion.length <= 0) {
-                    props.setMcVersion(keys[0]);
-                }
-                if (selectedMcVersionRef.current !== null && props.autoScroll) {
-                    selectedMcVersionRef.current.scrollIntoView();
-                }
-                if (selectedVersionRef.current !== null && props.autoScroll) {
-                    selectedVersionRef.current.scrollIntoView();
-                }
-            })
-            .catch((e) => {});
+        if (versionCache.length <= 0 || keyCache.length <= 0) {
+            invoke('get_forge_versions')
+                .then((obj) => {
+                    const newVersions = obj as ForgeVersionData[];
+                    const newKeys: string[] = [];
+                    newVersions.reverse();
+                    newVersions.forEach((version) => {
+                        const key = Object.keys(version)[0];
+                        version[key].reverse();
+                        newKeys.push(key);
+                    });
+                    versionCache = newVersions;
+                    keyCache = newKeys;
+                    setVersions(versionCache);
+                    setKeys(newKeys);
+                    scroll();
+                })
+                .catch((e) => {});
+        } else {
+            scroll();
+        }
     }, []);
+
+    useEffect(() => {
+        if (!props.autoScroll) {
+            props.setMcVersion(keys[0]);
+        }
+    }, [keys]);
 
     return (
         <div className='version-menu'>
@@ -120,4 +137,4 @@ function ForgeVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
     );
 }
 
-export default ForgeVersionMenu;
+export default memo(ForgeVersionMenu);

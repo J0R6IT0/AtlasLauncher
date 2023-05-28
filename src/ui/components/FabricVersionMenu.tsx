@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import { AlertTriangleIcon, CheckIcon } from '../../assets/icons/Icons';
 
 interface FabricMinecraftVersion {
@@ -19,38 +19,89 @@ interface ForgeVersionMenuProps {
     setModloaderVersion: (version: string) => void;
     isQuilt: boolean;
 }
+
+let fabricMcVersionCache: FabricMinecraftVersion[] = [];
+let quiltMcVersionCache: FabricMinecraftVersion[] = [];
+
+let fabricVersionCache: FabricVersion[] = [];
+let quiltVersionCache: FabricVersion[] = [];
+
 function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
     const [stable, setStable] = useState(true);
-    const [mcVersions, setMcVersions] = useState<FabricMinecraftVersion[]>([]);
-    const [loaderVersions, setLoaderVersions] = useState<FabricVersion[]>([]);
+    const [mcVersions, setMcVersions] = useState<FabricMinecraftVersion[]>(
+        props.isQuilt ? quiltMcVersionCache : fabricMcVersionCache
+    );
+    const [loaderVersions, setLoaderVersions] = useState<FabricVersion[]>(
+        props.isQuilt ? quiltVersionCache : fabricVersionCache
+    );
 
     const selectedMcVersionRef = useRef<HTMLLIElement>(null);
     const selectedVersionRef = useRef<HTMLLIElement>(null);
 
     useEffect(() => {
-        invoke('get_fabric_minecraft_versions', { isQuilt: !!props.isQuilt })
-            .then((obj) => {
-                setMcVersions(obj as FabricMinecraftVersion[]);
-                if (props.mcVersion.length <= 0) {
-                    props.setMcVersion(
-                        (obj as FabricMinecraftVersion[]).filter(
-                            (mcVers) => mcVers.stable === stable
-                        )[0].version
-                    );
-                } else {
-                    setStable(
-                        (obj as FabricMinecraftVersion[]).filter(
-                            (mcVers) => mcVers.version === props.mcVersion
-                        )[0].stable
-                    );
-                }
+        if (
+            (props.isQuilt &&
+                (quiltMcVersionCache.length <= 0 ||
+                    quiltVersionCache.length <= 0)) ||
+            (!props.isQuilt &&
+                (fabricMcVersionCache.length <= 0 ||
+                    fabricVersionCache.length <= 0))
+        ) {
+            invoke('get_fabric_minecraft_versions', {
+                isQuilt: !!props.isQuilt,
             })
-            .catch((e) => {});
-        invoke('get_fabric_versions', { isQuilt: !!props.isQuilt })
-            .then((obj) => {
-                setLoaderVersions(obj as FabricVersion[]);
-            })
-            .catch((e) => {});
+                .then((obj) => {
+                    if (props.isQuilt) {
+                        quiltMcVersionCache = obj as FabricMinecraftVersion[];
+                        setMcVersions(quiltMcVersionCache);
+                    } else {
+                        fabricMcVersionCache = obj as FabricMinecraftVersion[];
+                        setMcVersions(fabricMcVersionCache);
+                    }
+                    if (props.mcVersion.length <= 0) {
+                        props.setMcVersion(
+                            (obj as FabricMinecraftVersion[]).filter(
+                                (mcVers) => mcVers.stable === stable
+                            )[0].version
+                        );
+                    } else {
+                        setStable(
+                            (obj as FabricMinecraftVersion[]).filter(
+                                (mcVers) => mcVers.version === props.mcVersion
+                            )[0].stable
+                        );
+                    }
+                })
+                .catch((e) => {});
+            invoke('get_fabric_versions', { isQuilt: !!props.isQuilt })
+                .then((obj) => {
+                    if (props.isQuilt) {
+                        quiltVersionCache = obj as FabricVersion[];
+                        setLoaderVersions(quiltVersionCache);
+                    } else {
+                        fabricVersionCache = obj as FabricVersion[];
+                        setLoaderVersions(fabricVersionCache);
+                    }
+                })
+                .catch((e) => {});
+        } else {
+            if (props.mcVersion.length <= 0) {
+                props.setMcVersion(
+                    (props.isQuilt
+                        ? quiltMcVersionCache
+                        : fabricMcVersionCache
+                    ).filter((mcVers) => mcVers.stable === stable)[0].version
+                );
+            } else {
+                setStable(
+                    (props.isQuilt
+                        ? quiltMcVersionCache
+                        : fabricMcVersionCache
+                    ).filter((mcVers) => mcVers.version === props.mcVersion)[0]
+                        .stable
+                );
+            }
+        }
     }, []);
 
     useEffect(() => {
@@ -158,4 +209,4 @@ function FabricVersionMenu(props: ForgeVersionMenuProps): JSX.Element {
     );
 }
 
-export default FabricVersionMenu;
+export default memo(FabricVersionMenu);

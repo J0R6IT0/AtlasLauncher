@@ -21,28 +21,45 @@ const versionTypes = [
     { id: 'old_alpha', pretty: 'Alpha' },
 ];
 
+let versionCache: MinecraftVersion[] = [];
+
 function VersionMenu(props: VersionMenuProps): JSX.Element {
-    const [versions, setVersions] = useState<MinecraftVersion[]>([]);
-    const [selectedVersionType, setSelectedVersionType] = useState('release');
+    const [versions, setVersions] = useState<MinecraftVersion[]>(versionCache);
+    const [selectedVersionType, setSelectedVersionType] = useState('');
     const selectedVersionRef = useRef<HTMLLIElement>(null);
+
+    function scroll(): void {
+        if (props.autoScroll) {
+            const thisVersion = versionCache.filter(
+                (element) => element.id === props.mcVersion
+            );
+            if (thisVersion.length > 0) {
+                setSelectedVersionType(thisVersion[0].type);
+            }
+        } else {
+            setSelectedVersionType('release');
+        }
+    }
+
     useEffect(() => {
-        invoke('get_minecraft_versions')
-            .then((obj) => {
-                setVersions(obj as MinecraftVersion[]);
-                if (props.autoScroll) {
-                    const thisVersion = (obj as MinecraftVersion[]).filter(
-                        (element) => element.id === props.mcVersion
-                    );
-                    if (thisVersion.length > 0) {
-                        setSelectedVersionType(thisVersion[0].type);
-                    }
-                    if (selectedVersionRef.current !== null) {
-                        selectedVersionRef.current.scrollIntoView();
-                    }
-                }
-            })
-            .catch((e) => {});
+        if (versions.length <= 0) {
+            invoke('get_minecraft_versions')
+                .then((obj) => {
+                    versionCache = obj as MinecraftVersion[];
+                    setVersions(versionCache);
+                    scroll();
+                })
+                .catch((e) => {});
+        } else {
+            scroll();
+        }
     }, []);
+
+    useEffect(() => {
+        if (selectedVersionRef.current !== null) {
+            selectedVersionRef.current.scrollIntoView();
+        }
+    }, [selectedVersionType]);
 
     return (
         <div className='version-menu'>
