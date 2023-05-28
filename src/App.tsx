@@ -261,7 +261,9 @@ function SecondaryButtons(props: SecondaryButtonsProps): JSX.Element {
 
 function App(): JSX.Element {
     const [activePage, setActivePage] = useState(Pages.Library);
+    const [pageToChange, setPageToChange] = useState(activePage);
     const [instances, setInstances] = useState<InstanceInfo[]>([]);
+    const [pageChange, setPageChange] = useState(0);
 
     async function getInstances(): Promise<void> {
         const newInstances = (await invoke('get_instances').catch(
@@ -272,6 +274,19 @@ function App(): JSX.Element {
 
     function contextMenuHandler(event: Event): void {
         event.preventDefault();
+    }
+
+    function managePageChange(page: Pages.Library): void {
+        if (page === activePage) return;
+        setPageToChange(page);
+        setPageChange(1);
+        setTimeout(() => {
+            setPageChange(2);
+            setActivePage(page);
+            setTimeout(() => {
+                setPageChange(0);
+            }, 150);
+        }, 150);
     }
 
     useEffect(() => {
@@ -331,13 +346,13 @@ function App(): JSX.Element {
                     <XIcon />
                 </div>
             </div>
-            <SideBar setActivePage={setActivePage} activePage={activePage} />
+            <SideBar setActivePage={managePageChange} activePage={pageToChange} />
             <div className='page'>
                 <div className='page-info'>
                     <span className='page-title'>{pages[activePage].name}</span>
                     <span>{pages[activePage].desc}</span>
                 </div>
-                <div className='page-content'>
+                <div className={`page-content step${pageChange}`}>
                     {activePage === Pages.New && (
                         <NewInstance
                             goToLibrary={() => {

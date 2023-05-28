@@ -56,13 +56,10 @@
     border-radius: 0.3rem !important;
 }
 
-.fabric-icon {
-    transform: scale(0.9) scaleX(-1);
-}
-
 .clickable {
     cursor: pointer;
     transition: transform 0.2s ease-out;
+    will-change: transform;
 }
 
 .clickable:active {
@@ -72,6 +69,7 @@
 .hover,
 .hover svg {
     transition: all 0.2s ease;
+    will-change: color;
 }
 
 .accent-icons svg {

@@ -10,6 +10,7 @@
     box-shadow: 0 0 0.4rem rgb(0 0 0 / 10%);
     border-radius: 0.5rem;
     overflow: hidden;
+    will-change: max-height;
 }
 
 .context-menu.visible {

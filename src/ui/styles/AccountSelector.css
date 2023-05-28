@@ -12,6 +12,7 @@
     max-height: 0;
     overflow-y: scroll;
     transition: max-height 0.2s ease-in-out;
+    will-change: max-height;
 }
 
 .account-selector.visible {

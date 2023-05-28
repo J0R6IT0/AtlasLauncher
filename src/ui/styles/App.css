@@ -98,6 +98,20 @@
     left: 1.5rem;
     height: calc(100% - 8rem);
     width: calc(100% - 3rem);
+    transition: all 0.15s ease-in-out;
+    will-change: transform;
+    transform: none;
+}
+
+.page-content.step1 {
+    opacity: 0;
+    transform: translateX(110%);
+}
+
+.page-content.step2 {
+    opacity: 0;
+    transition: none;
+    transform: translateX(-120%);
 }
 
 .active-downloads-notification {

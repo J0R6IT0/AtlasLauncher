@@ -37,7 +37,7 @@ function ContextMenu(props: ContextMenuProps): JSX.Element {
                 props.position.x,
                 windowWidth - rect.width
             );
-            menuRef.current.style.left = `${newLeft}px`;
+            menuRef.current.style.transform = `${newLeft}px`;
         }
         if (rect.bottom > windowHeight) {
             const newTop = Math.min(
