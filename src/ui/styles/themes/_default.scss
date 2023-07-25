@@ -1,0 +1,20 @@
+@import '../variables';
+
+$theme-map-default: (
+    $--background: #101216,
+    $--primary-color: #191921,
+    $--secondary-color: #424250,
+    $--accent-color: #874295,
+    $--primary-text-color: #bab6be,
+    $--secondary-text-color: #555561,
+
+    // same as primary-color
+    $--menu-color: #191921f4,
+    $--danger-color: #cd4040,
+    // $--input-color: #15151d,
+    $--input-color: #191921,
+
+    $--sidebar-width: 3.4rem,
+    $--titlebar-height: 2.4rem,
+    $--primary-border-radius: 0.5rem,
+);

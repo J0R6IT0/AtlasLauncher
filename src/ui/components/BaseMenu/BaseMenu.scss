@@ -1,0 +1,9 @@
+.basemenu {
+    position: absolute;
+    border-radius: var(--primary-border-radius);
+    overflow: hidden;
+    background: var(--menu-color);
+    backface-visibility: hidden;
+    will-change: transform;
+    box-shadow: 0 0 0.3rem rgb(0 0 0 / 10%);
+}

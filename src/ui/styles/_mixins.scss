@@ -1,0 +1,77 @@
+@mixin spread-map($map: ()) {
+    @each $key, $value in $map {
+        #{$key}: $value;
+    }
+}
+
+@mixin flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@mixin flex-left {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+}
+
+@mixin flex-column {
+    @include flex-center;
+
+    flex-direction: column;
+}
+
+@mixin translate-y($transition-duration, $visible-class) {
+    will-change: transform, opacity;
+    transition: all $transition-duration ease-in-out;
+    transform: translateY(-100%);
+    opacity: 0;
+
+    &#{$visible-class} {
+        opacity: 1;
+        transform: translateY(0%);
+    }
+}
+
+@mixin pseudo-elem {
+    &::after {
+        inset: 0;
+        position: absolute;
+        content: '';
+    }
+}
+
+@mixin pseudo-elem-opacity($bg) {
+    &:hover {
+        &::after {
+            opacity: 1;
+        }
+    }
+
+    &::after {
+        will-change: opacity;
+        background: $bg;
+        opacity: 0;
+        z-index: -1;
+        transition: all 0.1s ease-in-out;
+    }
+
+    @include pseudo-elem;
+}
+
+@mixin pseudo-elem-opacity-inverse($bg) {
+    &:hover {
+        &::after {
+            opacity: 0;
+        }
+    }
+
+    &::after {
+        will-change: opacity;
+        background: $bg;
+        opacity: 0.9;
+    }
+
+    @include pseudo-elem;
+}

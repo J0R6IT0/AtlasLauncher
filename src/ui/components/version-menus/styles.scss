@@ -1,0 +1,118 @@
+@import '../../styles/mixins';
+
+.version-menu {
+    width: 20rem;
+    position: relative;
+    flex-grow: 1;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+
+    @include flex-center;
+
+    gap: 0.5rem;
+
+    .version-menu-wrapper {
+        height: 100%;
+        width: 100%;
+        position: relative;
+
+        .version-menu-tabs {
+            background-color: var(--input-color);
+            width: 100%;
+            height: 2.5rem;
+            border-radius: var(--primary-border-radius);
+
+            @include flex-center;
+
+            gap: 0.2rem;
+            box-sizing: border-box;
+            padding: 0.3rem;
+            margin-bottom: -0.8rem;
+
+            span {
+                height: 100%;
+                flex-basis: 100%;
+                border-radius: 0.3rem;
+
+                @include flex-center;
+
+                box-sizing: border-box;
+                padding: 0.2rem;
+                color: var(--secondary-text-color);
+                position: relative;
+                z-index: 1;
+
+                @include pseudo-elem-opacity(rgb(0 0 0 / 20%));
+
+                &::after {
+                    border-radius: 0.3rem;
+                }
+
+                &.selected {
+                    &::after {
+                        opacity: 1;
+                    }
+                    color: var(--primary-text-color);
+                }
+            }
+        }
+
+        .version-container-wrapper {
+            position: absolute;
+            width: 100%;
+            height: calc(100% - 2.7rem);
+            bottom: 0;
+
+            .version-container {
+                background-color: var(--input-color);
+                border-radius: var(--primary-border-radius);
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                overflow-y: scroll;
+                overflow-x: hidden;
+                color: var(--secondary-text-color);
+
+                .version {
+                    padding-top: 0.3rem;
+                    padding-bottom: 0.3rem;
+                    position: relative;
+                    z-index: 1;
+
+                    @include pseudo-elem-opacity(rgb(0 0 0 / 20%));
+                    display: flex;
+                    align-items: center;
+
+                    &::after {
+                        border-radius: var(--primary-border-radius);
+                    }
+
+                    span {
+                        margin-left: 1.2rem;
+                        white-space: nowrap;
+                    }
+
+                    .indicator {
+                        width: 0.6rem;
+                        height: 0.6rem;
+                        background-color: var(--accent-color);
+                        position: absolute;
+                        border-radius: 100%;
+                        left: 0.4rem;
+                    }
+
+                    &.selected {
+                        color: var(--primary-text-color);
+                    }
+                }
+            }
+        }
+    }
+
+    svg {
+        height: 2rem;
+        align-self: flex-start;
+        margin-top: 0.2rem;
+        color: var(--accent-color);
+    }
+}

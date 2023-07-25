@@ -1,0 +1,81 @@
+@font-face {
+    font-family: Metropolis;
+    font-weight: normal;
+    src: url('../../assets/fonts/Metropolis-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: Metropolis;
+    font-weight: 500;
+    src: url('../../assets/fonts/Metropolis-SemiBold.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: Metropolis;
+    font-weight: bold;
+    src: url('../../assets/fonts/Metropolis-ExtraBold.woff2') format('woff2');
+}
+
+:root {
+    font-family: Metropolis, sans-serif;
+    font-weight: normal;
+    font-synthesis: none;
+    text-rendering: optimizelegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-size-adjust: 100%;
+    user-select: none;
+
+    input {
+        font-family: Metropolis, sans-serif;
+    }
+}
+
+a {
+    text-decoration: none;
+    color: currentcolor;
+}
+
+.clickable {
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+
+    &:active {
+        transform: scale(0.9);
+    }
+}
+
+.hoverable {
+    transition: all 0.2s ease-in-out;
+
+    svg {
+        transition: all 0.2s ease-in-out;
+    }
+
+    &:hover {
+        &:not(.danger) svg {
+            color: var(--accent-color) !important;
+        }
+
+        &.danger svg {
+            color: var(--danger-color) !important;
+        }
+    }
+}
+
+::-webkit-scrollbar {
+    width: 0.4rem;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: var(--primary-border-radius);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+}

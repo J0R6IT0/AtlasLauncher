@@ -1,0 +1,17 @@
+.icon {
+    fill: currentcolor;
+    height: 1.5rem;
+}
+
+.feather {
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.5px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    height: 1.5rem;
+}
+
+.danger-icon {
+    color: var(--danger-color) !important;
+}

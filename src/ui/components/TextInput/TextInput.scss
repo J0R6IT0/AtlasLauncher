@@ -1,0 +1,94 @@
+@import '../../styles/mixins';
+
+.text-input {
+    @include flex-center;
+
+    gap: 0.5rem;
+    width: 20rem;
+    position: relative;
+
+    .input-wrapper {
+        height: 2.5rem;
+        background-color: var(--input-color);
+        position: relative;
+        transition: all 0.2s ease-in-out;
+        width: 100%;
+        border-radius: var(--primary-border-radius);
+
+        @include flex-center;
+
+        &:has(input:focus),
+        &:has(input:valid) {
+            transform: translate3d(0, 0.43rem, 0);
+
+            hr {
+                transform: scaleX(1);
+            }
+        }
+
+        &:has(input:focus)::after,
+        &:has(input:valid)::after {
+            transform: translate3d(0, -0.8rem, 0);
+        }
+
+        hr {
+            height: 1px;
+            background-color: var(--accent-color);
+            position: absolute;
+            width: calc(100% - 1.2rem);
+            border: none;
+            bottom: 0;
+            left: 0.6rem;
+            transform: scaleX(0);
+            transition: all 0.2s ease-in-out;
+        }
+
+        @include pseudo-elem;
+
+        &::after {
+            transition: all 0.2s ease-in-out;
+            background-color: var(--input-color);
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            z-index: -2;
+            border-radius: var(--primary-border-radius);
+        }
+
+        input {
+            outline: none;
+            padding-left: 0.6rem;
+            padding-right: 0.6rem;
+            height: 2rem;
+            background-color: transparent;
+            border-style: none;
+            position: relative;
+            color: var(--primary-text-color);
+            width: 100%;
+            font-size: 1rem;
+
+            &:focus ~ .input-label,
+            &:valid ~ .input-label {
+                transform: scale(0.75) translate3d(-1.2rem, -1.6rem, 0);
+            }
+
+            &:focus ~ .input-slider,
+            &:valid ~ .input-slider {
+                transform: translate3d(0, -0.8rem, 0);
+            }
+        }
+
+        .input-label {
+            transition: all 0.2s ease-in-out;
+            position: absolute;
+            left: 0.6rem;
+            pointer-events: none;
+            color: var(--secondary-text-color);
+        }
+    }
+
+    svg {
+        color: var(--accent-color);
+        height: 2rem;
+    }
+}

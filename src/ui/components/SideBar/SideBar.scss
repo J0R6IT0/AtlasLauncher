@@ -1,0 +1,63 @@
+@import '../../styles/mixins';
+
+#sidebar {
+    @include flex-column;
+
+    position: fixed;
+    inset: 0;
+    height: 100%;
+    width: var(--sidebar-width);
+    gap: 0.7rem;
+    z-index: 8000;
+
+    div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 2.6rem;
+        width: 2.6rem;
+        overflow: hidden;
+        border-radius: 0.8rem;
+        position: relative;
+        will-change: transform;
+
+        svg {
+            height: 1.7rem;
+            color: var(--secondary-color);
+            z-index: 10;
+        }
+
+        div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            will-change: transform;
+            transition: transform 0.15s ease-in-out;
+            transform: scale(0);
+            background-color: var(--accent-color);
+        }
+
+        &.selected {
+            svg {
+                fill: var(--primary-text-color) !important;
+            }
+
+            div {
+                transform: scale(1);
+            }
+        }
+    }
+
+    #account {
+        position: absolute;
+        height: 2rem;
+        bottom: 0.8rem;
+
+        img {
+            height: 100%;
+        }
+    }
+}

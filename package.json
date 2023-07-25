@@ -1,0 +1,38 @@
+{
+    "name": "atlas-launcher-solid",
+    "version": "0.0.0",
+    "description": "",
+    "scripts": {
+        "start": "vite",
+        "dev": "vite",
+        "build": "vite build",
+        "serve": "vite preview",
+        "tauri": "tauri"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "@motionone/solid": "^10.16.2",
+        "@solid-primitives/keyed": "^1.2.0",
+        "@solidjs/router": "^0.8.2",
+        "@tauri-apps/plugin-window": "^2.0.0-alpha.0",
+        "animate-css-grid": "^1.5.1",
+        "motion": "^10.16.2",
+        "solid-js": "^1.7.8"
+    },
+    "devDependencies": {
+        "@tauri-apps/api": "^2.0.0-alpha.4",
+        "@tauri-apps/cli": "^1.4.0",
+        "@types/node": "^20.4.4",
+        "@typescript-eslint/eslint-plugin": "^6.1.0",
+        "@typescript-eslint/parser": "^6.1.0",
+        "eslint": "^8.45.0",
+        "eslint-plugin-solid": "^0.12.1",
+        "prettier": "^3.0.0",
+        "sass": "^1.64.1",
+        "stylelint": "^15.10.2",
+        "stylelint-config-standard-scss": "^10.0.0",
+        "typescript": "^5.1.6",
+        "vite": "^4.4.6",
+        "vite-plugin-solid": "^2.5.0"
+    }
+}

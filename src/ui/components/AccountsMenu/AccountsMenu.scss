@@ -1,0 +1,60 @@
+@import '../../styles/mixins';
+
+.basemenu {
+    bottom: 1rem;
+    left: 1rem;
+    max-width: 15rem;
+
+    .account-item {
+        color: var(--secondary-color);
+        font-size: 0.8rem;
+
+        @include flex-left;
+
+        .account-details {
+            @include pseudo-elem-opacity(rgb(0 0 0 / 20%));
+            @include flex-left;
+
+            height: 2rem;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            width: 80%;
+            overflow: hidden;
+            position: relative;
+
+            img {
+                height: 2rem;
+                border-radius: 0.3rem;
+            }
+
+            svg {
+                width: 2rem;
+                height: 1.8rem;
+            }
+
+            #active-label {
+                font-size: 0.6rem;
+                color: var(--accent-color);
+                font-weight: bold;
+                margin-bottom: 0;
+                margin-top: 0.3rem;
+            }
+        }
+
+        .remove-account {
+            @include pseudo-elem-opacity(rgb(0 0 0 / 20%));
+            @include flex-center;
+
+            color: var(--secondary-color);
+            height: 3rem;
+            width: 3rem;
+            position: relative;
+
+        }
+
+        &.active {
+            color: var(--primary-text-color);
+            font-weight: 500;
+        }
+    }
+}
