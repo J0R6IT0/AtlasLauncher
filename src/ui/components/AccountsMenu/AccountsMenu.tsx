@@ -38,7 +38,7 @@ function AccountMenu(props: AccountMenuProps): JSX.Element {
                             }}
                         >
                             <img
-                                src={`data:image/png;base64,${account.avatar_64px}`}
+                                src={`data:image/png;base64,${account.avatar_64}`}
                             />
                             <span>
                                 {account.username}

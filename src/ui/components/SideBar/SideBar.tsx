@@ -40,7 +40,7 @@ function SideBar(props: SideBarProps): JSX.Element {
             >
                 {props.activeAccount !== null ? (
                     <img
-                        src={`data:image/png;base64,${props.activeAccount.avatar_64px}`}
+                        src={`data:image/png;base64,${props.activeAccount.avatar_64}`}
                     />
                 ) : (
                     <UserIcon />

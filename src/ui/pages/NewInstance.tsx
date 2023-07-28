@@ -1,11 +1,17 @@
-import { For, JSX, Show, createSignal } from 'solid-js';
+import { For, JSX, Show, createSignal, lazy } from 'solid-js';
 import '../styles/NewInstance.scss';
 import { flavours } from '../../data/constants';
 import { Flavours, Pages } from '../../data/enums';
 import TextInput from '../components/TextInput/TextInput';
-import VanillaVersionMenu from '../components/version-menus/VanillaVersionMenu';
+
+// Lazy load the version menus to make navigation smoother
+const VanillaVersionMenu = lazy(
+    () => import('../components/version-menus/VanillaVersionMenu'),
+);
+
 import BaseButton from '../components/BaseButton/BaseButton';
 import { PageNavigationProps } from '../../data/models';
+import { invoke } from '@tauri-apps/api/tauri';
 
 export interface VersionMenuProps {
     selectedVersion: string;
@@ -45,7 +51,7 @@ function NewInstance(props: PageNavigationProps): JSX.Element {
     };
 
     const handleClickable = (): boolean => {
-        return selectedVersion().length > 0 || isInstanceNameValid();
+        return selectedVersion().length > 0 && isInstanceNameValid();
     };
 
     return (
@@ -88,6 +94,10 @@ function NewInstance(props: PageNavigationProps): JSX.Element {
                                 clickable={handleClickable()}
                                 onClick={() => {
                                     props.setCurrentPage(Pages.Library);
+                                    invoke('create_instance', {
+                                        name: instanceName(),
+                                        version: selectedVersion(),
+                                    }).catch();
                                 }}
                             />
                         </div>

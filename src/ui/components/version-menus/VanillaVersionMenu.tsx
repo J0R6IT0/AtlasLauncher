@@ -16,7 +16,7 @@ interface MinecraftVersion {
 function VanillaVersionMenu(props: VersionMenuProps): JSX.Element {
     const fetchVersions = async (): Promise<MinecraftVersion[]> => {
         return (await invoke(
-            'update_minecraft_version_manifest',
+            'get_minecraft_versions',
         ).catch()) as MinecraftVersion[];
     };
 

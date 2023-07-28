@@ -9,7 +9,7 @@ export interface MinecraftAccount {
     username: string;
     uuid: string;
     active: boolean;
-    avatar_64px: string;
+    avatar_64: string;
 }
 
 export interface MSAuthEvent {

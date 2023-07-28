@@ -8,10 +8,8 @@ use image::{
 use serde_json::Value;
 
 use crate::{
-    data::{
-        constants::{FACE_OVERLAY_POSITION, FACE_POSITION},
-        enums::ChecksumType,
-    },
+    data::constants::{FACE_OVERLAY_POSITION, FACE_POSITION},
+    models::ChecksumType,
     util::file::download_as_vec,
 };
 

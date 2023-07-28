@@ -1,4 +1,4 @@
-use std::{env, io, time::Duration};
+use std::{io, time::Duration};
 
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
@@ -10,54 +10,15 @@ use tokio::{
     time::sleep,
 };
 
-use crate::data::enums::ChecksumType;
+use crate::{models::ChecksumType, APP_DIRECTORY};
 
 use super::directory::check_directory;
-
-pub struct DownloadTask {
-    name: String,
-    element: Vec<DownloadItem>,
-}
-
-pub struct DownloadItem {
-    url: String,
-    checksum: String,
-    checksum_type: ChecksumType,
-    path: String,
-    extract: String,
-    force: bool,
-}
-
-// file downloader
-pub struct Downloader {
-    tasks: Vec<DownloadTask>,
-}
-
-impl Downloader {
-    fn new() -> Self {
-        Downloader { tasks: vec![] }
-    }
-
-    fn add_task(&mut self, task: DownloadTask) {
-        self.tasks.push(task);
-        if self.tasks.len() == 1 {
-            self.process_tasks()
-        }
-    }
-
-    fn process_tasks(&mut self) {
-        while self.tasks.len() > 0 {
-            // process the task
-            self.tasks.remove(0);
-        }
-    }
-}
 
 // read file
 
 pub async fn read_as_vec<S: AsRef<str>>(path: S) -> Result<Vec<u8>, &'static str> {
-    let exe_path = env::current_exe().unwrap();
-    let file_path = exe_path.parent().unwrap().join(path.as_ref());
+    let app_directory = APP_DIRECTORY.get().unwrap();
+    let file_path = app_directory.join(path.as_ref());
 
     if !file_path.exists() {
         return Err("The path does not exist.");
@@ -69,7 +30,9 @@ pub async fn read_as_vec<S: AsRef<str>>(path: S) -> Result<Vec<u8>, &'static str
     }
 }
 
-pub async fn read_as_value<T: for<'de> Deserialize<'de>>(path: &str) -> Result<T, &'static str> {
+pub async fn read_as_value<T: for<'de> Deserialize<'de>, S: AsRef<str>>(
+    path: S,
+) -> Result<T, &'static str> {
     let bytes: Vec<u8> = read_as_vec(path).await?;
     match serde_json::from_slice(&bytes) {
         Ok(result) => Ok(result),
@@ -79,12 +42,12 @@ pub async fn read_as_value<T: for<'de> Deserialize<'de>>(path: &str) -> Result<T
 
 // write file
 
-pub async fn write_vec(data: &[u8], path: &str) -> Result<(), &'static str> {
-    let exe_path = env::current_exe().unwrap();
+pub async fn write_vec<S: AsRef<str>>(data: &[u8], path: S) -> Result<(), &'static str> {
+    let app_directory = APP_DIRECTORY.get().unwrap();
 
-    let file_path = exe_path.parent().unwrap().join(path);
-    let path = file_path.parent().unwrap();
-    check_directory(path.to_str().unwrap()).await;
+    let file_path = app_directory.join(path.as_ref());
+    let parent_path = file_path.parent().unwrap();
+    check_directory(parent_path.to_str().unwrap()).await;
 
     let mut file = match File::create(&file_path).await {
         Ok(file) => file,
@@ -99,7 +62,10 @@ pub async fn write_vec(data: &[u8], path: &str) -> Result<(), &'static str> {
     }
 }
 
-pub async fn write_value<T: Serialize>(data: &T, path: &str) -> Result<(), &'static str> {
+pub async fn write_value<T: Serialize, S: AsRef<str>>(
+    data: &T,
+    path: S,
+) -> Result<(), &'static str> {
     let bytes: Vec<u8> = serde_json::to_vec(&data).unwrap();
     write_vec(&bytes, path).await?;
 
@@ -108,11 +74,11 @@ pub async fn write_value<T: Serialize>(data: &T, path: &str) -> Result<(), &'sta
 
 // download file
 
-pub async fn download_as_vec(
+pub async fn download_as_vec<S: AsRef<str>>(
     url: &str,
     checksum: &str,
     checksum_type: ChecksumType,
-    path: &str,
+    path: S,
     force: bool,
 ) -> Result<Vec<u8>, &'static str> {
     if !force {
@@ -175,7 +141,7 @@ pub async fn download_as_vec(
         sleep(Duration::from_secs((1 + retry_count).into())).await;
     }
 
-    if !path.is_empty() {
+    if !path.as_ref().is_empty() {
         write_vec(&bytes.to_vec(), path).await?;
     }
 
