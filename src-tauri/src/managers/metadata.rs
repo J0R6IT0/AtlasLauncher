@@ -6,7 +6,7 @@ use crate::{
         metadata::{MinecraftVersion, MinecraftVersionManifest},
         ChecksumType,
     },
-    util::file::{download_as_json, read_as_value},
+    util::file::{download_as_json, read_to_value},
 };
 
 pub struct MetadataManager {
@@ -16,7 +16,7 @@ pub struct MetadataManager {
 impl MetadataManager {
     pub async fn init() -> Self {
         let minecraft_manifest: MinecraftVersionManifest =
-            read_as_value("launcher/meta/minecraft/version_manifest.json")
+            read_to_value("launcher/meta/minecraft/version_manifest.json")
                 .await
                 .unwrap_or_default();
 

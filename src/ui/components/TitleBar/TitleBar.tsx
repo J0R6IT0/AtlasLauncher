@@ -1,5 +1,5 @@
 import { type JSX } from 'solid-js';
-import { appWindow } from '@tauri-apps/plugin-window';
+import { Window } from '@tauri-apps/plugin-window';
 import './TitleBar.scss';
 import {
     AppIcon,
@@ -22,7 +22,7 @@ function TitleBar(props: PageNavigationProps): JSX.Element {
             <div
                 class='clickable hoverable'
                 onClick={() => {
-                    appWindow.minimize().catch();
+                    Window.getCurrent().minimize().catch();
                 }}
             >
                 <MinusIcon />
@@ -30,7 +30,7 @@ function TitleBar(props: PageNavigationProps): JSX.Element {
             <div
                 class='clickable hoverable'
                 onClick={() => {
-                    appWindow.maximize().catch();
+                    Window.getCurrent().maximize().catch();
                 }}
             >
                 <SquareIcon />
@@ -38,7 +38,7 @@ function TitleBar(props: PageNavigationProps): JSX.Element {
             <div
                 class='clickable hoverable'
                 onClick={() => {
-                    appWindow.close().catch();
+                    Window.getCurrent().close().catch();
                 }}
             >
                 <XIcon />

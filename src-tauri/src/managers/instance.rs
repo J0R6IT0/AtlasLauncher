@@ -1,13 +1,18 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    atomic::{AtomicU32, Ordering},
+    Arc, Mutex,
+};
 
 pub struct InstanceManager {
     downloading: Mutex<Vec<Arc<DownloadTask>>>,
+    downloading_counter: AtomicU32,
 }
 
 impl InstanceManager {
     pub async fn init() -> Self {
         Self {
             downloading: Mutex::new(vec![]),
+            downloading_counter: AtomicU32::new(0),
         }
     }
 
@@ -15,14 +20,14 @@ impl InstanceManager {
     pub async fn create_instance(&self, name: &str, version: &str) -> Result<(), &'static str> {
         let task = DownloadTask::new(name, version).await;
 
-        let tasks_number = match self.downloading.lock() {
+        match self.downloading.lock() {
             Ok(mut mutex_lock) => {
                 mutex_lock.push(Arc::new(task));
-                mutex_lock.len()
+                self.downloading_counter.fetch_add(1, Ordering::SeqCst)
             }
             Err(_) => return Err("Error adding download task"),
         };
-        if tasks_number == 1 {
+        if self.downloading_counter.load(Ordering::SeqCst) == 1 {
             self.process_tasks().await?;
         }
 
@@ -31,21 +36,12 @@ impl InstanceManager {
 
     /// Start processing tasks
     async fn process_tasks(&self) -> Result<(), &'static str> {
-        while self.download_tasks_count()? > 0 {
+        while self.downloading_counter.load(Ordering::SeqCst) > 0 {
             let task = self.downloading.lock().unwrap().first().unwrap().clone();
             task.download().await?;
             self.downloading.lock().unwrap().remove(0);
         }
         Ok(())
-    }
-
-    /// Returns the number of active download tasks
-    fn download_tasks_count(&self) -> Result<u32, &'static str> {
-        match self.downloading.lock() {
-            Ok(mutex_lock) => Ok(mutex_lock.len() as u32),
-
-            Err(_) => Err("Error adding download task"),
-        }
     }
 }
 

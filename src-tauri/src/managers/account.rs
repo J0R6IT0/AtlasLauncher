@@ -1,13 +1,14 @@
-use std::sync::Mutex;
+use std::{cmp::Ordering, sync::Mutex};
 
 use serde::{Deserialize, Serialize};
 use tokio::task::JoinSet;
 
 use crate::{
     auth::msauth::auth_flow,
-    util::file::{read_as_value, write_value},
+    util::file::{read_to_value, write_value},
 };
 
+/// Represents a Minecraft account.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct MinecraftAccount {
     pub username: String,
@@ -18,17 +19,39 @@ pub struct MinecraftAccount {
     pub avatar_64: String,
 }
 
+impl Ord for MinecraftAccount {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.uuid.cmp(&other.uuid)
+    }
+}
+
+impl PartialOrd for MinecraftAccount {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for MinecraftAccount {
+    fn eq(&self, other: &Self) -> bool {
+        self.uuid == other.uuid
+    }
+}
+
+impl Eq for MinecraftAccount {}
+
+/// A `state` to manage Minecraft accounts.
+///
+/// This is meant to be used with [`tauri`](tauri)'s state manager.
 pub struct AccountManager {
     accounts: Mutex<Vec<MinecraftAccount>>,
 }
 
 impl AccountManager {
+    /// Initializes the state by reading the accounts file.
     pub async fn init() -> Self {
-        let mut accounts: Vec<MinecraftAccount> = read_as_value("launcher/accounts.json")
+        let accounts: Vec<MinecraftAccount> = read_to_value("launcher/accounts.json".to_string())
             .await
             .unwrap_or_default();
-
-        accounts.sort_by(|a, b| a.username.cmp(&b.username));
 
         Self {
             accounts: Mutex::new(accounts),
@@ -36,7 +59,7 @@ impl AccountManager {
     }
 
     /// Returns the current accounts
-    pub fn get_accounts(&self) -> Vec<MinecraftAccount> {
+    pub fn accounts(&self) -> Vec<MinecraftAccount> {
         let mutex_lock = self.accounts.lock().unwrap();
         mutex_lock.clone()
     }
@@ -47,6 +70,7 @@ impl AccountManager {
             let mut mutex_lock = self.accounts.lock().unwrap();
             mutex_lock.retain(|acc| acc.uuid != uuid);
         }
+
         self.save_acounts().await?;
         Ok(())
     }
@@ -83,7 +107,6 @@ impl AccountManager {
 
             mutex_lock.retain(|acc| acc.uuid != account_uuid);
             mutex_lock.push(account);
-            mutex_lock.sort_by(|a, b| a.username.cmp(&b.username));
         }
         if set_active {
             self.set_active_account(&account_uuid).await?;
@@ -125,7 +148,7 @@ impl AccountManager {
 
     /// Saves the current accounts to file
     async fn save_acounts(&self) -> Result<(), &'static str> {
-        write_value(&self.get_accounts(), "launcher/accounts.json").await?;
+        write_value(&self.accounts(), "launcher/accounts.json").await?;
         Ok(())
     }
 }

@@ -308,7 +308,9 @@ fn build_url() -> String {
 pub async fn get_accounts(
     account_manager: State<'_, AccountManager>,
 ) -> Result<Vec<MinecraftAccount>, &'static str> {
-    Ok(account_manager.get_accounts())
+    let mut accounts = account_manager.accounts();
+    accounts.sort_unstable();
+    Ok(accounts)
 }
 
 #[tauri::command]

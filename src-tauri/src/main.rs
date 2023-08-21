@@ -14,7 +14,9 @@ use models::metadata::MinecraftVersion;
 use std::{env, path::PathBuf, sync::OnceLock};
 use tauri::{async_runtime, AppHandle, Manager, State};
 
+/// A [`OnceLock`](OnceLock) containing a [`tauri`](tauri) [`AppHandle`](AppHandle) for easy access.
 static APP: OnceLock<AppHandle> = OnceLock::new();
+/// A [`OnceLock`](OnceLock) containing the directory where the executable is located.
 static APP_DIRECTORY: OnceLock<PathBuf> = OnceLock::new();
 
 #[tauri::command]
@@ -35,9 +37,10 @@ async fn create_instance(
 
 #[tokio::main]
 async fn main() {
-    // to avoid problems due to having multiple async runtimes running
+    // Shares the current tokio runtime with tauri.
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
+    // Easy access to the app directory.
     APP_DIRECTORY
         .set(env::current_exe().unwrap().parent().unwrap().to_path_buf())
         .expect("Error setting up app directory");
@@ -59,16 +62,16 @@ async fn main() {
             println!("{}, {argv:?}, {cwd}", app.package_info().name);
         }))
         .setup(|app| {
-            APP.set(app.handle()).unwrap();
+            APP.set(app.handle().to_owned()).unwrap();
 
             // Refresh accounts info
-            async_runtime::spawn(async move {
+            async_runtime::spawn(async {
                 let manager = APP.get().unwrap().state::<AccountManager>();
                 manager.refresh_accounts().await.unwrap_or_default();
             });
 
             // Refresh metadata
-            async_runtime::spawn(async move {
+            async_runtime::spawn(async {
                 let manager = APP.get().unwrap().state::<MetadataManager>();
                 manager.refesh_manifests().await.unwrap_or_default();
             });
@@ -76,5 +79,5 @@ async fn main() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("Error running tauri app");
+        .expect("Error running AtlasLauncher.");
 }

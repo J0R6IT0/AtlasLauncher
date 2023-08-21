@@ -1,4 +1,4 @@
-use std::{io, time::Duration};
+use std::{io, path::Path, time::Duration};
 
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
@@ -12,60 +12,94 @@ use tokio::{
 
 use crate::{models::ChecksumType, APP_DIRECTORY};
 
-use super::directory::check_directory;
+use super::directory::get_path_or_create;
 
-// read file
-
-pub async fn read_as_vec<S: AsRef<str>>(path: S) -> Result<Vec<u8>, &'static str> {
+/// Read a file and return the vector of bytes.
+///
+/// # Errors
+/// This function will return an error if `path` does not exist or if [`tokio`](tokio)'s [`fs::read`](fs::read) fails.
+///
+/// # Examples
+/// ```
+/// let bytes = read("path/to/file.foo").await.unwrap();
+/// ```
+pub async fn read<P>(path: P) -> Result<Vec<u8>, &'static str>
+where
+    P: AsRef<Path>,
+{
     let app_directory = APP_DIRECTORY.get().unwrap();
-    let file_path = app_directory.join(path.as_ref());
+    let file_path = app_directory.join(path);
 
     if !file_path.exists() {
         return Err("The path does not exist.");
     }
 
-    match fs::read(&file_path).await {
-        Ok(contents) => Ok(contents),
-        Err(_) => Err("Error reading file."),
-    }
+    fs::read(&file_path)
+        .await
+        .map_err(|_| "Error reading file.")
 }
 
-pub async fn read_as_value<T: for<'de> Deserialize<'de>, S: AsRef<str>>(
-    path: S,
-) -> Result<T, &'static str> {
-    let bytes: Vec<u8> = read_as_vec(path).await?;
-    match serde_json::from_slice(&bytes) {
-        Ok(result) => Ok(result),
-        Err(_) => Err("Error reading json."),
-    }
+/// Deserialize an instance of type `T` from a JSON file.
+///
+/// # Errors
+/// This function will return an error if `path` does not exist or if [`tokio`](tokio)'s [`fs::read`](fs::read) fails.
+/// It can also fail if the JSON does not match `T`.
+///
+/// # Examples
+/// ```
+/// let json: serde::Value = read_to_value("path/to/file.json").await.unwrap();
+/// ```
+pub async fn read_to_value<P, D>(path: P) -> Result<D, &'static str>
+where
+    P: AsRef<Path>,
+    D: for<'de> Deserialize<'de>,
+{
+    let bytes: Vec<u8> = read(path).await?;
+    serde_json::from_slice(&bytes).map_err(|_| "Error parsing json.")
 }
 
-// write file
-
-pub async fn write_vec<S: AsRef<str>>(data: &[u8], path: S) -> Result<(), &'static str> {
+/// Writes a vector of bytes to a file.
+///
+/// # Errors
+/// This function will return an error if the file cannot be created or if the data cannot be written to it. See [`File`](File) for more details.
+///
+/// # Examples
+/// ```
+/// write_vec(&bytes_to_write, "path/to/file.foo").await?;
+/// ```
+pub async fn write_vec<P>(data: &[u8], path: P) -> Result<(), &'static str>
+where
+    P: AsRef<Path>,
+{
     let app_directory = APP_DIRECTORY.get().unwrap();
-
-    let file_path = app_directory.join(path.as_ref());
+    let file_path = app_directory.join(path);
     let parent_path = file_path.parent().unwrap();
-    check_directory(parent_path.to_str().unwrap()).await;
 
-    let mut file = match File::create(&file_path).await {
-        Ok(file) => file,
-        Err(_) => {
-            return Err("Error creating file.");
-        }
-    };
+    get_path_or_create(parent_path).await;
 
-    match file.write_all(data).await {
-        Ok(_) => Ok(()),
-        Err(_) => Err("Error writing file."),
-    }
+    let mut file = File::create(&file_path)
+        .await
+        .map_err(|_| "Error creating file.")?;
+
+    file.write_all(data)
+        .await
+        .map_err(|_| "Error writing file.")
 }
 
-pub async fn write_value<T: Serialize, S: AsRef<str>>(
-    data: &T,
-    path: S,
-) -> Result<(), &'static str> {
+/// Writes serializable data to a file.
+///
+/// # Errors
+/// This function will return an error if the file cannot be created or if the data cannot be written to it. See [`File`](File) for more details.
+///
+/// # Examples
+/// ```
+/// write_value(&some_serializable_data, "path/to/file.json").await?;
+/// ```
+pub async fn write_value<S, P>(data: &S, path: P) -> Result<(), &'static str>
+where
+    S: Serialize,
+    P: AsRef<Path>,
+{
     let bytes: Vec<u8> = serde_json::to_vec(&data).unwrap();
     write_vec(&bytes, path).await?;
 
@@ -74,7 +108,7 @@ pub async fn write_value<T: Serialize, S: AsRef<str>>(
 
 // download file
 
-pub async fn download_as_vec<S: AsRef<str>>(
+pub async fn download_as_vec<S: AsRef<Path>>(
     url: &str,
     checksum: &str,
     checksum_type: ChecksumType,
@@ -84,7 +118,7 @@ pub async fn download_as_vec<S: AsRef<str>>(
     if !force {
         let mut vec: Option<Vec<u8>> = None;
 
-        if let Ok(file_vec) = read_as_vec("").await {
+        if let Ok(file_vec) = read("").await {
             vec = Some(file_vec);
         }
 
@@ -141,7 +175,7 @@ pub async fn download_as_vec<S: AsRef<str>>(
         sleep(Duration::from_secs((1 + retry_count).into())).await;
     }
 
-    if !path.as_ref().is_empty() {
+    if !path.as_ref().is_file() {
         write_vec(&bytes.to_vec(), path).await?;
     }
 
